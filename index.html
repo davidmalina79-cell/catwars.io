@@ -571,6 +571,39 @@
             { name: '🛡️ TANK BOSS', hpMult: 1.6, dmgMult: 1.3, speedMult: 0.7, sizeMult: 1.5, cdMult: 1.4, color: '#7f8c8d', alert: '🛡️ TANK BOSS!', weapon: 'warhammer' },
             { name: '👑 MEGA BOSS',  hpMult: 1.0, dmgMult: 1.0, speedMult: 1.0, sizeMult: 1.4, cdMult: 1.0, color: '#ffd700', alert: '👑 MEGA BOSS!', weapon: 'godslayer' },
         ];
+        
+        // 9.5 GRAPHICS HELPERS, OBJECT POOLING & SPATIAL GRID
+        function shade(color, percent) { if (!color.startsWith('#')) return color; let R = parseInt(color.substring(1,3),16), G = parseInt(color.substring(3,5),16), B = parseInt(color.substring(5,7),16); R = Math.min(255, parseInt(R * (100 + percent) / 100)); G = Math.min(255, parseInt(G * (100 + percent) / 100)); B = Math.min(255, parseInt(B * (100 + percent) / 100)); return "#"+((1<<24)+(R<<16)+(G<<8)+B).toString(16).slice(1); }
+        
+        const particlePool = [];
+        const dmgNumberPool = [];
+        function getParticle() { return particlePool.pop() || { x:0, y:0, vx:0, vy:0, life:0, color:'#fff', size:6 }; }
+        function releaseParticle(p) { particlePool.push(p); }
+        function getDmgNumber() { return dmgNumberPool.pop() || { x:0, y:0, vy:0, val:0, life:0, color:'#fff' }; }
+        function releaseDmgNumber(d) { dmgNumberPool.push(d); }
+
+        const spatialGrid = new Map();
+        function getGridKey(x, y) { return Math.floor(x / GRID_CELL) + '_' + Math.floor(y / GRID_CELL); }
+        function rebuildGrid(items) {
+            spatialGrid.clear();
+            for (let i = 0; i < items.length; i++) {
+                let key = getGridKey(items[i].x, items[i].y);
+                if (!spatialGrid.has(key)) spatialGrid.set(key, []);
+                spatialGrid.get(key).push(items[i]);
+            }
+        }
+        function queryGrid(x, y, radius) {
+            let r = Math.ceil(radius / GRID_CELL);
+            let cx = Math.floor(x / GRID_CELL), cy = Math.floor(y / GRID_CELL);
+            let result = [];
+            for (let dx = -r; dx <= r; dx++) {
+                for (let dy = -r; dy <= r; dy++) {
+                    let cell = spatialGrid.get((cx + dx) + '_' + (cy + dy));
+                    if (cell) result.push(...cell);
+                }
+            }
+            return result;
+        }
 
         // 9. DRAWING FUNCTIONS (CLEANED UP & PERFECTED)
         const spritesCache = { cats: {}, dogs: {} };
