@@ -605,7 +605,7 @@
         let chests = [];
         let droppedGems = [];
         let player;
-        let camera = { x: 0, y: 0 };
+        let currentZoom = 1;
         let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [];
         let gameState = 'menu'; 
         let hitStop = 0; 
@@ -619,6 +619,7 @@
             document.getElementById('game-ui').style.display = 'flex';
             document.getElementById('dash-container').style.display = 'flex';
             
+            currentZoom = 1;
             player = {
                 x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 40,
                 hp: evolutions[0].maxHp, invuln: 120,
@@ -937,9 +938,16 @@
             if (hitStop > 0) { hitStop--; requestAnimationFrame(gameLoop); return; }
             if (gameState !== 'playing') { requestAnimationFrame(gameLoop); return; }
 
+            // PLYNULÉ ODDALOVÁNÍ (ZOOM) PODLE LEVELU
+            let targetZoom = 1 / (1 + (player.level - 1) * 0.04);
+            currentZoom += (targetZoom - currentZoom) * 0.05;
+
             let stats = evolutions[Math.min(player.level - 1, 29)];
             let pSize = stats.baseSize;
-            let dx = mouseX - width / 2, dy = mouseY - height / 2;
+            
+            // Přepočet kurzoru myši s ohledem na aktuální zoom kamery
+            let dx = (mouseX - width / 2) / currentZoom;
+            let dy = (mouseY - height / 2) / currentZoom;
             let distToMouse = Math.sqrt(dx * dx + dy * dy);
             
             let pCurrentSpeed = player.attackTimer > 0 ? stats.speed * 0.45 : stats.speed;
@@ -972,8 +980,6 @@
             if (isRightMouseDown && player.dashTimer <= 0) { player.dashActive = 12; player.dashTimer = player.dashCooldown; playSound('dash'); }
             if (isMouseDown && player.attackTimer <= 0) { player.attackTimer = player.attackCooldown; playSound('swing'); }
             let pDealDamageFrame = player.attackTimer === Math.floor(player.attackCooldown * 0.7);
-            
-            camera.x = player.x - width / 2; camera.y = player.y - height / 2;
 
             // Collision: Food
             for (let i = foods.length - 1; i >= 0; i--) { 
@@ -1054,8 +1060,20 @@
                 else if (Math.random() < 0.05) e.angle += (Math.random() - 0.5);
                 
                 e.x += Math.cos(e.angle) * eSpeed; e.y += Math.sin(e.angle) * eSpeed;
-                e.x = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.x)); 
-                e.y = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.y));
+                
+                // ODRAŽENÍ NEPŘÁTEL OD ZDI (ZABRÁNÍ ZASEKNUTÍ)
+                let hitWall = false;
+                if (e.x < e.size) { e.x = e.size; hitWall = true; }
+                else if (e.x > WORLD_SIZE - e.size) { e.x = WORLD_SIZE - e.size; hitWall = true; }
+                if (e.y < e.size) { e.y = e.size; hitWall = true; }
+                else if (e.y > WORLD_SIZE - e.size) { e.y = WORLD_SIZE - e.size; hitWall = true; }
+
+                if (hitWall) {
+                    e.state = 'wander'; // Přestanou utíkat
+                    // Nasměruj je přibližně do centra mapy
+                    e.angle = Math.atan2(WORLD_SIZE / 2 - e.y, WORLD_SIZE / 2 - e.x) + (Math.random() * 0.5 - 0.25);
+                    e.stateTimer = 60 + Math.random() * 60; // Zablokuje změnu stavu na pár vteřin
+                }
                 
                 if (e.attackTimer > 0) e.attackTimer--;
                 if (e.state === 'chase' && distToP < e.weaponLength + pSize * 1.6 && e.attackTimer <= 0) { 
@@ -1110,19 +1128,34 @@
 
         function draw(playerStats) {
             ctx.fillStyle = '#182825'; ctx.fillRect(0, 0, width, height);
-            ctx.save(); ctx.translate(-camera.x, -camera.y);
+            ctx.save(); 
+            
+            // Aplikace Zoomu a centrování na hráče
+            ctx.translate(width / 2, height / 2);
+            ctx.scale(currentZoom, currentZoom);
+            ctx.translate(-player.x, -player.y);
+
+            // Výpočet hranic kamery pro optimalizaci vykreslování (Culling)
+            let camLeft = player.x - (width / 2) / currentZoom;
+            let camRight = player.x + (width / 2) / currentZoom;
+            let camTop = player.y - (height / 2) / currentZoom;
+            let camBottom = player.y + (height / 2) / currentZoom;
             
             ctx.strokeStyle = '#000000'; ctx.lineWidth = 15; ctx.strokeRect(0, 0, WORLD_SIZE, WORLD_SIZE);
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)'; ctx.lineWidth = 2; const gSize = 200;
-            let sX = Math.max(0, Math.floor(camera.x / gSize) * gSize), sY = Math.max(0, Math.floor(camera.y / gSize) * gSize);
-            let eX = Math.min(WORLD_SIZE, camera.x + width + gSize), eY = Math.min(WORLD_SIZE, camera.y + height + gSize);
+            
+            let sX = Math.max(0, Math.floor(camLeft / gSize) * gSize), sY = Math.max(0, Math.floor(camTop / gSize) * gSize);
+            let eX = Math.min(WORLD_SIZE, camRight + gSize), eY = Math.min(WORLD_SIZE, camBottom + gSize);
+            let gStartX = Math.max(0, camLeft), gEndX = Math.min(WORLD_SIZE, camRight);
+            let gStartY = Math.max(0, camTop), gEndY = Math.min(WORLD_SIZE, camBottom);
+
             ctx.beginPath(); 
-            for (let x = sX; x <= eX; x += gSize) { ctx.moveTo(x, Math.max(0, camera.y)); ctx.lineTo(x, Math.min(WORLD_SIZE, camera.y + height)); } 
-            for (let y = sY; y <= eY; y += gSize) { ctx.moveTo(Math.max(0, camera.x), y); ctx.lineTo(Math.min(WORLD_SIZE, camera.x + width), y); } 
+            for (let x = sX; x <= eX; x += gSize) { ctx.moveTo(x, gStartY); ctx.lineTo(x, gEndY); } 
+            for (let y = sY; y <= eY; y += gSize) { ctx.moveTo(gStartX, y); ctx.lineTo(gEndX, y); } 
             ctx.stroke();
             
             decorations.forEach(d => { 
-                if (d.x < camera.x - 150 || d.x > camera.x + width + 150 || d.y < camera.y - 150 || d.y > camera.y + height + 150) return; 
+                if (d.x < camLeft - 150 || d.x > camRight + 150 || d.y < camTop - 150 || d.y > camBottom + 150) return; 
                 ctx.save(); ctx.translate(d.x, d.y); ctx.scale(d.size, d.size); 
                 if (d.type === 'grass') { 
                     ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
@@ -1147,7 +1180,7 @@
             });
 
             chests.forEach(c => {
-                if (c.x < camera.x - 250 || c.x > camera.x + width + 250 || c.y < camera.y - 250 || c.y > camera.y + height + 250) return;
+                if (c.x < camLeft - 250 || c.x > camRight + 250 || c.y < camTop - 250 || c.y > camBottom + 250) return;
                 ctx.save(); ctx.translate(c.x, c.y);
                 let cw = c.size; let ch = c.size * 0.78; 
                 ctx.fillStyle = CHEST_TYPES[c.type].color; ctx.fillRect(-cw/2, -ch/2, cw, ch);
@@ -1167,6 +1200,7 @@
             });
 
             droppedGems.forEach(g => { 
+                if (g.x < camLeft - 50 || g.x > camRight + 50 || g.y < camTop - 50 || g.y > camBottom + 50) return;
                 ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(Date.now()/180); 
                 ctx.fillStyle = g.color || '#00d4ff'; 
                 ctx.beginPath(); ctx.moveTo(0, -g.size); ctx.lineTo(g.size, 0); ctx.lineTo(0, g.size); ctx.lineTo(-g.size, 0); ctx.fill(); 
@@ -1175,7 +1209,7 @@
 
             let time = Date.now() / 300;
             foods.forEach(f => { 
-                if (f.x < camera.x - 100 || f.x > camera.x + width + 100 || f.y < camera.y - 100 || f.y > camera.y + height + 100) return; 
+                if (f.x < camLeft - 100 || f.x > camRight + 100 || f.y < camTop - 100 || f.y > camBottom + 100) return; 
                 ctx.save(); ctx.translate(f.x, f.y + Math.sin(time + f.bobOffset)*5); 
                 if (f.type === 'dot') { 
                     ctx.fillStyle = f.color; ctx.beginPath(); ctx.arc(0, 0, f.size, 0, Math.PI * 2); ctx.fill(); 
@@ -1204,7 +1238,7 @@
             });
 
             enemies.forEach(e => {
-                if (e.x < camera.x - e.size * 3 || e.x > camera.x + width + e.size * 3 || e.y < camera.y - e.size * 3 || e.y > camera.y + height + e.size * 3) return;
+                if (e.x < camLeft - e.size * 3 || e.x > camRight + e.size * 3 || e.y < camTop - e.size * 3 || e.y > camBottom + e.size * 3) return;
                 ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle);
                 if (e.isBoss) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 30; }
                 drawEntity(ctx, false, e.size, e.color, e.accent, e.pattern, e.attackTimer, e.attackCooldown, e.weaponType, e.level); 
@@ -1221,8 +1255,14 @@
             drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackTimer, player.attackCooldown, playerStats.weaponType, player.level); 
             ctx.restore();
             
-            particles.forEach(p => { ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill(); });
-            damageNumbers.forEach(n => { ctx.globalAlpha = Math.max(0, n.life / 40); ctx.fillStyle = n.color; ctx.strokeStyle = '#000000'; ctx.lineWidth = 3.5; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.strokeText(n.val, n.x, n.y); ctx.fillText(n.val, n.x, n.y); });
+            particles.forEach(p => { 
+                if (p.x < camLeft || p.x > camRight || p.y < camTop || p.y > camBottom) return;
+                ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill(); 
+            });
+            damageNumbers.forEach(n => { 
+                if (n.x < camLeft || n.x > camRight || n.y < camTop || n.y > camBottom) return;
+                ctx.globalAlpha = Math.max(0, n.life / 40); ctx.fillStyle = n.color; ctx.strokeStyle = '#000000'; ctx.lineWidth = 3.5; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.strokeText(n.val, n.x, n.y); ctx.fillText(n.val, n.x, n.y); 
+            });
             ctx.globalAlpha = 1; ctx.restore();
         }
 
