@@ -456,7 +456,7 @@
           { cat:"Mutant Cat", dog:"Cerberus", w:"scythe", c:"#a8324a", d:"#1a1a1a", acc:"#00ff00", pat:"horns" },
           { cat:"Cyborg Cat", dog:"Mutant Hound", w:"lightsaber", c:"#00d4ff", d:"#ff00ff", acc:"#0088aa", pat:"cyber" },
           { cat:"Ninja Cat", dog:"Cyborg Dog", w:"twin blades", c:"#1a1a2e", d:"#00d4ff", acc:"#000000", pat:"mask" },
-          { cat:"Samurai Cat", dog:"Ninja Dog", w:"great katana", c:"#a8324a", d:"#1a1a2e", acc:"#ffd700", pat:"helm" },
+          { cat:"Samurai Cat", dog:"Samurai Dog", w:"great katana", c:"#a8324a", d:"#1a1a2e", acc:"#ffd700", pat:"helm" },
           { cat:"Wizard Cat", dog:"Samurai Dog", w:"staff", c:"#6a3a8a", d:"#a8324a", acc:"#ffd700", pat:"hat" },
           { cat:"Dragon Cat", dog:"Wizard Dog", w:"dragonblade", c:"#4a8a3a", d:"#6a3a8a", acc:"#1a3a1a", pat:"scales" },
           { cat:"Demon Cat", dog:"Dragon Dog", w:"soul reaper", c:"#7a1a1a", d:"#4a8a3a", acc:"#3a0a0a", pat:"demon" },
@@ -515,16 +515,22 @@
             updateMenuStats();
         }
 
+        window.goToMenu = goToMenu; // Export for inline handlers
+
         function openEncyclopedia(startTab = 'cats') {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('encyclopedia').style.display = 'flex';
             switchTab(startTab);
         }
         
+        window.openEncyclopedia = openEncyclopedia;
+
         function closeEncyclopedia() {
             document.getElementById('encyclopedia').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
         }
+        
+        window.closeEncyclopedia = closeEncyclopedia;
 
         function switchTab(tab) {
             document.querySelectorAll('.enc-tab').forEach(b => b.classList.remove('active'));
@@ -583,6 +589,8 @@
                 }
             }
         }
+        
+        window.switchTab = switchTab;
 
         function buyUpgrade(level, cost, nextTier) {
             if (prog.gems >= cost) {
@@ -631,6 +639,8 @@
             
             gameState = 'playing'; updateUI();
         }
+        
+        window.startGame = startGame;
 
         function spawnChest(isInitial = false) {
             let cx, cy;
@@ -1239,6 +1249,8 @@
                 prog.gems -= currentReviveCost; saveProgress(); playSound('gem'); executeRevive();
             }
         }
+        
+        window.reviveWithGems = reviveWithGems;
 
         function reviveWithAd() {
             let adBtn = document.getElementById('btn-revive-ad');
@@ -1251,6 +1263,8 @@
                 playSound('meow'); executeRevive();
             }, 2000);
         }
+        
+        window.reviveWithAd = reviveWithAd;
 
         function giveUp() {
             document.getElementById('death-screen').style.display = 'none';
@@ -1262,6 +1276,8 @@
             document.getElementById('final-gems').innerText = playerRunData.totalRunGems; 
             document.getElementById('game-over').style.display = 'flex';
         }
+        
+        window.giveUp = giveUp;
 
         // --- FIREBASE INICIALIZACE A START HRY ---
         window.startApp = function() {
@@ -1276,15 +1292,21 @@
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
         import { getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        let firebaseConfig = {
-            apiKey: "AIzaSyA6EOidw5V5q45xINGnDbh1Szoho5_Ksd0",
-            authDomain: "catwars-63a0c.firebaseapp.com",
-            projectId: "catwars-63a0c",
-            storageBucket: "catwars-63a0c.firebasestorage.app",
-            messagingSenderId: "918204912047",
-            appId: "1:918204912047:web:3059fc2c0a7ff1e48f5f5a",
-            measurementId: "G-02ZYGPQSZ7"
-        };
+        // BEZPEČNÁ INICIALIZACE - Kompatibilní s pískovištěm umělé inteligence i tvým webem
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            firebaseConfig = {
+                apiKey: "AIzaSyA6EOidw5V5q45xINGnDbh1Szoho5_Ksd0",
+                authDomain: "auth.catwars.io",
+                projectId: "catwars-63a0c",
+                storageBucket: "catwars-63a0c.firebasestorage.app",
+                messagingSenderId: "918204912047",
+                appId: "1:918204912047:web:3059fc2c0a7ff1e48f5f5a",
+                measurementId: "G-02ZYGPQSZ7"
+            };
+        }
 
         let app, auth, analytics;
         try {
