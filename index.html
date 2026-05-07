@@ -878,6 +878,23 @@
                 ctx.fillStyle = '#ff9999'; 
                 ctx.beginPath(); ctx.moveTo(-size*0.3, -size*0.6); ctx.lineTo(-size*0.4, -size*0.95); ctx.lineTo(-size*0.1, -size*0.7); ctx.fill(); 
                 ctx.beginPath(); ctx.moveTo(-size*0.3,  size*0.6); ctx.lineTo(-size*0.4,  size*0.95); ctx.lineTo(-size*0.1,  size*0.7); ctx.fill(); 
+                
+                // Vousky (Whiskers)
+                ctx.strokeStyle = '#222222'; ctx.lineWidth = Math.max(1, size * 0.04);
+                ctx.beginPath();
+                // Levé vousky (odsazené od nosu s malou mezerou)
+                ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*1.0, -size*0.85);
+                ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.8, -size*0.95);
+                ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.6, -size*0.85);
+                // Pravé vousky (odsazené od nosu s malou mezerou)
+                ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*1.0, size*0.85);
+                ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.8, size*0.95);
+                ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.6, size*0.85);
+                ctx.stroke();
+
+                // Čumáček (Nose)
+                ctx.fillStyle = '#111111'; 
+                ctx.beginPath(); ctx.arc(size*0.8, 0, size*0.1, 0, Math.PI*2); ctx.fill();
             } else { 
                 ctx.fillStyle = shade(color, -20); 
                 ctx.beginPath(); ctx.ellipse(-size*0.3, -size*0.85, size*0.45, size*0.25, -Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
@@ -1055,9 +1072,15 @@
                 }
                 
                 let eSpeed = e.attackTimer > 0 ? e.speed * 0.45 : e.speed;
-                if (e.state === 'chase') e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
-                else if (e.state === 'flee') e.angle = Math.atan2(e.y - player.y, e.x - player.x); 
-                else if (Math.random() < 0.05) e.angle += (Math.random() - 0.5);
+                
+                // Pokud pes zrovna útočí (máchá zbraní), vždy se otočí na hráče (i když původně utíkal)
+                if (e.attackTimer > 0) {
+                    e.angle = Math.atan2(player.y - e.y, player.x - e.x);
+                } else {
+                    if (e.state === 'chase') e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
+                    else if (e.state === 'flee') e.angle = Math.atan2(e.y - player.y, e.x - player.x); 
+                    else if (Math.random() < 0.05) e.angle += (Math.random() - 0.5);
+                }
                 
                 e.x += Math.cos(e.angle) * eSpeed; e.y += Math.sin(e.angle) * eSpeed;
                 
@@ -1076,7 +1099,9 @@
                 }
                 
                 if (e.attackTimer > 0) e.attackTimer--;
-                if (e.state === 'chase' && distToP < e.weaponLength + pSize * 1.6 && e.attackTimer <= 0) { 
+                
+                // Všichni psi v dosahu zaútočí (protiútok, i když předtím utíkali)
+                if (distToP < e.weaponLength + pSize * 1.6 && e.attackTimer <= 0) { 
                     e.attackTimer = e.attackCooldown; playSound('swing'); 
                 }
                 
