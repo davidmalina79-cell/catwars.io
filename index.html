@@ -295,37 +295,32 @@
         </div>
     </div>
 
-    <!-- DEATH SCREEN -->
+    <!-- DEATH SCREEN (MERGED WITH GAME OVER) -->
     <div id="death-screen" class="overlay" style="display: none; background: rgba(0, 0, 0, 0.85); z-index: 150;">
-        <div class="panel" style="border-color: var(--danger); max-width: 420px;">
-            <h1 style="color: var(--danger); margin-bottom: 10px; font-size: 45px;">YOU DIED!</h1>
-            <p style="font-size: 20px; color: #ddd; margin-bottom: 5px;">Continue your journey?</p>
-            <p style="font-size: 18px; color: #fff; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px;">
-                Your Gems: <span id="ds-current-gems" class="gem-text" style="font-weight: bold; font-size: 22px;">0</span> 💎
-            </p>
-            <button id="btn-revive-gem" class="btn-main" onclick="reviveWithGems()" style="background: #00d4ff; box-shadow: 0 4px 0 #0099cc; width: 100%; margin: 10px 0;">
-                💎 Revive (Cost: <span id="revive-cost">0</span>)
-            </button>
-            <button id="btn-revive-ad" class="btn-main" onclick="reviveWithAd()" style="background: var(--success); box-shadow: 0 4px 0 #27ae60; width: 100%; margin: 10px 0;">
-                📺 Watch Ad to Revive (FREE)
-            </button>
-            <button class="btn-main" onclick="giveUp()" style="background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; width: 100%; margin: 10px 0; margin-top: 20px;">
-                🏠 Back to Menu
-            </button>
-        </div>
-    </div>
+        <div class="panel" style="border-color: var(--danger); max-width: 450px;">
+            <h1 style="color: var(--danger); margin-bottom: 10px; font-size: 45px;">WASTED</h1>
+            <p style="font-size: 18px; color: #ddd; margin-bottom: 15px;">A dog ended your meow-journey.</p>
 
-    <!-- GAME OVER -->
-    <div id="game-over" class="overlay" style="display: none;">
-        <div class="panel" style="max-width: 450px;">
-            <h1 style="color: var(--danger); margin-bottom: 15px;">WASTED</h1>
-            <p style="font-size: 18px; color: #ddd;">A dog ended your meow-journey.</p>
-            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; margin: 20px 0;">
-                <p style="font-size: 20px; margin: 5px 0;">Level <strong id="final-level"></strong> (<strong id="final-name"></strong>)</p>
-                <p style="font-size: 16px; color: #aaa; margin: 5px 0;">Kills: <span id="final-kills">0</span> | Best Combo: <span id="final-combo">0</span>x</p>
-                <p class="gem-text" style="font-size: 22px; font-weight: bold; margin: 10px 0;">💎 Gems found: <span id="final-gems">0</span></p>
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <p style="font-size: 20px; margin: 5px 0;">Level <strong id="ds-final-level"></strong> (<strong id="ds-final-name"></strong>)</p>
+                <p style="font-size: 16px; color: #aaa; margin: 5px 0;">Kills: <span id="ds-final-kills">0</span> | Best Combo: <span id="ds-final-combo">0</span>x</p>
+                <p class="gem-text" style="font-size: 20px; font-weight: bold; margin: 10px 0;">💎 Gems found: <span id="ds-final-gems">0</span></p>
+                <p style="font-size: 16px; color: #fff; margin: 10px 0 0 0; border-top: 1px solid #555; padding-top: 10px;">
+                    Bank: <span id="ds-current-gems" class="gem-text" style="font-weight: bold;">0</span> 💎
+                </p>
             </div>
-            <button class="btn-main" onclick="goToMenu()">Main Menu</button>
+
+            <div id="death-buttons" style="opacity: 0; pointer-events: none; transition: opacity 0.5s ease; width: 100%;">
+                <button id="btn-revive-gem" class="btn-main" onclick="reviveWithGems()" style="background: #00d4ff; box-shadow: 0 4px 0 #0099cc; width: 100%; margin: 8px 0;">
+                    💎 Revive (Cost: <span id="revive-cost">0</span>)
+                </button>
+                <button id="btn-revive-ad" class="btn-main" onclick="reviveWithAd()" style="background: var(--success); box-shadow: 0 4px 0 #27ae60; width: 100%; margin: 8px 0;">
+                    📺 Watch Ad to Revive (FREE)
+                </button>
+                <button class="btn-main" onclick="giveUp()" style="background: var(--primary); color: #111; box-shadow: 0 4px 0 var(--primary-active); width: 100%; margin: 8px 0; margin-top: 15px;">
+                    🏠 Back to Menu
+                </button>
+            </div>
         </div>
     </div>
 
@@ -867,7 +862,7 @@
         };
 
         function goToMenu() { 
-            document.getElementById('game-ui').style.display = 'none'; document.getElementById('game-over').style.display = 'none'; 
+            document.getElementById('game-ui').style.display = 'none'; 
             document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('dash-container').style.display = 'none'; 
             document.getElementById('minimap').style.display = 'none'; document.getElementById('boss-arrow').style.display = 'none';
             document.getElementById('pause-btn').style.display = 'none'; document.getElementById('tutorial').style.display = 'none';
@@ -1008,7 +1003,17 @@
                     
                     if (!locked) {
                         let wTierName = wTier > 0 ? `✨ ${WEAPON_TIERS[wTier]} ` : ''; 
-                        card.innerHTML += `<p>${wTierName}${stats.weaponType.toUpperCase()}<br><span style="color:#f39c12;font-size:11px">${archLabel}</span></p>`;
+                        
+                        let weaponImgUrl = getWeaponDataURL(stats.weaponType, wTier);
+                        card.innerHTML += `
+                            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;">
+                                <img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));">
+                                <div style="text-align:left; font-size: 11px; line-height: 1.3;">
+                                    <strong style="color: #fff;">${wTierName}${stats.weaponType.toUpperCase()}</strong><br>
+                                    <span style="color:#f39c12;">${archLabel}</span>
+                                </div>
+                            </div>
+                        `;
                         
                         let wBtn = document.createElement('button'); wBtn.className = 'upgrade-btn';
                         if (wTier >= 4) { wBtn.innerText = "MAX WEAPON"; wBtn.disabled = true; } 
@@ -1019,7 +1024,7 @@
                         if (hTier >= 5) { hBtn.innerText = "MAX HELMET"; hBtn.disabled = true; } 
                         else { let hCost = i * HELMET_UPGRADE_COSTS[hTier]; hBtn.innerText = `Helmet: ${HELMET_TIERS[hTier + 1]} (💎${hCost})`; if (prog.gems < hCost) hBtn.disabled = true; hBtn.onclick = () => buyUpgrade('helmet', i, hCost, hTier + 1); }
                         card.appendChild(hBtn);
-                    } else { card.innerHTML += `<p>Reach Lv. ${i}</p>`; }
+                    } else { card.innerHTML += `<p style="margin-top:10px;">Reach Lv. ${i}</p>`; }
                     grid.appendChild(card);
                 }
             } else {
@@ -1028,7 +1033,25 @@
                     let card = document.createElement('div'); card.className = `card ${locked ? 'locked' : ''}`;
                     let img = document.createElement('img'); img.src = getSpriteDataURL('dogs', i); card.appendChild(img);
                     let archLabel = { fast:'⚡ Fast', heavy:'🔨 Heavy', wide:'🌀 Wide', reach:'➡️ Reach', balanced:'⚔️ Balanced' }[getWeaponArchetype(stats.weaponType)];
-                    card.innerHTML += `<h3>Lv.${i} ${locked ? '???' : stats.dogName}</h3><p>Defeated: ${kills}<br><span style="color:#f39c12;font-size:11px">${locked?'':archLabel}</span></p>`;
+                    
+                    card.innerHTML += `<h3>Lv.${i} ${locked ? '???' : stats.dogName}</h3>`;
+                    
+                    if (!locked) {
+                        let weaponImgUrl = getWeaponDataURL(stats.weaponType, 0); // Psi používají základní barvy tieru 0
+                        card.innerHTML += `
+                            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;">
+                                <img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0;">
+                                <div style="text-align:left; font-size: 11px; line-height: 1.3;">
+                                    <strong style="color: #fff;">${stats.weaponType.toUpperCase()}</strong><br>
+                                    <span style="color:#f39c12;">${archLabel}</span>
+                                </div>
+                            </div>
+                            <p style="margin-top: 5px;">Defeated: ${kills}</p>
+                        `;
+                    } else {
+                        card.innerHTML += `<p style="margin-top: 5px;">Defeated: 0</p>`;
+                    }
+                    
                     grid.appendChild(card);
                 }
             }
@@ -1081,7 +1104,7 @@
         }
 
         function startGame() {
-            initAudio(); document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-over').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
+            initAudio(); document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
             currentZoom = 1; 
             let pMaxHpBase = evolutions[0].maxHp;
             let pHpMult = HELMET_HP_MULT[prog.helmetUpgrades[1] || 0];
@@ -1447,8 +1470,17 @@
             let scale = 160 / WORLD_SIZE;
             mmCtx.fillStyle = '#f1c40f'; for (let c of chests) mmCtx.fillRect(c.x*scale - 1, c.y*scale - 1, 3, 3);
             for (let e of enemies) {
-                if (e.isBoss) { mmCtx.fillStyle = e.color; mmCtx.beginPath(); mmCtx.arc(e.x*scale, e.y*scale, 5, 0, Math.PI*2); mmCtx.fill(); mmCtx.strokeStyle='#fff'; mmCtx.stroke(); } 
-                else { mmCtx.fillStyle = e.level >= player.level ? '#e74c3c' : '#7f8c8d'; mmCtx.fillRect(e.x*scale - 0.7, e.y*scale - 0.7, 1.4, 1.4); }
+                if (e.isBoss) { 
+                    mmCtx.fillStyle = e.color; mmCtx.beginPath(); mmCtx.arc(e.x*scale, e.y*scale, 5, 0, Math.PI*2); mmCtx.fill(); mmCtx.strokeStyle='#fff'; mmCtx.stroke(); 
+                } else { 
+                    if (e.level >= player.level) {
+                        mmCtx.fillStyle = '#e74c3c'; 
+                        mmCtx.fillRect(e.x*scale - 2, e.y*scale - 2, 4, 4); // Větší červené tečky (nebezpeční psi)
+                    } else {
+                        mmCtx.fillStyle = '#7f8c8d'; 
+                        mmCtx.fillRect(e.x*scale - 1.5, e.y*scale - 1.5, 3, 3); // Větší šedé tečky (slabší psi)
+                    }
+                }
             }
             mmCtx.fillStyle = '#2ecc71'; mmCtx.beginPath(); mmCtx.arc(player.x*scale, player.y*scale, 3, 0, Math.PI*2); mmCtx.fill();
             let camW = (width/currentZoom)*scale, camH = (height/currentZoom)*scale; mmCtx.strokeStyle = 'rgba(255,255,255,0.4)'; mmCtx.strokeRect(player.x*scale - camW/2, player.y*scale - camH/2, camW, camH);
@@ -1465,11 +1497,48 @@
             arrow.style.left = (tx - 20) + 'px'; arrow.style.top = (ty - 20) + 'px'; arrow.style.transform = `rotate(${angle + Math.PI/2}rad)`;
         }
 
-        function showDeathScreen() { gameState = 'death_menu'; document.body.classList.remove('low-hp'); currentReviveCost = player.level * 10 + 20; document.getElementById('revive-cost').innerText = currentReviveCost; document.getElementById('ds-current-gems').innerText = prog.gems + playerRunData.gems; let gemBtn = document.getElementById('btn-revive-gem'); if (prog.gems + playerRunData.gems < currentReviveCost) { gemBtn.disabled = true; } else { gemBtn.disabled = false; } document.getElementById('dash-container').style.display = 'none'; document.getElementById('minimap').style.display = 'none'; document.getElementById('boss-arrow').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; document.getElementById('death-screen').style.display = 'flex'; }
+        function showDeathScreen() { 
+            gameState = 'death_menu'; document.body.classList.remove('low-hp'); currentReviveCost = player.level * 10 + 20; 
+            
+            let stats = evolutions[Math.min(player.level - 1, 49)];
+            document.getElementById('ds-final-level').innerText = player.level;
+            document.getElementById('ds-final-name').innerText = stats.catName;
+            document.getElementById('ds-final-kills').innerText = playerRunData.kills;
+            document.getElementById('ds-final-combo').innerText = playerRunData.bestCombo;
+            document.getElementById('ds-final-gems').innerText = playerRunData.totalRunGems;
+            
+            document.getElementById('revive-cost').innerText = currentReviveCost; 
+            document.getElementById('ds-current-gems').innerText = prog.gems + playerRunData.gems; 
+            
+            let gemBtn = document.getElementById('btn-revive-gem'); 
+            if (prog.gems + playerRunData.gems < currentReviveCost) { gemBtn.disabled = true; } else { gemBtn.disabled = false; } 
+            
+            document.getElementById('dash-container').style.display = 'none'; document.getElementById('minimap').style.display = 'none'; 
+            document.getElementById('boss-arrow').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; 
+            document.getElementById('death-screen').style.display = 'flex'; 
+            
+            // Misclick ochrana (Tlačítka se objeví za 1.5 sekundy)
+            let deathBtns = document.getElementById('death-buttons');
+            deathBtns.style.opacity = '0';
+            deathBtns.style.pointerEvents = 'none';
+            setTimeout(() => {
+                if(deathBtns) {
+                    deathBtns.style.opacity = '1';
+                    deathBtns.style.pointerEvents = 'auto';
+                }
+            }, 1500);
+        }
         function executeRevive() { let stats = evolutions[Math.min(player.level - 1, 49)]; player.hp = player.maxHp; player.invuln = 3.0; enemies = enemies.filter(e => e.isBoss || Math.hypot(e.x - player.x, e.y - player.y) > 1200); document.getElementById('death-screen').style.display = 'none'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('minimap').style.display = 'block'; document.getElementById('pause-btn').style.display = 'flex'; lastTime = performance.now(); gameState = 'playing'; updateUI(); }
         function reviveWithGems() { let need = currentReviveCost; if (playerRunData.gems >= need) { playerRunData.gems -= need; } else { let fromMeta = need - playerRunData.gems; playerRunData.gems = 0; prog.gems -= fromMeta; saveProgress(); } playSound('gem'); executeRevive(); } window.reviveWithGems = reviveWithGems;
         function reviveWithAd() { let adBtn = document.getElementById('btn-revive-ad'); let originalText = adBtn.innerHTML; adBtn.innerHTML = "⏳ Playing Ad..."; adBtn.disabled = true; setTimeout(() => { adBtn.innerHTML = originalText; adBtn.disabled = false; playSound('meow'); executeRevive(); }, 2000); } window.reviveWithAd = reviveWithAd;
-        function giveUp() { document.getElementById('death-screen').style.display = 'none'; document.getElementById('game-ui').style.display = 'none'; prog.gems += playerRunData.gems; if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; saveProgress(); let stats = evolutions[Math.min(player.level - 1, 49)]; document.getElementById('final-level').innerText = player.level; document.getElementById('final-name').innerText = stats.catName; document.getElementById('final-kills').innerText = playerRunData.kills; document.getElementById('final-combo').innerText = playerRunData.bestCombo; document.getElementById('final-gems').innerText = playerRunData.totalRunGems; document.getElementById('game-over').style.display = 'flex'; } window.giveUp = giveUp;
+        function giveUp() { 
+            document.getElementById('death-screen').style.display = 'none'; 
+            document.getElementById('game-ui').style.display = 'none'; 
+            prog.gems += playerRunData.gems; 
+            if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; 
+            saveProgress(); 
+            goToMenu(); 
+        } window.giveUp = giveUp;
         
         window.startApp = function() { requestAnimationFrame(gameLoop); };
     </script>
