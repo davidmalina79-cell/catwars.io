@@ -198,7 +198,7 @@
             <div class="game-art-banner" style="min-height: 200px;">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
-            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 3.0: 50 Levels, Visual Armor & Weapons.</p>
+            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 3.1: Cloud Saving & Global Leaderboard.</p>
             
             <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="stat-box">Kills: <span id="mm-kills">0</span></div>
@@ -207,13 +207,28 @@
             </div>
             
             <button class="btn-main" onclick="startGame()" style="font-size: 24px; padding: 15px 40px; width: 100%; max-width: 400px; margin-bottom: 5px;">▶️ PLAY GAME</button>
-            <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; width: 100%; max-width: 400px; margin-bottom: 15px; font-size: 18px; padding: 10px 20px;">📺 Watch Ad (+500 💎)</button>
+            <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; width: 100%; max-width: 400px; margin-bottom: 5px; font-size: 18px; padding: 10px 20px;">📺 Watch Ad (+500 💎)</button>
+            
+            <!-- NEW LEADERBOARD BUTTON -->
+            <button class="btn-main" onclick="window.openLeaderboard()" style="background: #e67e22; box-shadow: 0 4px 0 #d35400; width: 100%; max-width: 400px; margin-bottom: 15px; font-size: 18px; padding: 10px 20px;">🏆 Leaderboard</button>
             
             <div style="display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap;">
                 <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 4px 0 #2980b9; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🐱 UPGRADES</button>
                 <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🐶 BESTIARY</button>
                 <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 4px 0 #d68910; color: #111; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🛡️ ARMORY</button>
             </div>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD SCREEN -->
+    <div id="leaderboard-screen" class="overlay" style="display: none; z-index: 250;">
+        <div class="panel" style="max-width: 550px; width: 95%; padding: 20px;">
+            <h1 style="color: #f1c40f; font-size: 35px; margin-bottom: 10px;">🏆 LEADERBOARD</h1>
+            <p style="color: #aaa; margin-top: 0;">Top 50 Players Globally</p>
+            <div id="lb-content" style="max-height: 50vh; overflow-y: auto; text-align: left; margin-bottom: 20px; background: rgba(0,0,0,0.4); border-radius: 10px; padding: 10px;">
+                <p style="text-align: center; color: #aaa;">Loading data from satellite...</p>
+            </div>
+            <button class="btn-main" onclick="window.closeLeaderboard()">🏠 Back to Menu</button>
         </div>
     </div>
 
@@ -318,22 +333,45 @@
         // --- SCRIPT BLOCK: ENTIRE GAME LOGIC ---
 
         // 1. META PROGRESSION
-        let prog = { maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
+        let defaultProg = { maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
+        let prog = { ...defaultProg };
         
-        function saveProgress() { localStorage.setItem('catwars_save', JSON.stringify(prog)); updateMenuStats(); }
-        function loadProgress() {
-            let saved = localStorage.getItem('catwars_save');
-            if (saved) {
-                let parsed = JSON.parse(saved);
-                prog = { ...prog, ...parsed }; 
-                if(!prog.dogKills) prog.dogKills = {};
-                if(!prog.weaponUpgrades) prog.weaponUpgrades = {};
-                if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; 
-                if(!prog.quests) prog.quests = [];
+        window.currentUserUid = null;
+
+        function saveProgress() { 
+            // Local fallback specifický pro účet
+            if (window.currentUserUid) {
+                localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
             }
+            updateMenuStats(); 
+            // Uložení na Cloud (Firebase)
+            if (window.saveToFirestore) {
+                window.saveToFirestore(prog);
+            }
+        }
+        
+        window.loadCloudProgress = async (uid) => {
+            // Load local specific user data fallback
+            let local = localStorage.getItem('catwars_save_' + uid);
+            prog = local ? { ...defaultProg, ...JSON.parse(local) } : { ...defaultProg };
+            
+            // Try to override with Cloud data
+            if (window.fetchFromFirestore) {
+                 let cloudData = await window.fetchFromFirestore(uid);
+                 if (cloudData) {
+                     prog = { ...prog, ...cloudData };
+                 }
+            }
+            
+            // Pojistka pro sub-objekty
+            if(!prog.dogKills) prog.dogKills = {};
+            if(!prog.weaponUpgrades) prog.weaponUpgrades = {};
+            if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; 
+            if(!prog.quests) prog.quests = [];
             rollDailyQuestsIfNeeded();
             updateMenuStats();
-        }
+        };
+
         function updateMenuStats() {
             document.getElementById('mm-kills').innerText = prog.totalKills;
             document.getElementById('mm-level').innerText = prog.maxCatLevel;
@@ -605,7 +643,7 @@
             return result;
         }
 
-        // 9. DRAWING FUNCTIONS (CLEANED UP & PERFECTED)
+        // 9. DRAWING FUNCTIONS
         const spritesCache = { cats: {}, dogs: {} };
         const weaponCache = {};
 
@@ -803,6 +841,31 @@
         }
 
         // 10. MENUS & UI
+        window.openLeaderboard = async () => {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('leaderboard-screen').style.display = 'flex';
+            document.getElementById('lb-content').innerHTML = '<p style="text-align: center; color: #aaa;">Fetching global ranks...</p>';
+            if (window.fetchLeaderboard) {
+                let data = await window.fetchLeaderboard();
+                let html = '<table class="stats-table" style="margin-bottom:0;"><tr><th>Rank</th><th>Player</th><th>Max Lvl</th><th>Kills</th></tr>';
+                data.forEach((p, i) => {
+                    html += `<tr>
+                        <td style="color:var(--primary);font-weight:bold;">#${i+1}</td>
+                        <td>${p.nickname || 'Unknown'}</td>
+                        <td style="color:var(--success);font-weight:bold;">${p.maxLevel}</td>
+                        <td>${p.kills}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                if (data.length === 0) html = '<p style="text-align: center; color: #aaa;">No data yet.</p>';
+                document.getElementById('lb-content').innerHTML = html;
+            }
+        };
+        window.closeLeaderboard = () => {
+            document.getElementById('leaderboard-screen').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+        };
+
         function goToMenu() { 
             document.getElementById('game-ui').style.display = 'none'; document.getElementById('game-over').style.display = 'none'; 
             document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('dash-container').style.display = 'none'; 
@@ -1408,19 +1471,26 @@
         function reviveWithAd() { let adBtn = document.getElementById('btn-revive-ad'); let originalText = adBtn.innerHTML; adBtn.innerHTML = "⏳ Playing Ad..."; adBtn.disabled = true; setTimeout(() => { adBtn.innerHTML = originalText; adBtn.disabled = false; playSound('meow'); executeRevive(); }, 2000); } window.reviveWithAd = reviveWithAd;
         function giveUp() { document.getElementById('death-screen').style.display = 'none'; document.getElementById('game-ui').style.display = 'none'; prog.gems += playerRunData.gems; if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; saveProgress(); let stats = evolutions[Math.min(player.level - 1, 49)]; document.getElementById('final-level').innerText = player.level; document.getElementById('final-name').innerText = stats.catName; document.getElementById('final-kills').innerText = playerRunData.kills; document.getElementById('final-combo').innerText = playerRunData.bestCombo; document.getElementById('final-gems').innerText = playerRunData.totalRunGems; document.getElementById('game-over').style.display = 'flex'; } window.giveUp = giveUp;
         
-        window.startApp = function() { loadProgress(); requestAnimationFrame(gameLoop); };
+        window.startApp = function() { requestAnimationFrame(gameLoop); };
     </script>
 
     <!-- FIREBASE MODULE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let isCanvasEnv = typeof __firebase_config !== 'undefined';
         let firebaseConfig = isCanvasEnv ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyA6EOidw5V5q45xINGnDbh1Szoho5_Ksd0", authDomain: "catwars-63a0c.firebaseapp.com", projectId: "catwars-63a0c", storageBucket: "catwars-63a0c.firebasestorage.app", messagingSenderId: "918204912047", appId: "1:918204912047:web:3059fc2c0a7ff1e48f5f5a" };
 
-        let app, auth;
-        try { app = initializeApp(firebaseConfig); auth = getAuth(app); } catch (error) { console.error("Firebase init failed:", error); }
+        let app, auth, db;
+        try { 
+            app = initializeApp(firebaseConfig); 
+            auth = getAuth(app); 
+            db = getFirestore(app); 
+        } catch (error) { console.error("Firebase init failed:", error); }
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'catwars-default';
 
         function getFakeEmail() { const nick = document.getElementById('login-nick').value.trim(); if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } return `${nick.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}@catwars.local`; }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
@@ -1433,6 +1503,54 @@
         window.loginWithPassword = () => { const email = getFakeEmail(); const pass = getPass(); if (email && pass) signInWithEmailAndPassword(auth, email, pass).catch(e => { document.getElementById('login-error').innerText = "Incorrect nickname or password."; }); };
         window.registerWithPassword = () => { const email = getFakeEmail(); const pass = getPass(); if (email && pass) createUserWithEmailAndPassword(auth, email, pass).catch(e => { document.getElementById('login-error').innerText = (e.code === 'auth/email-already-in-use' ? "Nickname is already taken." : "Error: " + e.message); }); };
         window.logout = () => { if (auth && auth.currentUser) signOut(auth); else { document.getElementById('main-menu').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; } };
+
+        window.fetchFromFirestore = async (uid) => {
+            if (!db) return null;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
+                const snap = await getDoc(docRef);
+                if (snap.exists()) return snap.data();
+                return null;
+            } catch(e) { console.error(e); return null; }
+        };
+
+        window.saveToFirestore = async (progressData) => {
+            if (!auth || !auth.currentUser || !db) return;
+            try {
+                const uid = auth.currentUser.uid;
+                
+                // 1) Uložení osobních dat (Privátní Firestore Cesta)
+                const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
+                await setDoc(docRef, progressData, { merge: true });
+                
+                // 2) Uložení skóre pro Leaderboard (Veřejná Firestore Cesta)
+                let nick = document.getElementById('login-nick').value || 'Hero';
+                if (auth.currentUser.email) nick = auth.currentUser.email.split('@')[0];
+                if (auth.currentUser.isAnonymous) nick = 'Guest_' + uid.substring(0,4);
+                
+                const pubRef = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', uid);
+                await setDoc(pubRef, {
+                    nickname: nick,
+                    maxLevel: progressData.maxCatLevel,
+                    kills: progressData.totalKills,
+                    gems: progressData.gems,
+                    lastActive: new Date().toISOString()
+                }, { merge: true });
+            } catch (error) { console.error("Firestore save error:", error); }
+        };
+
+        window.fetchLeaderboard = async () => {
+            if (!db) return [];
+            try {
+                // Stažení všech globálních záznamů a seřazení u klienta
+                const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
+                let players = [];
+                querySnapshot.forEach((doc) => { players.push(doc.data()); });
+                
+                players.sort((a, b) => b.maxLevel - a.maxLevel || b.kills - a.kills);
+                return players.slice(0, 50); // Vrátí TOP 50
+            } catch (error) { console.error("Leaderboard fetch error:", error); return []; }
+        };
 
         const initAuth = async () => {
             if (!auth) return;
@@ -1455,16 +1573,26 @@
                 }
             }, 5000);
 
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(auth, async (user) => {
                 authResolved = true;
                 const loadingScreen = document.getElementById('loading-screen'); if (loadingScreen) loadingScreen.style.display = 'none';
+                
                 if (user) {
+                    window.currentUserUid = user.uid;
+                    
                     const statusText = document.getElementById('auth-status-text');
+                    statusText.innerText = "Syncing cloud data...";
+                    
+                    // Pokus o načtení dat specifických pro tento UID z Cloudu / Lokálu
+                    await window.loadCloudProgress(user.uid);
+
                     statusText.innerText = "Playing as: " + (user.isAnonymous ? "Guest" : (user.email ? user.email.split('@')[0] : "Hero"));
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('main-menu').style.display = 'flex'; 
+                    
                     if (window.startApp) { window.startApp(); window.startApp = null; }
                 } else {
+                    window.currentUserUid = null;
                     document.getElementById('login-screen').style.display = 'flex';
                     document.getElementById('main-menu').style.display = 'none';
                 }
