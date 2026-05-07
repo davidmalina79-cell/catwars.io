@@ -873,11 +873,14 @@
             
             ctx.fillStyle = color;
             if (isCat) { 
-                ctx.beginPath(); ctx.moveTo(-size*0.3, -size*0.5); ctx.lineTo(-size*0.5, -size*1.2); ctx.lineTo(size*0.1, -size*0.8); ctx.fill(); ctx.stroke(); 
-                ctx.beginPath(); ctx.moveTo(-size*0.3,  size*0.5); ctx.lineTo(-size*0.5,  size*1.2); ctx.lineTo(size*0.1,  size*0.8); ctx.fill(); ctx.stroke(); 
+                // Uši (Ears) - Posunuté na 11 a 1 hodinu, mírně protažené
+                ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.25); ctx.lineTo(-size*1.2, -size*0.85); ctx.lineTo(-size*0.3, -size*0.65); ctx.fill(); ctx.stroke(); 
+                ctx.beginPath(); ctx.moveTo(-size*0.8,  size*0.25); ctx.lineTo(-size*1.2,  size*0.85); ctx.lineTo(-size*0.3,  size*0.65); ctx.fill(); ctx.stroke(); 
+                
+                // Růžový vnitřek uší
                 ctx.fillStyle = '#ff9999'; 
-                ctx.beginPath(); ctx.moveTo(-size*0.3, -size*0.6); ctx.lineTo(-size*0.4, -size*0.95); ctx.lineTo(-size*0.1, -size*0.7); ctx.fill(); 
-                ctx.beginPath(); ctx.moveTo(-size*0.3,  size*0.6); ctx.lineTo(-size*0.4,  size*0.95); ctx.lineTo(-size*0.1,  size*0.7); ctx.fill(); 
+                ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.35); ctx.lineTo(-size*1.05, -size*0.75); ctx.lineTo(-size*0.45, -size*0.6); ctx.fill(); 
+                ctx.beginPath(); ctx.moveTo(-size*0.75,  size*0.35); ctx.lineTo(-size*1.05,  size*0.75); ctx.lineTo(-size*0.45,  size*0.6); ctx.fill(); 
                 
                 // Vousky (Whiskers)
                 ctx.strokeStyle = '#222222'; ctx.lineWidth = Math.max(1, size * 0.04);
