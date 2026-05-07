@@ -500,17 +500,20 @@
           { cat:"God Cat", dog:"Supreme Overlord", w:"infinity blade", c:"#ffd700", d:"#ffffff", acc:"#ffffff", pat:"god" } // Lv 50
         ];
 
-        // V3.0 RPG SCALING FOR 50 LEVELS
+        // V3.1 OPRAVENÝ RPG SCALING (Jednotná křivka 1.25)
         const evolutions = TIER_VISUALS.map((t, i) => {
             let level = i + 1;
             let size = 20 + (level * 4.5); 
             let speed = Math.max(120, 310 - (level * 3.5)); 
             let weaponLength = size * 2.5; 
-            let nextXp = Math.floor(50 * Math.pow(1.28, i)); 
             
-            let maxHp = Math.floor(100 * Math.pow(1.28, i)); 
-            let playerDamage = Math.floor(80 * Math.pow(1.35, i)); 
-            let enemyDamage = Math.floor(15 * Math.pow(1.24, i));
+            // JEDNOTNÝ RŮST - zabraňuje "božskosti" na lvlu 20+ a zaručuje, že hra je pořád výzvou
+            let multiplier = Math.pow(1.25, i);
+            let nextXp = Math.floor(50 * multiplier); 
+            
+            let maxHp = Math.floor(100 * multiplier); 
+            let playerDamage = Math.floor(45 * multiplier); // Základ = zabije stejný lvl na 2-3 rány
+            let enemyDamage = Math.floor(20 * multiplier); // Základ = zabije hráče na 5 ran (bez helmy)
             
             return { 
                 level, catName: t.cat, dogName: t.dog, weaponType: t.w, baseSize: size, speed, 
@@ -578,8 +581,12 @@
             tCtx.translate(40, 100); 
             tCtx.rotate(-Math.PI / 4);
             let size = 30; 
-            let wLen = size * 2.5; 
+            
+            let arch = getWeaponArchetype(weaponType); 
+            let archStats = ARCH_STATS[arch];
+            let wLen = (size * 2.5) * archStats.reachMult; // Vizualizuje i dosah v Armory
             let wWid = Math.max(6, size * 0.22);
+            
             drawWeaponShape(tCtx, wLen, wWid, weaponType, '#ffffff', upgradeTier);
             let data = tempC.toDataURL(); weaponCache[key] = data; return data;
         }
@@ -1067,7 +1074,12 @@
         function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0) {
             ctx.save(); drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier);
             let currentTier = isCat ? (prog.weaponUpgrades[level] || 0) : 0; let sizeMult = isCat ? UPGRADE_SIZE_MULT[currentTier] : 1.0;
-            let wLen = (size * 2.5) * sizeMult, wWid = Math.max(6, size * 0.22) * sizeMult; let pawColor = shade(color, -10);
+            
+            let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
+            let wLen = (size * 2.5) * sizeMult * archStats.reachMult; // OPRAVA: Skutečná vizuální délka podle dosahu zbraně
+            let wWid = Math.max(6, size * 0.22) * sizeMult; 
+            
+            let pawColor = shade(color, -10);
             ctx.fillStyle = pawColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.1); ctx.beginPath(); ctx.ellipse(0, -size*1.1, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
             ctx.save(); let swingAng = Math.PI / 4, armExtend = size * 1.1; 
             if (attackProgress > 0) { 
@@ -1222,7 +1234,36 @@
                 if (distToP > 0 && distToP < pMinDist) { let overlap = pMinDist - distToP; e.x += ((e.x - player.x) / distToP) * overlap * 0.5; e.y += ((e.y - player.y) / distToP) * overlap * 0.5; }
 
                 e.stateTimer -= dt; 
-                if (e.stateTimer <= 0 && !e.isBoss) { e.stateTimer = 0.7 + Math.random() * 1.3; if (distToP < 1200) { if (e.level >= player.level) e.state = 'chase'; else e.state = 'flee'; } else e.state = 'wander'; }
+                if (e.stateTimer <= 0 && !e.isBoss) { 
+                    e.stateTimer = 0.7 + Math.random() * 1.3; 
+                    if (distToP < 1200) { 
+                        // SÁM JE DOST SILNÝ
+                        if (e.level >= player.level - 2) {
+                            e.state = 'chase'; 
+                        } else {
+                            // CHOVÁNÍ SMEČKY (Pack Mentality)
+                            let packMembers = queryGrid(e.x, e.y, 600); // 600px okruh pro smečku
+                            let sumLevels = 0;
+                            let hasLeader = false;
+                            
+                            for (let mate of packMembers) {
+                                sumLevels += mate.level;
+                                if (mate.isBoss || mate.level >= player.level - 2) {
+                                    hasLeader = true;
+                                }
+                            }
+                            
+                            // Útočí, pokud je poblíž Vůdce, nebo je součet levelů smečky větší než tvůj
+                            if (hasLeader || sumLevels >= player.level) {
+                                e.state = 'chase';
+                            } else {
+                                e.state = 'flee'; 
+                            }
+                        }
+                    } else {
+                        e.state = 'wander'; 
+                    }
+                }
                 
                 if (e.attackTimer > 0) e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
                 else if (e.state === 'chase') e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
