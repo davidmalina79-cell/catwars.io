@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CatWars.io - Evolution & Armory</title>
     
-    <!-- EMOJI FAVICON -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐱</text></svg>">
     
     <style>
@@ -31,7 +30,6 @@
         
         canvas { display: block; width: 100%; height: 100%; }
         
-        /* Low HP Effect */
         #damage-vignette {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             box-shadow: inset 0 0 150px rgba(231, 76, 60, 0); pointer-events: none;
@@ -200,7 +198,7 @@
             <div class="game-art-banner" style="min-height: 200px;">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
-            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 3.0: 50 Levels & Armor System.</p>
+            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 3.0: 50 Levels, Visual Armor & Weapons.</p>
             
             <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="stat-box">Kills: <span id="mm-kills">0</span></div>
@@ -214,7 +212,7 @@
             <div style="display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap;">
                 <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 4px 0 #2980b9; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🐱 UPGRADES</button>
                 <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🐶 BESTIARY</button>
-                <button class="btn-main" onclick="openEncyclopedia('quests')" style="background: var(--success); box-shadow: 0 4px 0 #1e8449; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">📜 QUESTS</button>
+                <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 4px 0 #d68910; color: #111; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🛡️ ARMORY</button>
             </div>
         </div>
     </div>
@@ -316,9 +314,10 @@
         </div>
     </div>
 
-    <!-- GAME LOGIC -->
     <script>
-        // --- META PROGRESSION ---
+        // --- SCRIPT BLOCK: ENTIRE GAME LOGIC ---
+
+        // 1. META PROGRESSION
         let prog = { maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
         
         function saveProgress() { localStorage.setItem('catwars_save', JSON.stringify(prog)); updateMenuStats(); }
@@ -342,7 +341,7 @@
             document.getElementById('enc-gems').innerText = prog.gems;
         }
 
-        // --- WATCH AD FOR GEMS ---
+        // 2. WATCH AD FOR GEMS
         function watchAdForGems() {
             let btn = document.getElementById('btn-ad-gems');
             let originalText = btn.innerHTML;
@@ -359,7 +358,7 @@
         }
         window.watchAdForGems = watchAdForGems;
 
-        // --- DAILY QUESTS ---
+        // 3. DAILY QUESTS
         const QUEST_POOL = [
             { id: 'kill20', text: 'Defeat 20 dogs', goal: 20, reward: 30, type: 'kills' },
             { id: 'kill50', text: 'Defeat 50 dogs', goal: 50, reward: 80, type: 'kills' },
@@ -406,7 +405,7 @@
         }
         window.claimQuest = claimQuest;
 
-        // --- AUDIO ---
+        // 4. AUDIO
         let audioCtx = null; let soundEnabled = true; let lastGemSoundTime = 0;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function toggleSound() { soundEnabled = !soundEnabled; document.getElementById('sound-toggle').innerText = soundEnabled ? '🔊' : '🔇'; }
@@ -426,10 +425,10 @@
             else if (type === 'combo') { osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1400, now + 0.15); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); }
         }
 
-        // --- CONSTANTS & DATA ---
+        // 5. CONSTANTS & DATA
         const CHEST_TYPES = { wood: { hp: 500, gems: [3, 6], color: '#6b4423', metal: '#7f8c8d', weight: 0.70, size: 130 }, iron: { hp: 1500, gems: [10, 18], color: '#7f8c8d', metal: '#bdc3c7', weight: 0.20, size: 130 }, gold: { hp: 4000, gems: [30, 60], color: '#d4af37', metal: '#f1c40f', weight: 0.08, size: 150 }, diamond: { hp: 10000, gems: [120, 250], color: '#00d4ff', metal: '#ffffff', weight: 0.02, size: 180 } };
         const WORLD_SIZE = 6000; const FOOD_COUNT = 800; const ENEMY_COUNT = 45; const DECORATION_COUNT = 300; const CHEST_COUNT = 25; 
-        const GRID_CELL = 400; // For Spatial Grid
+        const GRID_CELL = 400; 
         
         const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
         const minimapCanvas = document.getElementById('minimap'); const mmCtx = minimapCanvas.getContext('2d');
@@ -439,7 +438,7 @@
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
         window.addEventListener('resize', resize); resize();
         
-        // Input Handling
+        // 6. INPUT HANDLING
         window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
         window.addEventListener('mousedown', (e) => { if(e.button === 0) isMouseDown = true; if(e.button === 2) { isRightMouseDown = true; dashRequested = true; } initAudio(); });
         window.addEventListener('mouseup', (e) => { if(e.button === 0) isMouseDown = false; if(e.button === 2) isRightMouseDown = false; });
@@ -460,7 +459,7 @@
         }
         window.triggerDash = triggerDash;
         
-        // V3.0 - 50 LEVELS STRUCTURE
+        // 7. 50 LEVELS STRUCTURE
         const TIER_VISUALS = [
           { cat:"Kitten", dog:"Chihuahua", w:"stick", c:"#f5d49a", d:"#e8c89a", acc:"#c89060", pat:"none" }, 
           { cat:"House Cat", dog:"Pug", w:"stick", c:"#d4a574", d:"#d4a574", acc:"#8b6f47", pat:"stripes" },
@@ -471,7 +470,7 @@
           { cat:"Sand Cat", dog:"Beagle", w:"shortsword", c:"#f1c40f", d:"#d8a060", acc:"#d35400", pat:"spots" },
           { cat:"Lynx", dog:"Spaniel", w:"longsword", c:"#f0e5d0", d:"#bdc3c7", acc:"#d4a060", pat:"fluffy" },
           { cat:"Caracal", dog:"Basset", w:"longsword", c:"#e67e22", d:"#95a5a6", acc:"#2c3e50", pat:"stripes" },
-          { cat:"Serval", dog:"Bulldog", w:"mace", c:"#f1c40f", d:"#c89060", acc:"#111111", pat:"spots" }, // Lv 10
+          { cat:"Serval", dog:"Bulldog", w:"mace", c:"#f1c40f", d:"#c89060", acc:"#111111", pat:"spots" }, 
 
           { cat:"Fat Cat", dog:"Shiba Inu", w:"mace", c:"#e8dcc4", d:"#f39c12", acc:"#6a4a2a", pat:"spots" }, 
           { cat:"Wildcat", dog:"Dalmatian", w:"hammer", c:"#8b6f47", d:"#ffffff", acc:"#3a2a1a", pat:"stripes" },
@@ -482,7 +481,7 @@
           { cat:"Black Panther", dog:"Rottweiler", w:"broadsword", c:"#111111", d:"#3a2a1a", acc:"#333333", pat:"mask" },
           { cat:"Leopard", dog:"Mastiff", w:"battleaxe", c:"#d4a060", d:"#8b6f47", acc:"#111111", pat:"spots" },
           { cat:"Snow Leopard", dog:"Great Dane", w:"colossus axe", c:"#ecf0f1", d:"#34495e", acc:"#7f8c8d", pat:"spots" },
-          { cat:"Jaguar", dog:"Wolfhound", w:"warhammer", c:"#8b8b9a", d:"#888888", acc:"#8b4513", pat:"helm" }, // Lv 20
+          { cat:"Jaguar", dog:"Wolfhound", w:"warhammer", c:"#8b8b9a", d:"#888888", acc:"#8b4513", pat:"helm" }, 
 
           { cat:"Cougar", dog:"Bloodhound", w:"warhammer", c:"#e8c8a8", d:"#8b4513", acc:"#333333", pat:"spots" }, 
           { cat:"Puma", dog:"Dire Wolf", w:"katana", c:"#1a1a2e", d:"#444444", acc:"#0a0a14", pat:"mask" },
@@ -493,7 +492,7 @@
           { cat:"Cave Lion", dog:"Ninja Dog", w:"great katana", c:"#bdc3c7", d:"#111111", acc:"#7f8c8d", pat:"mane" },
           { cat:"Dire Tiger", dog:"Samurai Dog", w:"staff", c:"#c4a060", d:"#1a1a2e", acc:"#5a3a1a", pat:"stripes" },
           { cat:"Sabertooth", dog:"Assassin Hound", w:"twin blades", c:"#d35400", d:"#2c3e50", acc:"#f1c40f", pat:"fangs" },
-          { cat:"Smilodon", dog:"Monk Dog", w:"warhammer", c:"#8b4513", d:"#e67e22", acc:"#ffd700", pat:"fangs" }, // Lv 30
+          { cat:"Smilodon", dog:"Monk Dog", w:"warhammer", c:"#8b4513", d:"#e67e22", acc:"#ffd700", pat:"fangs" }, 
 
           { cat:"Mutant Cat", dog:"Battle Mage", w:"scythe", c:"#a8324a", d:"#9b59b6", acc:"#00ff00", pat:"horns" }, 
           { cat:"Cyborg Cat", dog:"Warlock Hound", w:"lightsaber", c:"#00d4ff", d:"#8e44ad", acc:"#0088aa", pat:"cyber" },
@@ -504,7 +503,7 @@
           { cat:"Wizard Cat", dog:"Void Hound", w:"staff", c:"#6a3a8a", d:"#111111", acc:"#ffd700", pat:"hat" },
           { cat:"Warlock Cat", dog:"Alien Dog", w:"soul reaper", c:"#8e44ad", d:"#33ff33", acc:"#9b59b6", pat:"demon" },
           { cat:"Dragon Cat", dog:"Nebula Dog", w:"dragonblade", c:"#4a8a3a", d:"#9b59b6", acc:"#1a3a1a", pat:"scales" },
-          { cat:"Demon Cat", dog:"Galaxy Dog", w:"soul reaper", c:"#7a1a1a", d:"#3a5a9a", acc:"#3a0a0a", pat:"demon" }, // Lv 40
+          { cat:"Demon Cat", dog:"Galaxy Dog", w:"soul reaper", c:"#7a1a1a", d:"#3a5a9a", acc:"#3a0a0a", pat:"demon" }, 
 
           { cat:"Angel Cat", dog:"Universe Dog", w:"holy spear", c:"#fff8dc", d:"#2a4a3a", acc:"#ffd700", pat:"halo" }, 
           { cat:"Phantom Cat", dog:"Cosmic Dog", w:"void blade", c:"#bdc3c7", d:"#111111", acc:"#ecf0f1", pat:"glow" },
@@ -515,10 +514,10 @@
           { cat:"Astral Cat", dog:"Eternity Hound", w:"lightsaber", c:"#8e44ad", d:"#f39c12", acc:"#9b59b6", pat:"stars" },
           { cat:"Universe Cat", dog:"Celestial Dog", w:"colossus axe", c:"#2a4a3a", d:"#00d4ff", acc:"#0a2a1a", pat:"tentacles" },
           { cat:"Cosmic Cat", dog:"Dimensional Hound", w:"godslayer", c:"#111111", d:"#34495e", acc:"#00ffff", pat:"stars" },
-          { cat:"God Cat", dog:"Supreme Overlord", w:"infinity blade", c:"#ffd700", d:"#ffffff", acc:"#ffffff", pat:"god" } // Lv 50
+          { cat:"God Cat", dog:"Supreme Overlord", w:"infinity blade", c:"#ffd700", d:"#ffffff", acc:"#ffffff", pat:"god" } 
         ];
 
-        // V3.1 OPRAVENÝ RPG SCALING (Jednotná křivka 1.25)
+        // RPG SCALING
         const evolutions = TIER_VISUALS.map((t, i) => {
             let level = i + 1;
             let size = 20 + (level * 4.5); 
@@ -538,14 +537,13 @@
             };
         });
 
-        // WEAPONS
+        // 8. WEAPONS AND ARMOR STATS
         const WEAPON_TIERS = ["DEFAULT", "BRONZE", "SILVER", "GOLD", "DIAMOND"];
         const UPGRADE_COSTS = [10, 25, 60, 150]; 
         const UPGRADE_COLORS = [null, '#cd7f32', '#e3e4e5', '#ffd700', '#00ffff']; 
         const UPGRADE_MULT = [1.0, 1.25, 1.6, 2.2, 3.5]; 
         const UPGRADE_SIZE_MULT = [1.0, 1.1, 1.2, 1.3, 1.5]; 
 
-        // HELMETS
         const HELMET_TIERS = ["NO HELMET", "BRONZE", "IRON", "SILVER", "GOLD", "DIAMOND"];
         const HELMET_UPGRADE_COSTS = [15, 35, 80, 200, 450];
         const HELMET_COLORS = [null, '#cd7f32', '#7f8c8d', '#e3e4e5', '#ffd700', '#00ffff'];
@@ -574,7 +572,172 @@
             { name: '👑 MEGA BOSS',  hpMult: 1.0, dmgMult: 1.0, speedMult: 1.0, sizeMult: 1.4, cdMult: 1.0, color: '#ffd700', alert: '👑 MEGA BOSS!', weapon: 'godslayer' },
         ];
 
+        // 9. DRAWING FUNCTIONS (CLEANED UP & PERFECTED)
         const spritesCache = { cats: {}, dogs: {} };
+        const weaponCache = {};
+
+        function drawWeaponShape(ctx, len, wid, weaponType, colorBase, upgradeTier) {
+            let w = (weaponType || 'stick').toLowerCase(); 
+            if (upgradeTier > 0) { colorBase = UPGRADE_COLORS[upgradeTier]; ctx.shadowColor = colorBase; ctx.shadowBlur = upgradeTier >= 3 ? 15 : 8; }
+            
+            ctx.fillStyle = '#5c4033'; // Brown Handle
+            ctx.fillRect(-wid*0.5, -wid*0.4, len*0.4, wid*0.8); 
+            
+            ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            if (w.includes('katana') || w.includes('naginata') || w.includes('dragonblade') || w.includes('cutlass')) {
+                ctx.fillStyle = '#111'; ctx.fillRect(len*0.2, -wid*0.8, wid*0.4, wid*1.6); // Tsuba
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
+                ctx.moveTo(len*0.25, -wid*0.3); ctx.quadraticCurveTo(len*0.6, wid*1.5, len, wid*0.2);
+                ctx.lineTo(len*0.9, -wid*0.8); ctx.quadraticCurveTo(len*0.6, -wid*0.2, len*0.25, -wid*0.8);
+            }
+            else if (w.includes('sword') || w.includes('blade') || w.includes('godslayer') || w.includes('dagger') || w.includes('spear') || w.includes('twin')) {
+                ctx.fillStyle = '#444'; ctx.fillRect(len*0.15, -wid*1.2, wid*0.5, wid*2.4); // Crossguard
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
+                ctx.moveTo(len*0.2, -wid*0.6); ctx.lineTo(len*0.85, -wid*0.6); ctx.lineTo(len, 0); 
+                ctx.lineTo(len*0.85, wid*0.6); ctx.lineTo(len*0.2, wid*0.6);
+            }
+            else if (w.includes('axe')) { 
+                ctx.fillStyle = '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.4, wid*0.8); // Handle extension
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
+                ctx.moveTo(len*0.5, -wid*0.4); ctx.quadraticCurveTo(len*0.8, -wid*4, len*0.9, 0);
+                ctx.quadraticCurveTo(len*0.8, wid*4, len*0.5, wid*0.4); ctx.lineTo(len*0.6, 0);
+            } 
+            else if (w.includes('mace') || w.includes('hammer') || w.includes('star')) { 
+                ctx.fillStyle = '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.4, wid*0.8);
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#999999';
+                if (w.includes('hammer')) { ctx.rect(len*0.6, -wid*2.5, len*0.3, wid*5); } 
+                else {
+                    ctx.arc(len*0.8, 0, wid*2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = upgradeTier > 0 ? '#fff' : '#ddd';
+                    for(let i=0; i<8; i++) { let a = (i/8) * Math.PI*2; ctx.beginPath(); ctx.moveTo(len*0.8 + Math.cos(a)*wid*1.5, Math.sin(a)*wid*1.5); ctx.lineTo(len*0.8 + Math.cos(a)*wid*3.5, Math.sin(a)*wid*3.5); ctx.lineTo(len*0.8 + Math.cos(a+0.3)*wid*1.5, Math.sin(a+0.3)*wid*1.5); ctx.fill(); }
+                    ctx.beginPath(); // reset for stroke
+                }
+            } 
+            else if (w.includes('scythe') || w.includes('reaper')) { 
+                ctx.fillStyle = '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.5, wid*0.8);
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
+                ctx.moveTo(len*0.7, -wid*0.5); ctx.quadraticCurveTo(len*1.2, -wid*6, len*0.3, -wid*8);
+                ctx.quadraticCurveTo(len*0.9, -wid*4, len*0.8, -wid*0.5);
+            } 
+            else if (w.includes('lightsaber')) {
+                ctx.fillStyle = '#111'; ctx.fillRect(-wid*0.5, -wid*0.6, len*0.3, wid*1.2);
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#00ffff'; 
+                ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 20;
+                ctx.fillRect(len*0.2, -wid*0.5, len*0.7, wid*1); ctx.arc(len*0.9, 0, wid*0.5, -Math.PI/2, Math.PI/2);
+            }
+            else { 
+                ctx.fillStyle = (w === 'stick' || w === 'twig' || w === 'staff') ? (upgradeTier > 0 ? colorBase : '#8b5a2b') : (upgradeTier > 0 ? colorBase : '#e0e0e0'); 
+                ctx.fillRect(0, -wid*0.6, len*0.8, wid*1.2); ctx.moveTo(len*0.8, -wid*0.6); ctx.lineTo(len, 0); ctx.lineTo(len*0.8, wid*0.6);
+                if (w === 'staff' && upgradeTier > 0) { ctx.fill(); ctx.stroke(); ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(len, 0, wid*2, 0, Math.PI*2); ctx.fill(); }
+            } 
+            
+            if (ctx.fillStyle !== '#5c4033') { ctx.fill(); if(!w.includes('lightsaber')) ctx.stroke(); }
+            ctx.shadowBlur = 0;
+        }
+
+        function drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier = 0) {
+            // Base face
+            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size * 0.1); ctx.stroke(); ctx.fillStyle = accent;
+            
+            // Patterns
+            if (pattern === 'stripes') { ctx.fillRect(-size*0.6, -size*0.1, size*0.4, size*0.2); ctx.fillRect(-size*0.5, -size*0.4, size*0.3, size*0.15); ctx.fillRect(-size*0.5, size*0.25, size*0.3, size*0.15); } 
+            else if (pattern === 'spots') { ctx.beginPath(); ctx.arc(-size*0.3, -size*0.4, size*0.18, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.5, size*0.3, size*0.22, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.1, size*0.5, size*0.15, 0, Math.PI*2); ctx.fill(); } 
+            else if (pattern === 'mane') { for (let i = 0; i < 14; i++) { ctx.beginPath(); ctx.arc(Math.cos(i)*size*0.8, Math.sin(i)*size*0.8, size*0.35, 0, Math.PI*2); ctx.fill(); } } 
+            else if (pattern === 'mask') { ctx.fillStyle = '#111111'; ctx.fillRect(0, -size*0.8, size*0.45, size*1.6); } 
+            else if (pattern === 'cyber') { ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.2); ctx.lineTo(size*0.2, -size*0.2); ctx.lineTo(size*0.5, -size*0.5); ctx.stroke(); } 
+            else if (pattern === 'halo' || pattern === 'god') { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = size * 0.18; ctx.beginPath(); ctx.ellipse(-size*0.4, 0, size*0.5, size*1.3, 0, 0, Math.PI*2); ctx.stroke(); } 
+            else if (pattern === 'hat') { ctx.beginPath(); ctx.moveTo(0, -size*0.4); ctx.lineTo(-size*1.6, 0); ctx.lineTo(0, size*0.4); ctx.fill(); ctx.stroke(); } 
+            else if (pattern === 'demon' || pattern === 'horns') { ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.moveTo(-size*0.2, -size*0.6); ctx.lineTo(size*0.2, -size*1.3); ctx.lineTo(size*0.1, -size*0.5); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.2, size*0.6); ctx.lineTo(size*0.2, size*1.3); ctx.lineTo(size*0.1, size*0.5); ctx.fill(); ctx.stroke(); } 
+            else if (pattern === 'fluffy') { ctx.fillStyle = '#ffffff'; for (let i = 0; i < 8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.arc(Math.cos(a)*size*0.9, Math.sin(a)*size*0.9, size*0.25, 0, Math.PI*2); ctx.fill(); } }
+            
+            // Ears
+            ctx.fillStyle = color;
+            if (isCat) { 
+                ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.25); ctx.lineTo(-size*1.2, -size*0.85); ctx.lineTo(-size*0.3, -size*0.65); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.8, size*0.25); ctx.lineTo(-size*1.2, size*0.85); ctx.lineTo(-size*0.3, size*0.65); ctx.fill(); ctx.stroke(); 
+                ctx.fillStyle = '#ff9999'; ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.35); ctx.lineTo(-size*1.05, -size*0.75); ctx.lineTo(-size*0.45, -size*0.6); ctx.fill(); ctx.beginPath(); ctx.moveTo(-size*0.75, size*0.35); ctx.lineTo(-size*1.05, size*0.75); ctx.lineTo(-size*0.45, size*0.6); ctx.fill(); 
+                ctx.strokeStyle = '#222222'; ctx.lineWidth = Math.max(1, size * 0.04); ctx.beginPath(); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*1.0, -size*0.85); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.8, -size*0.95); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.6, -size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*1.0, size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.8, size*0.95); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.6, size*0.85); ctx.stroke();
+                ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(size*0.8, 0, size*0.1, 0, Math.PI*2); ctx.fill();
+            } else { 
+                ctx.fillStyle = shade(color, -20); ctx.beginPath(); ctx.ellipse(-size*0.3, -size*0.85, size*0.45, size*0.25, -Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(-size*0.3, size*0.85, size*0.45, size*0.25, Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+                ctx.fillStyle = shade(color, 15); ctx.beginPath(); ctx.ellipse(size*0.75, 0, size*0.38, size*0.28, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(size*0.95, 0, size*0.12, 0, Math.PI*2); ctx.fill(); 
+            }
+            
+            // --- HELMET DRAWING ---
+            if (isCat && helmetTier > 0) {
+                let hColor = HELMET_COLORS[helmetTier];
+                ctx.fillStyle = hColor;
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = Math.max(2, size*0.05);
+                ctx.shadowColor = (helmetTier >= 5) ? hColor : 'transparent';
+                ctx.shadowBlur = (helmetTier >= 5) ? 15 : 0;
+                
+                ctx.beginPath();
+                if (helmetTier >= 1) { // Bronze: Back plate
+                    ctx.arc(-size*0.1, 0, size*1.05, Math.PI/2.5, -Math.PI/2.5 + Math.PI*2);
+                    ctx.lineTo(-size*0.1, 0); ctx.fill(); ctx.stroke();
+                }
+                if (helmetTier >= 2) { // Iron: Cheek guards
+                    ctx.fillRect(0, -size*1.05, size*0.4, size*0.35); ctx.strokeRect(0, -size*1.05, size*0.4, size*0.35);
+                    ctx.fillRect(0, size*0.7, size*0.4, size*0.35); ctx.strokeRect(0, size*0.7, size*0.4, size*0.35);
+                }
+                if (helmetTier >= 3) { // Silver: Forehead band
+                    ctx.fillRect(-size*0.2, -size*0.7, size*0.2, size*1.4); ctx.strokeRect(-size*0.2, -size*0.7, size*0.2, size*1.4);
+                }
+                if (helmetTier >= 4) { // Gold/Diamond: Chin guard & Horns
+                    ctx.fillRect(size*0.3, -size*0.2, size*0.2, size*0.4); ctx.strokeRect(size*0.3, -size*0.2, size*0.2, size*0.4);
+                    ctx.beginPath(); ctx.moveTo(-size*0.2, -size*0.8); ctx.lineTo(-size*0.6, -size*1.4); ctx.lineTo(0, -size*0.9); ctx.moveTo(-size*0.2, size*0.8); ctx.lineTo(-size*0.6, size*1.4); ctx.lineTo(0, size*0.9); ctx.fill(); ctx.stroke();
+                }
+                if (helmetTier >= 5) { // Diamond: Spikes
+                    ctx.beginPath(); ctx.moveTo(-size*0.1, -size*0.5); ctx.lineTo(-size*0.8, -size*0.8); ctx.lineTo(-size*0.4, -size*0.3); ctx.moveTo(-size*0.1, size*0.5); ctx.lineTo(-size*0.8, size*0.8); ctx.lineTo(-size*0.4, size*0.3); ctx.moveTo(-size*0.3, 0); ctx.lineTo(-size*1.2, 0); ctx.lineTo(-size*0.6, size*0.2); ctx.fill(); ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+            }
+
+            // EYES SYSTEM
+            let eyeColor = '#ffffff'; let glowColor = null;
+            if (isCat) {
+                if (level >= 45) { eyeColor = '#ffd700'; glowColor = '#ffaa00'; } 
+                else if (level >= 30) { eyeColor = '#00ffff'; glowColor = '#0088ff'; } 
+                if (level === 40) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } 
+            } else {
+                if (level >= 25) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } 
+            }
+            
+            ctx.fillStyle = eyeColor;
+            if (glowColor) { ctx.shadowColor = glowColor; ctx.shadowBlur = 15; }
+            ctx.beginPath(); ctx.arc(size*0.2, -size*0.4, size*0.22, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(size*0.2, size*0.4, size*0.22, 0, Math.PI*2); ctx.fill();
+            
+            if (level < 25) { 
+                ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(size*0.3, -size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.3, size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(size*0.32, -size*0.43, size*0.04, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.32, size*0.37, size*0.04, 0, Math.PI*2); ctx.fill(); 
+            } 
+            ctx.shadowBlur = 0;
+        }
+
+        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0) {
+            ctx.save(); drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier);
+            let currentTier = isCat ? (prog.weaponUpgrades[level] || 0) : 0; let sizeMult = isCat ? UPGRADE_SIZE_MULT[currentTier] : 1.0;
+            
+            let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
+            let wLen = (size * 2.5) * sizeMult * archStats.reachMult; 
+            let wWid = Math.max(6, size * 0.22) * sizeMult; 
+            
+            let pawColor = shade(color, -10);
+            ctx.fillStyle = pawColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.1); ctx.beginPath(); ctx.ellipse(0, -size*1.1, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.save(); let swingAng = Math.PI / 4, armExtend = size * 1.1; 
+            if (attackProgress > 0) { 
+                if (attackProgress < 0.2) swingAng = Math.PI/3 + attackProgress*0.2; 
+                else if (attackProgress < 0.4) swingAng = Math.PI*0.4 - ((attackProgress-0.2)/0.2)*Math.PI; 
+                else swingAng = -Math.PI*0.6 + ((attackProgress-0.4)/0.6)*Math.PI*0.6; 
+            } 
+            ctx.rotate(swingAng); ctx.translate(armExtend, 0); ctx.save(); ctx.rotate(Math.PI/8); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; drawWeaponShape(ctx, wLen, wWid, weaponType, color, currentTier); ctx.restore(); ctx.fillStyle = pawColor; ctx.beginPath(); ctx.ellipse(0, 0, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore(); ctx.restore();
+        }
+
         function getSpriteDataURL(type, level, weaponTier = 0, helmetTier = 0) {
             let key = `${level}_${weaponTier}_${helmetTier}`;
             if (spritesCache[type][key]) return spritesCache[type][key];
@@ -582,13 +745,11 @@
             let tCtx = tempC.getContext('2d'); tCtx.translate(70, 70); 
             let stats = evolutions[Math.min(level - 1, 49)];
             let isCat = type === 'cats'; let cColor = isCat ? stats.catColor : stats.dogColor;
-            let visSize = 28 + Math.min(level, 50) * 0.5; // Karty rostou s levelem
+            let visSize = 28 + Math.min(level, 50) * 0.5; 
             drawFace(tCtx, visSize, cColor, stats.accent, stats.pattern, isCat, level, helmetTier);
             let data = tempC.toDataURL(); spritesCache[type][key] = data; return data;
         }
 
-        // --- NEW: WEAPON CACHE FOR ARMORY ---
-        const weaponCache = {};
         function getWeaponDataURL(weaponType, upgradeTier = 0) {
             let key = `${weaponType}_${upgradeTier}`;
             if (weaponCache[key]) return weaponCache[key];
@@ -608,39 +769,7 @@
             let data = tempC.toDataURL(); weaponCache[key] = data; return data;
         }
 
-        // --- OBJECT POOLING ---
-        const particlePool = [];
-        const dmgNumberPool = [];
-        function getParticle() { return particlePool.pop() || { x:0, y:0, vx:0, vy:0, life:0, color:'#fff', size:6 }; }
-        function releaseParticle(p) { particlePool.push(p); }
-        function getDmgNumber() { return dmgNumberPool.pop() || { x:0, y:0, vy:0, val:0, life:0, color:'#fff' }; }
-        function releaseDmgNumber(d) { dmgNumberPool.push(d); }
-
-        // --- SPATIAL GRID ---
-        const spatialGrid = new Map();
-        function getGridKey(x, y) { return Math.floor(x / GRID_CELL) + '_' + Math.floor(y / GRID_CELL); }
-        function rebuildGrid(items) {
-            spatialGrid.clear();
-            for (let i = 0; i < items.length; i++) {
-                let key = getGridKey(items[i].x, items[i].y);
-                if (!spatialGrid.has(key)) spatialGrid.set(key, []);
-                spatialGrid.get(key).push(items[i]);
-            }
-        }
-        function queryGrid(x, y, radius) {
-            let r = Math.ceil(radius / GRID_CELL);
-            let cx = Math.floor(x / GRID_CELL), cy = Math.floor(y / GRID_CELL);
-            let result = [];
-            for (let dx = -r; dx <= r; dx++) {
-                for (let dy = -r; dy <= r; dy++) {
-                    let cell = spatialGrid.get((cx + dx) + '_' + (cy + dy));
-                    if (cell) result.push(...cell);
-                }
-            }
-            return result;
-        }
-
-        // --- MENUS ---
+        // 10. MENUS & UI
         function goToMenu() { 
             document.getElementById('game-ui').style.display = 'none'; document.getElementById('game-over').style.display = 'none'; 
             document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('dash-container').style.display = 'none'; 
@@ -650,6 +779,7 @@
             gameState = 'menu'; updateMenuStats(); 
         }
         window.goToMenu = goToMenu;
+        
         function openEncyclopedia(startTab = 'cats') { document.getElementById('main-menu').style.display = 'none'; document.getElementById('encyclopedia').style.display = 'flex'; switchTab(startTab); }
         window.openEncyclopedia = openEncyclopedia;
         function closeEncyclopedia() { document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('main-menu').style.display = 'flex'; }
@@ -784,13 +914,11 @@
                         let wTierName = wTier > 0 ? `✨ ${WEAPON_TIERS[wTier]} ` : ''; 
                         card.innerHTML += `<p>${wTierName}${stats.weaponType.toUpperCase()}<br><span style="color:#f39c12;font-size:11px">${archLabel}</span></p>`;
                         
-                        // Zbraně
                         let wBtn = document.createElement('button'); wBtn.className = 'upgrade-btn';
                         if (wTier >= 4) { wBtn.innerText = "MAX WEAPON"; wBtn.disabled = true; } 
                         else { let wCost = i * UPGRADE_COSTS[wTier]; wBtn.innerText = `Weapon: ${WEAPON_TIERS[wTier + 1]} (💎${wCost})`; if (prog.gems < wCost) wBtn.disabled = true; wBtn.onclick = () => buyUpgrade('weapon', i, wCost, wTier + 1); }
                         card.appendChild(wBtn);
 
-                        // Helmy
                         let hBtn = document.createElement('button'); hBtn.className = 'upgrade-btn helmet-btn';
                         if (hTier >= 5) { hBtn.innerText = "MAX HELMET"; hBtn.disabled = true; } 
                         else { let hCost = i * HELMET_UPGRADE_COSTS[hTier]; hBtn.innerText = `Helmet: ${HELMET_TIERS[hTier + 1]} (💎${hCost})`; if (prog.gems < hCost) hBtn.disabled = true; hBtn.onclick = () => buyUpgrade('helmet', i, hCost, hTier + 1); }
@@ -832,7 +960,7 @@
         }
         window.togglePause = togglePause;
 
-        // --- GAME STATE ---
+        // 11. GAME STATE & MAIN LOGIC
         let playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0 };
         let chests = [], droppedGems = [], player, currentZoom = 1;
         let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [];
@@ -864,7 +992,6 @@
             player = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: pMaxHpBase * pHpMult, maxHp: pMaxHpBase * pHpMult, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
             playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0 }; combo = 0; comboTimer = 0;
             
-            // Clean up pools
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
             
@@ -972,169 +1099,22 @@
             let el = document.getElementById('combo-popup'); el.innerText = text; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 1000);
         }
 
-        // Graphics Helpers
-        function shade(color, percent) { if (!color.startsWith('#')) return color; let R = parseInt(color.substring(1,3),16), G = parseInt(color.substring(3,5),16), B = parseInt(color.substring(5,7),16); R = Math.min(255, parseInt(R * (100 + percent) / 100)); G = Math.min(255, parseInt(G * (100 + percent) / 100)); B = Math.min(255, parseInt(B * (100 + percent) / 100)); return "#"+((1<<24)+(R<<16)+(G<<8)+B).toString(16).slice(1); }
-        
-        function drawWeaponShape(ctx, len, wid, weaponType, colorBase, upgradeTier) {
-            let w = (weaponType || 'stick').toLowerCase(); if (upgradeTier > 0) { colorBase = UPGRADE_COLORS[upgradeTier]; ctx.shadowColor = colorBase; ctx.shadowBlur = upgradeTier >= 3 ? 18 : 10; }
-            ctx.fillStyle = '#5c4033'; ctx.fillRect(-wid*0.2, -wid*0.5, len*0.4, wid); // Handle
-            
-            if (w.includes('katana') || w.includes('naginata') || w.includes('dragonblade') || w.includes('cutlass')) {
-                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
-                ctx.beginPath(); ctx.moveTo(len * 0.3, -wid * 0.5);
-                ctx.quadraticCurveTo(len * 0.6, wid * 1.5, len, wid * 0.2);
-                ctx.lineTo(len * 0.95, -wid * 0.8);
-                ctx.quadraticCurveTo(len * 0.6, 0, len * 0.3, -wid * 0.8);
-                ctx.fill(); ctx.stroke();
-            }
-            else if (w.includes('sword') || w.includes('blade') || w.includes('godslayer') || w.includes('dagger') || w.includes('spear') || w.includes('twin')) {
-                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
-                ctx.beginPath(); ctx.moveTo(len * 0.3, -wid * 0.8);
-                ctx.lineTo(len * 0.8, -wid * 0.8); ctx.lineTo(len, 0); 
-                ctx.lineTo(len * 0.8, wid * 0.8); ctx.lineTo(len * 0.3, wid * 0.8);
-                ctx.fill(); ctx.stroke();
-            }
-            else if (w.includes('axe')) { 
-                ctx.fillRect(0, -wid*0.5, len*0.8, wid); ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc'; ctx.beginPath(); ctx.moveTo(len*0.6, -wid*3.5); ctx.lineTo(len*1.1, 0); ctx.lineTo(len*0.6, wid*3.5); ctx.lineTo(len*0.4, wid*1.5); ctx.lineTo(len*0.4, -wid*1.5); ctx.fill(); ctx.stroke(); 
-            } 
-            else if (w.includes('mace') || w.includes('hammer') || w.includes('star')) { 
-                ctx.fillRect(0, -wid*0.5, len*0.8, wid); ctx.fillStyle = upgradeTier > 0 ? colorBase : '#999999'; ctx.beginPath(); ctx.arc(len*0.85, 0, wid*2.2, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = upgradeTier > 0 ? '#ffffff' : '#dddddd'; for(let i=0; i<6; i++) { let a = (i/6) * Math.PI*2; ctx.beginPath(); ctx.moveTo(len*0.85 + Math.cos(a)*wid*1.5, Math.sin(a)*wid*1.5); ctx.lineTo(len*0.85 + Math.cos(a)*wid*3.2, Math.sin(a)*wid*3.2); ctx.lineTo(len*0.85 + Math.cos(a+0.4)*wid*1.5, Math.sin(a+0.4)*wid*1.5); ctx.fill(); } 
-            } 
-            else if (w.includes('scythe') || w.includes('reaper')) { 
-                ctx.fillRect(0, -wid*0.5, len, wid); ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc'; ctx.beginPath(); ctx.moveTo(len*0.9, 0); ctx.quadraticCurveTo(len + wid*2.5, wid*6, len*0.5, wid*7.5); ctx.quadraticCurveTo(len*0.4, wid*2.5, len*0.8, 0); ctx.fill(); ctx.stroke(); 
-            } 
-            else if (w.includes('lightsaber')) {
-                ctx.fillStyle = '#000000'; ctx.fillRect(-wid*0.2, -wid*0.6, len*0.3, wid*1.2); // Hilt
-                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#00ffff'; 
-                ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 15;
-                ctx.fillRect(len*0.1, -wid*0.6, len*0.8, wid*1.2); 
-                ctx.beginPath(); ctx.arc(len*0.9, 0, wid*0.6, -Math.PI/2, Math.PI/2); ctx.fill();
-            }
-            else { 
-                ctx.fillStyle = (w === 'stick' || w === 'twig' || w === 'staff') ? (upgradeTier > 0 ? colorBase : '#8b5a2b') : (upgradeTier > 0 ? colorBase : '#e0e0e0'); 
-                ctx.fillRect(wid*1.5, -wid*1.5, wid*0.6, wid*3); 
-                ctx.beginPath(); ctx.moveTo(wid*2.2, -wid*0.9); ctx.lineTo(len, 0); ctx.lineTo(wid*2.2, wid*0.9); ctx.fill(); 
-                if (w !== 'stick' && w !== 'staff') ctx.stroke(); 
-                if (w === 'staff' && upgradeTier > 0) { ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(len, 0, wid*1.5, 0, Math.PI*2); ctx.fill(); }
-            } 
-            ctx.shadowBlur = 0;
-        }
-
-        // --- DRAW FACE WITH HELMET ---
-        function drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier = 0) {
-            // Base face
-            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size * 0.1); ctx.stroke(); ctx.fillStyle = accent;
-            
-            // Patterns
-            if (pattern === 'stripes') { ctx.fillRect(-size*0.6, -size*0.1, size*0.4, size*0.2); ctx.fillRect(-size*0.5, -size*0.4, size*0.3, size*0.15); ctx.fillRect(-size*0.5, size*0.25, size*0.3, size*0.15); } 
-            else if (pattern === 'spots') { ctx.beginPath(); ctx.arc(-size*0.3, -size*0.4, size*0.18, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.5, size*0.3, size*0.22, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.1, size*0.5, size*0.15, 0, Math.PI*2); ctx.fill(); } 
-            else if (pattern === 'mane') { for (let i = 0; i < 14; i++) { ctx.beginPath(); ctx.arc(Math.cos(i)*size*0.8, Math.sin(i)*size*0.8, size*0.35, 0, Math.PI*2); ctx.fill(); } } 
-            else if (pattern === 'mask') { ctx.fillStyle = '#111111'; ctx.fillRect(0, -size*0.8, size*0.45, size*1.6); } 
-            else if (pattern === 'cyber') { ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.2); ctx.lineTo(size*0.2, -size*0.2); ctx.lineTo(size*0.5, -size*0.5); ctx.stroke(); } 
-            else if (pattern === 'halo' || pattern === 'god') { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = size * 0.18; ctx.beginPath(); ctx.ellipse(-size*0.4, 0, size*0.5, size*1.3, 0, 0, Math.PI*2); ctx.stroke(); } 
-            else if (pattern === 'hat') { ctx.beginPath(); ctx.moveTo(0, -size*0.4); ctx.lineTo(-size*1.6, 0); ctx.lineTo(0, size*0.4); ctx.fill(); ctx.stroke(); } 
-            else if (pattern === 'demon' || pattern === 'horns') { ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.moveTo(-size*0.2, -size*0.6); ctx.lineTo(size*0.2, -size*1.3); ctx.lineTo(size*0.1, -size*0.5); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.2, size*0.6); ctx.lineTo(size*0.2, size*1.3); ctx.lineTo(size*0.1, size*0.5); ctx.fill(); ctx.stroke(); } 
-            else if (pattern === 'fluffy') { ctx.fillStyle = '#ffffff'; for (let i = 0; i < 8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.arc(Math.cos(a)*size*0.9, Math.sin(a)*size*0.9, size*0.25, 0, Math.PI*2); ctx.fill(); } }
-            
-            // Ears
-            ctx.fillStyle = color;
-            if (isCat) { 
-                ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.25); ctx.lineTo(-size*1.2, -size*0.85); ctx.lineTo(-size*0.3, -size*0.65); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.8, size*0.25); ctx.lineTo(-size*1.2, size*0.85); ctx.lineTo(-size*0.3, size*0.65); ctx.fill(); ctx.stroke(); 
-                ctx.fillStyle = '#ff9999'; ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.35); ctx.lineTo(-size*1.05, -size*0.75); ctx.lineTo(-size*0.45, -size*0.6); ctx.fill(); ctx.beginPath(); ctx.moveTo(-size*0.75, size*0.35); ctx.lineTo(-size*1.05, size*0.75); ctx.lineTo(-size*0.45, size*0.6); ctx.fill(); 
-                ctx.strokeStyle = '#222222'; ctx.lineWidth = Math.max(1, size * 0.04); ctx.beginPath(); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*1.0, -size*0.85); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.8, -size*0.95); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.6, -size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*1.0, size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.8, size*0.95); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.6, size*0.85); ctx.stroke();
-                ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(size*0.8, 0, size*0.1, 0, Math.PI*2); ctx.fill();
-            } else { 
-                ctx.fillStyle = shade(color, -20); ctx.beginPath(); ctx.ellipse(-size*0.3, -size*0.85, size*0.45, size*0.25, -Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(-size*0.3, size*0.85, size*0.45, size*0.25, Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
-                ctx.fillStyle = shade(color, 15); ctx.beginPath(); ctx.ellipse(size*0.75, 0, size*0.38, size*0.28, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(size*0.95, 0, size*0.12, 0, Math.PI*2); ctx.fill(); 
-            }
-            
-            // --- HELMET DRAWING ---
-            if (isCat && helmetTier > 0) {
-                let hColor = HELMET_COLORS[helmetTier];
-                ctx.fillStyle = hColor;
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = Math.max(2, size*0.05);
-                ctx.shadowColor = (helmetTier >= 5) ? hColor : 'transparent';
-                ctx.shadowBlur = (helmetTier >= 5) ? 15 : 0;
-                
-                ctx.beginPath();
-                if (helmetTier >= 1) { // Bronze (Headband)
-                    ctx.rect(-size*0.1, -size*0.8, size*0.4, size*1.6);
-                }
-                if (helmetTier >= 2) { // Iron (Cheeks)
-                    ctx.rect(-size*0.1, -size*0.8, size*0.4, size*0.3); // Top part
-                    ctx.rect(-size*0.1, size*0.5, size*0.4, size*0.3);  // Bottom part
-                }
-                if (helmetTier >= 3) { // Silver (Crown shield)
-                    ctx.arc(-size*0.1, 0, size*0.85, Math.PI/2, -Math.PI/2);
-                }
-                if (helmetTier >= 4) { // Gold/Diamond (Horns/Spikes)
-                    ctx.moveTo(-size*0.2, -size*0.75); ctx.lineTo(-size*0.5, -size*1.3); ctx.lineTo(0, -size*0.85);
-                    ctx.moveTo(-size*0.2, size*0.75); ctx.lineTo(-size*0.5, size*1.3); ctx.lineTo(0, size*0.85);
-                }
-                ctx.fill(); ctx.stroke();
-                ctx.shadowBlur = 0;
-            }
-
-            // EYES SYSTEM: Positive heroes (cyan/gold/white), Enemies (red)
-            let eyeColor = '#ffffff'; let glowColor = null;
-            if (isCat) {
-                if (level >= 45) { eyeColor = '#ffd700'; glowColor = '#ffaa00'; } 
-                else if (level >= 30) { eyeColor = '#00ffff'; glowColor = '#0088ff'; } 
-                if (level === 40) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } // Demon Cat
-            } else {
-                if (level >= 25) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } 
-            }
-            
-            ctx.fillStyle = eyeColor;
-            if (glowColor) { ctx.shadowColor = glowColor; ctx.shadowBlur = 15; }
-            
-            ctx.beginPath(); ctx.arc(size*0.2, -size*0.4, size*0.22, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(size*0.2, size*0.4, size*0.22, 0, Math.PI*2); ctx.fill();
-            
-            if (level < 25) { 
-                ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(size*0.3, -size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.3, size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); 
-                ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(size*0.32, -size*0.43, size*0.04, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.32, size*0.37, size*0.04, 0, Math.PI*2); ctx.fill(); 
-            } 
-            ctx.shadowBlur = 0;
-        }
-
-        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0) {
-            ctx.save(); drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier);
-            let currentTier = isCat ? (prog.weaponUpgrades[level] || 0) : 0; let sizeMult = isCat ? UPGRADE_SIZE_MULT[currentTier] : 1.0;
-            
-            let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
-            let wLen = (size * 2.5) * sizeMult * archStats.reachMult; // OPRAVA: Skutečná vizuální délka podle dosahu zbraně
-            let wWid = Math.max(6, size * 0.22) * sizeMult; 
-            
-            let pawColor = shade(color, -10);
-            ctx.fillStyle = pawColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.1); ctx.beginPath(); ctx.ellipse(0, -size*1.1, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            ctx.save(); let swingAng = Math.PI / 4, armExtend = size * 1.1; 
-            if (attackProgress > 0) { 
-                if (attackProgress < 0.2) swingAng = Math.PI/3 + attackProgress*0.2; 
-                else if (attackProgress < 0.4) swingAng = Math.PI*0.4 - ((attackProgress-0.2)/0.2)*Math.PI; 
-                else swingAng = -Math.PI*0.6 + ((attackProgress-0.4)/0.6)*Math.PI*0.6; 
-            } 
-            ctx.rotate(swingAng); ctx.translate(armExtend, 0); ctx.save(); ctx.rotate(Math.PI/8); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; drawWeaponShape(ctx, wLen, wWid, weaponType, color, currentTier); ctx.restore(); ctx.fillStyle = pawColor; ctx.beginPath(); ctx.ellipse(0, 0, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore(); ctx.restore();
-        }
-
-        // --- MAIN LOOP ---
         function gameLoop(currentTime) {
             if (gameState === 'paused' || gameState === 'menu' || gameState === 'death_menu' || gameState === 'game_over') { 
                 requestAnimationFrame(gameLoop); return; 
             }
             
             let dt = (currentTime - lastTime) / 1000;
-            if (dt > 0.1) dt = 0.1; // Capping dt
+            if (dt > 0.1) dt = 0.1; 
             if (isNaN(dt) || dt < 0) dt = 0;
             lastTime = currentTime;
 
             let stats = evolutions[Math.min(player.level - 1, 49)]; let pSize = stats.baseSize;
             let targetZoom = 1 / (1 + (player.level - 1) * 0.035); currentZoom += (targetZoom - currentZoom) * (dt * 3);
             
-            // --- UPDATES THAT RUN EVEN IN HITSTOP (Particles, Timers) ---
+            // Updates running even in hitstop
             for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx * dt; particles[i].y += particles[i].vy * dt; particles[i].life -= dt; if (particles[i].life <= 0) { releaseParticle(particles[i]); particles.splice(i, 1); } }
-            for (let i = damageNumbers.length - 1; i >= 0; i--) { damageNumbers[i].y += damageNumbers[i].vy * dt; damageNumbers[i].vy += 800 * dt; /*gravity*/ damageNumbers[i].life -= dt; if (damageNumbers[i].life <= 0) { releaseDmgNumber(damageNumbers[i]); damageNumbers.splice(i, 1); } }
+            for (let i = damageNumbers.length - 1; i >= 0; i--) { damageNumbers[i].y += damageNumbers[i].vy * dt; damageNumbers[i].vy += 800 * dt; damageNumbers[i].life -= dt; if (damageNumbers[i].life <= 0) { releaseDmgNumber(damageNumbers[i]); damageNumbers.splice(i, 1); } }
             for (let i = droppedGems.length - 1; i >= 0; i--) { 
                 let g = droppedGems[i]; g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= Math.pow(0.05, dt); g.vy *= Math.pow(0.05, dt); g.life -= dt; 
                 let gDist = Math.hypot(player.x - g.x, player.y - g.y); 
@@ -1146,13 +1126,11 @@
             if (tutorialActive) { tutorialTimer -= dt; if (tutorialTimer <= 0) { tutorialIdx++; showTutorial(); } }
             if (combo > 0) { comboTimer -= dt; if (comboTimer <= 0) { combo = 0; updateUI(); } }
 
-            // Fyzikální update (zastavený hitstopem)
+            // Hitstop pause
             if (hitStop > 0) { hitStop -= dt; draw(stats); requestAnimationFrame(gameLoop); return; }
 
-            // --- SPATIAL GRID pro měkké kolize ---
+            // Spatials & Combat
             rebuildGrid(enemies);
-
-            // --- MOVEMENT & COMBAT ---
             if (player.dashTimer > 0) player.dashTimer -= dt;
             if (player.dashActive > 0) player.dashActive -= dt;
             
@@ -1168,11 +1146,8 @@
             }
             
             let pDealDamage = false;
-            if (player.attackTimer > 0 && player.attackProgress >= 0.25 && !player.hasAttacked) { 
-                pDealDamage = true; 
-            }
+            if (player.attackTimer > 0 && player.attackProgress >= 0.25 && !player.hasAttacked) { pDealDamage = true; }
             
-            // Player Movement
             let dx = (mouseX - width / 2) / currentZoom; let dy = (mouseY - height / 2) / currentZoom; 
             let distToMouse = Math.hypot(dx, dy);
             
@@ -1200,12 +1175,10 @@
             player.knockbackVx *= Math.pow(0.001, dt); player.knockbackVy *= Math.pow(0.001, dt);
             player.x = Math.max(pSize, Math.min(WORLD_SIZE - pSize, player.x)); player.y = Math.max(pSize, Math.min(WORLD_SIZE - pSize, player.y));
             
-            // Spawns
             bossSpawnTimer -= dt; if(bossSpawnTimer <= 0) { if (!enemies.some(e=>e.isBoss)) spawnBoss(); bossSpawnTimer = 180; }
             for (let i = chests.length - 1; i >= 0; i--) { if (Math.hypot(player.x - chests[i].x, player.y - chests[i].y) > 2500) chests.splice(i, 1); }
             while (enemies.length < ENEMY_COUNT) spawnEnemy(); while (chests.length < CHEST_COUNT) spawnChest();
             
-            // Foods (Strict priority: Heal OR XP)
             for (let i = foods.length - 1; i >= 0; i--) { 
                 let f = foods[i]; if (Math.abs(player.x - f.x) > 200 || Math.abs(player.y - f.y) > 200) continue;
                 if (Math.hypot(player.x - f.x, player.y - f.y) < pSize + f.size + 15) { 
@@ -1224,11 +1197,10 @@
             
             let pTier = (prog.weaponUpgrades[player.level] || 0);
             let pReachMult = UPGRADE_SIZE_MULT[pTier] * archStats.reachMult; 
-            let comboDmgMult = 1 + Math.min(0.3, combo * 0.03); // Max +30% damage from combo
+            let comboDmgMult = 1 + Math.min(0.3, combo * 0.03); 
             let pDmgMult = UPGRADE_MULT[pTier] * archStats.dmgMult * comboDmgMult;
             let pAttackReach = (pSize * 1.5) + (stats.weaponLength * pReachMult);
             
-            // Chest collision
             if (pDealDamage) {
                 let chestHit = false;
                 for (let i = chests.length - 1; i >= 0; i--) {
@@ -1244,14 +1216,12 @@
                 if(chestHit) { hitStop = 0.05; playSound('hit'); }
             }
             
-            // Enemy Logic + Soft Collision
             for (let i = enemies.length - 1; i >= 0; i--) { if (!enemies[i].isBoss && Math.hypot(player.x - enemies[i].x, player.y - enemies[i].y) > 3500) enemies.splice(i, 1); }
 
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i]; if (e.hp <= 0) continue;
                 let distToP = Math.hypot(player.x - e.x, player.y - e.y);
                 
-                // --- Soft Collision (Oprava vibrování) ---
                 let nearEnemies = queryGrid(e.x, e.y, e.size * 3);
                 for (let o of nearEnemies) {
                     if (e === o) continue;
@@ -1265,35 +1235,14 @@
                 if (e.stateTimer <= 0 && !e.isBoss) { 
                     e.stateTimer = 0.7 + Math.random() * 1.3; 
                     if (distToP < 1200) { 
-                        // SÁM JE DOST SILNÝ
-                        if (e.level >= player.level - 2) {
-                            e.state = 'chase'; 
-                        } else {
-                            // CHOVÁNÍ SMEČKY (Pack Mentality)
-                            let packMembers = queryGrid(e.x, e.y, 350); // Zmenšený okruh na 350px
-                            let sumLevels = 0;
-                            let hasLeader = false;
-                            
-                            for (let mate of packMembers) {
-                                // Přidána přesná kontrola vzdálenosti (queryGrid vrací i hrubé hrany buněk)
-                                if (Math.hypot(mate.x - e.x, mate.y - e.y) <= 350) {
-                                    sumLevels += mate.level;
-                                    if (mate.isBoss || mate.level >= player.level - 2) {
-                                        hasLeader = true;
-                                    }
-                                }
-                            }
-                            
-                            // Útočí, pokud je poblíž Vůdce, nebo je součet levelů smečky větší než tvůj
-                            if (hasLeader || sumLevels >= player.level) {
-                                e.state = 'chase';
-                            } else {
-                                e.state = 'flee'; 
-                            }
+                        if (e.level >= player.level - 2) { e.state = 'chase'; } 
+                        else {
+                            let packMembers = queryGrid(e.x, e.y, 350); 
+                            let sumLevels = 0; let hasLeader = false;
+                            for (let mate of packMembers) { if (Math.hypot(mate.x - e.x, mate.y - e.y) <= 350) { sumLevels += mate.level; if (mate.isBoss || mate.level >= player.level - 2) { hasLeader = true; } } }
+                            if (hasLeader || sumLevels >= player.level) { e.state = 'chase'; } else { e.state = 'flee'; }
                         }
-                    } else {
-                        e.state = 'wander'; 
-                    }
+                    } else { e.state = 'wander'; }
                 }
                 
                 if (e.attackTimer > 0) e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
@@ -1310,7 +1259,6 @@
                 if (e.attackTimer > 0) e.attackTimer -= dt; 
                 else if (distToP < e.weaponLength + pSize * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; playSound('swing'); }
                 
-                // Hráč zasáhl nepřítele
                 if (pDealDamage) {
                     if (distToP > pAttackReach + e.size) continue; 
                     let aToE = Math.atan2(e.y - player.y, e.x - player.x), aDiff = Math.abs(((aToE - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
@@ -1334,7 +1282,6 @@
                     }
                 }
                 
-                // Nepřítel zasáhl hráče
                 if (e.attackTimer > 0 && !e.hasAttacked) {
                     let eProgress = 1 - (e.attackTimer / e.attackCooldown);
                     if (eProgress >= 0.4 && eProgress <= 0.65) {
@@ -1353,8 +1300,7 @@
                 }
             }
             
-            if (pDealDamage) player.hasAttacked = true; // Mark as attacked after checking all enemies
-            
+            if (pDealDamage) player.hasAttacked = true;
             draw(stats); requestAnimationFrame(gameLoop);
         }
 
@@ -1468,7 +1414,6 @@
         if (auth) {
             initAuth();
             
-            // Timeout fallback
             let authResolved = false;
             setTimeout(() => {
                 if (!authResolved) {
