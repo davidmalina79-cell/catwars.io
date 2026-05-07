@@ -328,7 +328,7 @@
                 prog = { ...prog, ...parsed }; 
                 if(!prog.dogKills) prog.dogKills = {};
                 if(!prog.weaponUpgrades) prog.weaponUpgrades = {};
-                if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; // New Armor System
+                if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; 
                 if(!prog.quests) prog.quests = [];
             }
             rollDailyQuestsIfNeeded();
@@ -507,13 +507,11 @@
             let speed = Math.max(120, 310 - (level * 3.5)); 
             let weaponLength = size * 2.5; 
             
-            // JEDNOTNÝ RŮST - zabraňuje "božskosti" na lvlu 20+ a zaručuje, že hra je pořád výzvou
             let multiplier = Math.pow(1.25, i);
             let nextXp = Math.floor(50 * multiplier); 
-            
             let maxHp = Math.floor(100 * multiplier); 
-            let playerDamage = Math.floor(45 * multiplier); // Základ = zabije stejný lvl na 2-3 rány
-            let enemyDamage = Math.floor(20 * multiplier); // Základ = zabije hráče na 5 ran (bez helmy)
+            let playerDamage = Math.floor(45 * multiplier); 
+            let enemyDamage = Math.floor(20 * multiplier); 
             
             return { 
                 level, catName: t.cat, dogName: t.dog, weaponType: t.w, baseSize: size, speed, 
@@ -584,7 +582,7 @@
             
             let arch = getWeaponArchetype(weaponType); 
             let archStats = ARCH_STATS[arch];
-            let wLen = (size * 2.5) * archStats.reachMult; // Vizualizuje i dosah v Armory
+            let wLen = (size * 2.5) * archStats.reachMult; 
             let wWid = Math.max(6, size * 0.22);
             
             drawWeaponShape(tCtx, wLen, wWid, weaponType, '#ffffff', upgradeTier);
