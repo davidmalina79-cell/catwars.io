@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CatWars.io - Stabilní Verze</title>
+    <title>CatWars.io - Evolution & Armory</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐱</text></svg>">
     
@@ -207,7 +207,7 @@
             <div class="game-art-banner" style="min-height: 200px;">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
-            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.2.0: Stabilní Modulární Verze</p>
+            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.2.1: UI & Localization Update</p>
             
             <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="stat-box">Kills: <span id="mm-kills">0</span></div>
@@ -1468,17 +1468,14 @@
             
             document.getElementById('ds-current-gems').innerText = prog.gems + playerRunData.gems; 
             
-            // FIX: Zobrazení chybějících gemů u revive tlačítka
+            // Reverted back to the original simple logic
             let gemBtn = document.getElementById('btn-revive-gem'); 
-            let missingGems = currentReviveCost - (prog.gems + playerRunData.gems);
-            
-            if (missingGems > 0) { 
+            if (prog.gems + playerRunData.gems < currentReviveCost) { 
                 gemBtn.disabled = true; 
-                gemBtn.innerHTML = `💎 Chybí ${missingGems} gemů`;
             } else { 
                 gemBtn.disabled = false; 
-                gemBtn.innerHTML = `💎 Revive (Cost: ${currentReviveCost})`;
             } 
+            gemBtn.innerHTML = `💎 Revive (Cost: ${currentReviveCost})`;
             
             document.getElementById('dash-container').style.display = 'none'; document.getElementById('minimap').style.display = 'none'; 
             document.getElementById('boss-arrow').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; 
@@ -1494,7 +1491,7 @@
                 }
             }, 1500);
 
-            // Cloud sync (Pojistka pro případ, že hráč zavře okno prohlížeče dříve, než klikne na Give Up)
+            // Cloud sync
             forceSaveNow();
         }
 
