@@ -1689,6 +1689,35 @@
         
         window.logout = () => { if (auth && auth.currentUser) signOut(auth); else { document.getElementById('main-menu').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; } };
 
+        window.loadCloudProgress = async (uid) => {
+            let local = localStorage.getItem('catwars_save_' + uid);
+            let localProg = local ? { ...defaultProg, ...JSON.parse(local) } : null;
+            
+            let cloudLoaded = false;
+
+            if (window.fetchFromFirestore) {
+                 let cloudData = await window.fetchFromFirestore(uid);
+                 if (cloudData) {
+                     prog = { ...defaultProg, ...cloudData };
+                     cloudLoaded = true;
+                     console.log("[CatWars] Úspěch: Data načtena z Cloudu!");
+                 }
+            }
+            
+            if (!cloudLoaded) {
+                 prog = localProg ? localProg : { ...defaultProg };
+                 console.log("[CatWars] Info: Použita lokální záloha (nebo čistý účet).");
+            }
+            
+            if(!prog.dogKills) prog.dogKills = {};
+            if(!prog.weaponUpgrades) prog.weaponUpgrades = {};
+            if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; 
+            if(!prog.quests) prog.quests = [];
+            
+            rollDailyQuestsIfNeeded();
+            updateMenuStats();
+        };
+
         window.fetchFromFirestore = async (uid) => {
             if (!db) return null;
             try {
@@ -1696,7 +1725,7 @@
                 console.time("[CatWars] Firestore Download took");
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
                 
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (5s) - Firebase not responding")), 5000));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (15s) - Firebase is slow")), 15000));
                 const snap = await Promise.race([getDoc(docRef), timeoutPromise]);
                 
                 console.timeEnd("[CatWars] Firestore Download took");
