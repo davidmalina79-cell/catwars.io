@@ -278,20 +278,20 @@
 
             <!-- RIGHT COLUMN: Upgrades -->
             <div class="menu-col side">
-                <!-- ZVĚTŠENÁ A BUCLATÁ TLAČÍTKA S VELKÝMI EMOJI (Nadpis Armory byl odstraněn a zarovnáno nahoru) -->
+                <!-- ZVĚTŠENÁ A BUCLATÁ TLAČÍTKA S HERNÍ GRAFIKOU (Emoji odstraněny) -->
                 <div style="display: flex; flex-direction: column; gap: 18px; flex-grow: 1; justify-content: flex-start; margin-top: 0;">
                     <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 8px 0 #2980b9; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">🐱</span>
+                        <img id="btn-icon-cats" src="" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
                         <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">UPGRADES</span>
                     </button>
                     
                     <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 8px 0 #8e44ad; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">🐶</span>
+                        <img id="btn-icon-dogs" src="" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
                         <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">BESTIARY</span>
                     </button>
                     
                     <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 8px 0 #d68910; color: #111; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">🛡️</span>
+                        <img id="btn-icon-armory" src="" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
                         <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">WEAPONS</span>
                     </button>
                     
@@ -335,6 +335,15 @@
     <!-- IN-GAME UI -->
     <div id="game-ui">
         <div class="stats-bar">
+            <!-- ZÁŘÍCÍ ŠTÍTEK HRÁČE VLEVO NAHOŘE -->
+            <div id="ui-global-rank" class="stat-box" style="display: none; flex-direction: column; align-items: center; justify-content: center; border-width: 2px; gap: 4px; padding: 5px 15px; background: rgba(0,0,0,0.75);">
+                <div id="ui-rank-name" style="font-size: 14px; text-shadow: 1px 1px 2px #000;">Stray Recruit ★</div>
+                <div style="width: 110px; height: 6px; background: rgba(0,0,0,0.8); border-radius: 3px; overflow: hidden; position: relative;">
+                    <div id="ui-rank-bar" style="height: 100%; width: 0%; background: #2ecc71; transition: width 0.3s ease-out;"></div>
+                </div>
+                <div id="ui-rank-xp" style="font-size: 11px; color: #ddd; font-weight: bold;">0 / 1000 XP</div>
+            </div>
+            
             <div class="stat-box">⚔️ <span id="ui-kills">0</span></div>
             <div class="stat-box gem-text">💎 <span id="ui-gems">0</span></div>
             <div class="stat-box combo-text" id="combo-box">🔥 <span id="ui-combo">0</span>x</div>
@@ -636,6 +645,13 @@
                     document.getElementById('mm-cat-preview').src = getSpriteDataURL('cats', prog.maxCatLevel, wTier, hTier);
                     let stats = evolutions[Math.min(prog.maxCatLevel - 1, 49)];
                     document.getElementById('mm-cat-name').innerText = `Lv.${prog.maxCatLevel} ${stats.catName}`;
+                    
+                    // Nastavení herní grafiky pro tlačítka v menu
+                    if(document.getElementById('btn-icon-cats')) {
+                        document.getElementById('btn-icon-cats').src = getSpriteDataURL('cats', prog.maxCatLevel, wTier, hTier);
+                        document.getElementById('btn-icon-dogs').src = getSpriteDataURL('dogs', prog.maxCatLevel);
+                        document.getElementById('btn-icon-armory').src = getWeaponDataURL('longsword', 3);
+                    }
                 } catch(e) { console.log('Waiting for engine init...'); }
             }
         }
@@ -945,9 +961,10 @@
             ctx.shadowBlur = 0;
         }
 
-        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0) {
+        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0, wTierOverride = -1) {
             ctx.save(); drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier);
-            let currentTier = isCat ? (prog.weaponUpgrades[level] || 0) : 0; let sizeMult = isCat ? UPGRADE_SIZE_MULT[currentTier] : 1.0;
+            let currentTier = wTierOverride !== -1 ? wTierOverride : (isCat ? (prog.weaponUpgrades[level] || 0) : 0); 
+            let sizeMult = isCat ? UPGRADE_SIZE_MULT[currentTier] : 1.0;
             
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let wLen = (size * 2.5) * sizeMult * archStats.reachMult; 
@@ -967,12 +984,21 @@
         function getSpriteDataURL(type, level, weaponTier = 0, helmetTier = 0) {
             let key = `${level}_${weaponTier}_${helmetTier}`;
             if (spritesCache[type][key]) return spritesCache[type][key];
-            let tempC = document.createElement('canvas'); tempC.width = 140; tempC.height = 140;
-            let tCtx = tempC.getContext('2d'); tCtx.translate(70, 70); 
+            
+            // Zvětšené plátno pro zbraně
+            let tempC = document.createElement('canvas'); tempC.width = 280; tempC.height = 280;
+            let tCtx = tempC.getContext('2d'); tCtx.translate(140, 100); 
+            
             let stats = evolutions[Math.min(level - 1, 49)];
             let isCat = type === 'cats'; let cColor = isCat ? stats.catColor : stats.dogColor;
-            let visSize = 28 + Math.min(level, 50) * 0.5; 
-            drawFace(tCtx, visSize, cColor, stats.accent, stats.pattern, isCat, level, helmetTier);
+            let visSize = 22 + Math.min(level, 50) * 0.35; // Mírně zmenšený model pro náhledy, aby nevytekl obří meč
+            
+            // Otočení o 90 stupňů (Math.PI / 2), aby zvíře koukalo dopředu (na nás)
+            tCtx.rotate(Math.PI / 2); 
+            
+            // Vykreslení celé entity (obličej + tlapa se zbraní)
+            drawEntity(tCtx, isCat, visSize, cColor, stats.accent, stats.pattern, 0, stats.weaponType, level, helmetTier, weaponTier);
+            
             let data = tempC.toDataURL(); spritesCache[type][key] = data; return data;
         }
 
@@ -1118,38 +1144,70 @@
                     let stats = evolutions[i-1]; let locked = i > prog.maxCatLevel; 
                     let wTier = prog.weaponUpgrades[i] || 0; let hTier = prog.helmetUpgrades[i] || 0;
                     let card = document.createElement('div'); card.className = `card ${locked ? 'locked' : ''} ${wTier === 4 && hTier === 5 ? 'upgraded' : ''}`;
-                    let img = document.createElement('img'); img.src = getSpriteDataURL('cats', i, wTier, hTier); card.appendChild(img);
+                    
                     let archLabel = { fast:'⚡ Fast', heavy:'🔨 Heavy', wide:'🌀 Wide', reach:'➡️ Reach', balanced:'⚔️ Balanced' }[getWeaponArchetype(stats.weaponType)];
-                    card.innerHTML += `<h3>Lv.${i} ${locked ? '???' : stats.catName}</h3>`;
                     
                     if (!locked) {
                         let wTierName = wTier > 0 ? `✨ ${WEAPON_TIERS[wTier]} ` : ''; 
-                        let weaponImgUrl = getWeaponDataURL(stats.weaponType, wTier);
-                        card.innerHTML += `<div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;"><img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));"><div style="text-align:left; font-size: 11px; line-height: 1.3;"><strong style="color: #fff;">${wTierName}${stats.weaponType.toUpperCase()}</strong><br><span style="color:#f39c12;">${archLabel}</span></div></div>`;
+                        
+                        let cardContent = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ${stats.catName}</h3>`;
+                        cardContent += `<img src="${getSpriteDataURL('cats', i, wTier, hTier)}" style="width:140px; height:140px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
+                        cardContent += `<div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px; line-height: 1.3;">
+                                            <strong style="color: #fff; font-size: 13px;">${wTierName}${stats.weaponType.toUpperCase()}</strong><br>
+                                            <span style="color:#f39c12; font-size: 11px;">${archLabel}</span>
+                                        </div>`;
+                        card.innerHTML = cardContent;
                         
                         let wBtn = document.createElement('button'); wBtn.className = 'upgrade-btn';
-                        if (wTier >= 4) { wBtn.innerText = "MAX WEAPON"; wBtn.disabled = true; } 
-                        else { let wCost = i * UPGRADE_COSTS[wTier]; wBtn.innerText = `Weapon: ${WEAPON_TIERS[wTier + 1]} (💎${wCost})`; if (prog.gems < wCost) wBtn.disabled = true; wBtn.onclick = () => buyUpgrade('weapon', i, wCost, wTier + 1); }
+                        if (wTier >= 4) { 
+                            wBtn.innerHTML = `<strong>WEAPON: MAX</strong><br><span style="font-size:12px; color:#555;">Maxed out</span>`; 
+                            wBtn.disabled = true; 
+                        } else { 
+                            let wCost = i * UPGRADE_COSTS[wTier]; 
+                            wBtn.innerHTML = `<strong>Weapon: ${WEAPON_TIERS[wTier + 1]}</strong><br><span style="font-size:13px; color:#111; font-weight:900;">💎 ${wCost}</span>`; 
+                            if (prog.gems < wCost) wBtn.disabled = true; 
+                            wBtn.onclick = () => buyUpgrade('weapon', i, wCost, wTier + 1); 
+                        }
                         card.appendChild(wBtn);
 
                         let hBtn = document.createElement('button'); hBtn.className = 'upgrade-btn helmet-btn';
-                        if (hTier >= 5) { hBtn.innerText = "MAX HELMET"; hBtn.disabled = true; } 
-                        else { let hCost = i * HELMET_UPGRADE_COSTS[hTier]; hBtn.innerText = `Helmet: ${HELMET_TIERS[hTier + 1]} (💎${hCost})`; if (prog.gems < hCost) hBtn.disabled = true; hBtn.onclick = () => buyUpgrade('helmet', i, hCost, hTier + 1); }
+                        if (hTier >= 5) { 
+                            hBtn.innerHTML = `<strong>HELMET: MAX</strong><br><span style="font-size:12px; color:#555;">Maxed out</span>`; 
+                            hBtn.disabled = true; 
+                        } else { 
+                            let hCost = i * HELMET_UPGRADE_COSTS[hTier]; 
+                            hBtn.innerHTML = `<strong>Helmet: ${HELMET_TIERS[hTier + 1]}</strong><br><span style="font-size:13px; color:#111; font-weight:900;">💎 ${hCost}</span>`; 
+                            if (prog.gems < hCost) hBtn.disabled = true; 
+                            hBtn.onclick = () => buyUpgrade('helmet', i, hCost, hTier + 1); 
+                        }
                         card.appendChild(hBtn);
-                    } else { card.innerHTML += `<p style="margin-top:10px;">Reach Lv. ${i}</p>`; }
+                    } else { 
+                        card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
+                        card.innerHTML += `<img src="${getSpriteDataURL('cats', i, 0, 0)}" style="width:140px; height:140px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
+                        card.innerHTML += `<p style="margin-top:10px;">Reach Lv. ${i}</p>`; 
+                    }
                     grid.appendChild(card);
                 }
             } else {
                 for(let i=1; i<=50; i++) {
                     let stats = evolutions[i-1]; let kills = prog.dogKills[stats.dogName] || 0; let locked = kills === 0;
                     let card = document.createElement('div'); card.className = `card ${locked ? 'locked' : ''}`;
-                    let img = document.createElement('img'); img.src = getSpriteDataURL('dogs', i); card.appendChild(img);
                     let archLabel = { fast:'⚡ Fast', heavy:'🔨 Heavy', wide:'🌀 Wide', reach:'➡️ Reach', balanced:'⚔️ Balanced' }[getWeaponArchetype(stats.weaponType)];
-                    card.innerHTML += `<h3>Lv.${i} ${locked ? '???' : stats.dogName}</h3>`;
+                    
                     if (!locked) {
-                        let weaponImgUrl = getWeaponDataURL(stats.weaponType, 0); 
-                        card.innerHTML += `<div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;"><img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0;"><div style="text-align:left; font-size: 11px; line-height: 1.3;"><strong style="color: #fff;">${stats.weaponType.toUpperCase()}</strong><br><span style="color:#f39c12;">${archLabel}</span></div></div><p style="margin-top: 5px;">Defeated: ${kills}</p>`;
-                    } else { card.innerHTML += `<p style="margin-top: 5px;">Defeated: 0</p>`; }
+                        let cardContent = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ${stats.dogName}</h3>`;
+                        cardContent += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:140px; height:140px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
+                        cardContent += `<div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px; line-height: 1.3;">
+                                            <strong style="color: #fff; font-size: 13px;">${stats.weaponType.toUpperCase()}</strong><br>
+                                            <span style="color:#f39c12; font-size: 11px;">${archLabel}</span>
+                                        </div>`;
+                        cardContent += `<p style="margin: 0; font-weight: bold; color: ${kills > 0 ? '#2ecc71' : '#aaa'};">Defeated: ${kills}</p>`;
+                        card.innerHTML = cardContent;
+                    } else { 
+                        card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
+                        card.innerHTML += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:140px; height:140px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
+                        card.innerHTML += `<p style="margin-top: 10px;">Defeated: 0</p>`; 
+                    }
                     grid.appendChild(card);
                 }
             }
@@ -1328,6 +1386,36 @@
         
         function updateUI() {
             let stats = evolutions[Math.min(player.level - 1, 49)]; 
+            
+            // Nový UI štítek pro Global Rank (bez jména hráče, s progress barem)
+            let gRank = getGlobalRankInfo(prog.globalLevel || 1);
+            let rankContainer = document.getElementById('ui-global-rank');
+            if (rankContainer) {
+                rankContainer.style.display = 'flex';
+                
+                let currentXp = prog.globalXp || 0;
+                let gainedXpRun = playerRunData ? ((player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500)) : 0;
+                let displayXp = currentXp + gainedXpRun;
+                let displayLevel = prog.globalLevel || 1;
+                
+                let currentRankInfo = gRank;
+                while (displayXp >= currentRankInfo.nextXp && displayLevel < 50) {
+                    displayXp -= currentRankInfo.nextXp;
+                    displayLevel++;
+                    currentRankInfo = getGlobalRankInfo(displayLevel);
+                }
+                
+                document.getElementById('ui-rank-name').innerText = currentRankInfo.fullText;
+                document.getElementById('ui-rank-name').style.color = currentRankInfo.color;
+                rankContainer.style.borderColor = currentRankInfo.color;
+                rankContainer.style.boxShadow = `0 0 15px ${currentRankInfo.color}`;
+                
+                let xpPct = displayLevel >= 50 ? 100 : (displayXp / currentRankInfo.nextXp) * 100;
+                document.getElementById('ui-rank-bar').style.width = `${Math.min(100, xpPct)}%`;
+                document.getElementById('ui-rank-bar').style.background = currentRankInfo.color;
+                document.getElementById('ui-rank-xp').innerText = displayLevel >= 50 ? "MAX RANK" : `${Math.floor(displayXp)} / ${currentRankInfo.nextXp} XP`;
+            }
+
             document.getElementById('level-text').innerText = `Level ${player.level}: ${stats.catName}`; 
             document.getElementById('xp-bar').style.width = (player.level >= 50 ? 100 : (player.xp / stats.nextXp) * 100) + '%'; 
             document.getElementById('xp-text').innerText = player.level >= 50 ? `MAX LEVEL` : `${player.xp} / ${stats.nextXp} XP`; 
@@ -1656,18 +1744,9 @@
             let pHTier = prog.helmetUpgrades[player.level] || 0;
             drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier); ctx.restore();
             
-            // Renderování GLOBÁLNÍ HODNOSTI a jména nad hráčem
-            let gRank = getGlobalRankInfo(prog.globalLevel || 1);
-            let badgeWidth = gRank.stars.length * 12 + 20;
-            ctx.fillStyle = gRank.color;
-            ctx.fillRect(player.x - badgeWidth/2, player.y - playerStats.baseSize - 62, badgeWidth, 16);
-            ctx.strokeStyle = "#fff"; ctx.lineWidth = 1;
-            ctx.strokeRect(player.x - badgeWidth/2, player.y - playerStats.baseSize - 62, badgeWidth, 16);
-            ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center";
-            ctx.fillText(gRank.stars, player.x, player.y - playerStats.baseSize - 50);
-
-            ctx.fillStyle = "white"; ctx.font = "bold 16px Arial"; 
-            ctx.fillText(player.name, player.x, player.y - playerStats.baseSize - 30);
+            // Renderování POUZE jména nad hráčem (Hodnost se přesunula do levého horního rohu v UI)
+            ctx.fillStyle = "white"; ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
+            ctx.fillText(player.name, player.x, player.y - playerStats.baseSize - 35);
 
             particles.forEach(p => { if (p.x < camL || p.x > camR || p.y < camT || p.y > camB) return; ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
             damageNumbers.forEach(n => { if (n.x < camL || n.x > camR || n.y < camT || n.y > camB) return; ctx.globalAlpha = Math.max(0, n.life); ctx.fillStyle = n.color; ctx.strokeStyle = '#000000'; ctx.lineWidth = 3.5; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.strokeText(n.val, n.x, n.y); ctx.fillText(n.val, n.x, n.y); });
@@ -1997,30 +2076,20 @@
         window.fetchLeaderboard = async () => {
             if (!db) return [];
             try {
-                // FIX: Omezení dotazu na databázi na 50 řádků a úprava řazení na globalLevel
-                try {
-                    const q = query(
-                        collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'),
-                        orderBy('globalLevel', 'desc'),
-                        orderBy('kills', 'desc'),
-                        limit(50)
-                    );
-                    const querySnapshot = await getDocs(q);
-                    let players = [];
-                    querySnapshot.forEach((doc) => { players.push(doc.data()); });
-                    return players;
-                } catch (idxError) {
-                    if (idxError.code === 'permission-denied') throw idxError;
-                    console.warn("[CatWars] Missing Firebase Index for globalLevel, using fallback sort.");
-                    const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
-                    let players = [];
-                    querySnapshot.forEach((doc) => { players.push(doc.data()); });
-                    players.sort((a, b) => (b.globalLevel || 1) - (a.globalLevel || 1) || b.kills - a.kills);
-                    return players.slice(0, 50);
-                }
+                // Načteme všechny hráče pro zjištění přesného Ranku a vyhneme se Firestore Index chybám
+                const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
+                let players = [];
+                querySnapshot.forEach((doc) => { 
+                    let data = doc.data();
+                    data.uid = doc.id; // Uložíme ID hráče, abychom ho v seznamu poznali
+                    players.push(data); 
+                });
+                
+                // Seřadíme lokálně podle Global Levelu a Kills
+                players.sort((a, b) => (b.globalLevel || 1) - (a.globalLevel || 1) || b.kills - a.kills);
+                return players;
             } catch (error) { 
                 console.error("[CatWars] Leaderboard fetch error:", error); 
-                // Pokud chybí pravidla v databázi, vypíše to upozornění přímo hráčům
                 if (error.code === 'permission-denied') {
                     document.getElementById('lb-content').innerHTML = '<p style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 16px;">Firebase Error: Permission Denied!<br><br>Check your Firestore Security Rules.</p>';
                 } else {
