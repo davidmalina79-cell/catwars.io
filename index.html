@@ -155,13 +155,14 @@
     <canvas id="gameCanvas"></canvas>
     
     <div id="loading-screen" class="overlay" style="z-index: 400;">
-        <div class="panel" style="max-width: 500px; padding: 25px;">
+        <div class="panel" style="max-width: 500px; padding: 25px; overflow: hidden;">
             <div class="game-art-banner" style="margin-bottom: 20px;">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
             <h1 style="font-size: 35px; margin-bottom: 15px; color: #fff; text-shadow: 2px 2px 4px #000;">Loading CatWars.io</h1>
             
-            <div style="width: 100%; background: #2c3e50; border: 2px solid #555; border-radius: 10px; height: 20px; overflow: hidden; position: relative; margin-bottom: 10px;">
+            <!-- Vylepšený, čistý loading bar bez ošklivých šedých okrajů -->
+            <div style="width: 100%; background: #1a252f; border-radius: 10px; height: 8px; overflow: hidden; position: relative; margin-bottom: 15px;">
                 <div id="loading-bar-fill" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
             </div>
             
@@ -1591,7 +1592,10 @@
         function getFakeEmail() { 
             const nick = document.getElementById('login-nick').value.trim(); 
             if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } 
-            return `${nick.replace(/\s+/g, '_').toLowerCase()}@catwars.local`; // FIX: Ponechání speciálních znaků, nahrazení mezer pro lepší bezpečnost
+            
+            // VRÁCENO ZPĚT: Původní logika čištění textu. 
+            // Tímto se opraví přihlašování pro všechny dříve založené účty!
+            return `${nick.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}@catwars.local`; 
         }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
 
