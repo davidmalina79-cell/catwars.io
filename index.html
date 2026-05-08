@@ -155,9 +155,17 @@
     <canvas id="gameCanvas"></canvas>
     
     <div id="loading-screen" class="overlay" style="z-index: 400;">
-        <div class="panel">
-            <h1 style="font-size: 40px; margin-bottom: 20px; color: #fff;">Connecting...</h1>
-            <div style="font-size: 20px; color: #aaa;">Authenticating hero...</div>
+        <div class="panel" style="max-width: 500px; padding: 25px;">
+            <div class="game-art-banner" style="margin-bottom: 20px;">
+                <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
+            </div>
+            <h1 style="font-size: 35px; margin-bottom: 15px; color: #fff; text-shadow: 2px 2px 4px #000;">Loading CatWars.io</h1>
+            
+            <div style="width: 100%; background: #2c3e50; border: 2px solid #555; border-radius: 10px; height: 20px; overflow: hidden; position: relative; margin-bottom: 10px;">
+                <div id="loading-bar-fill" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
+            </div>
+            
+            <div id="loading-status-text" style="font-size: 16px; color: #aaa; font-weight: bold;">Connecting to servers...</div>
         </div>
     </div>
 
@@ -198,7 +206,7 @@
             <div class="game-art-banner" style="min-height: 200px;">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
-            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.1: Cloud Saving & Global Leaderboard.</p>
+            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.1.2: Database Fixes & Loading UI</p>
             
             <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="stat-box">Kills: <span id="mm-kills">0</span></div>
@@ -346,23 +354,38 @@
         }
         
         window.loadCloudProgress = async (uid) => {
-            // Load local specific user data fallback
+            // Prepared local data as a backup
             let local = localStorage.getItem('catwars_save_' + uid);
-            prog = local ? { ...defaultProg, ...JSON.parse(local) } : { ...defaultProg };
+            let localProg = local ? { ...defaultProg, ...JSON.parse(local) } : null;
             
-            // Try to override with Cloud data
+            let cloudLoaded = false;
+
+            // Attempt to fetch from Firebase
             if (window.fetchFromFirestore) {
+                 console.log(`[CatWars] Attempting to fetch cloud data for UID: ${uid}...`);
                  let cloudData = await window.fetchFromFirestore(uid);
                  if (cloudData) {
-                     prog = { ...prog, ...cloudData };
+                     // FIREBASE IS THE SOURCE OF TRUTH
+                     prog = { ...defaultProg, ...cloudData };
+                     cloudLoaded = true;
+                     console.log("[CatWars] Success: Game data SUCCESSFULLY loaded from Firebase Firestore!");
+                 } else {
+                     console.log("[CatWars] Info: No cloud data returned (might be a new account).");
                  }
             }
             
-            // Pojistka pro sub-objekty
+            // Fallback to local if cloud failed
+            if (!cloudLoaded) {
+                 prog = localProg ? localProg : { ...defaultProg };
+                 console.log("[CatWars] Info: Using local backup data.");
+            }
+            
+            // Object safeties
             if(!prog.dogKills) prog.dogKills = {};
             if(!prog.weaponUpgrades) prog.weaponUpgrades = {};
             if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; 
             if(!prog.quests) prog.quests = [];
+            
             rollDailyQuestsIfNeeded();
             updateMenuStats();
         };
@@ -1434,7 +1457,7 @@
                 if (pDealDamage) {
                     if (distToP > pAttackReach + e.size) continue; 
                     let aToE = Math.atan2(e.y - player.y, e.x - player.x), aDiff = Math.abs(((aToE - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                    if (aDiff < Math.PI / 1.5 || distToP < (pSize + e.size) * 1.5) { 
+                    if (aDiff < Math.PI / 1.5 || distToC < (pSize + e.size) * 1.5) { 
                         let dmg = stats.playerDamage * pDmgMult; e.hp -= dmg; hitStop = 0.05; playSound('hit');
                         if (archStats.knockback > 0) { let ang = Math.atan2(e.y - player.y, e.x - player.x); e.knockbackVx = Math.cos(ang) * archStats.knockback; e.knockbackVy = Math.sin(ang) * archStats.knockback; }
                         let d = getDmgNumber(); d.x=e.x; d.y=e.y-e.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
@@ -1528,10 +1551,10 @@
                 } else { 
                     if (e.level >= player.level) {
                         mmCtx.fillStyle = '#e74c3c'; 
-                        mmCtx.fillRect(e.x*scale - 2, e.y*scale - 2, 4, 4); // Větší červené tečky (nebezpeční psi)
+                        mmCtx.fillRect(e.x*scale - 2, e.y*scale - 2, 4, 4); // Larger red dots (dangerous dogs)
                     } else {
                         mmCtx.fillStyle = '#7f8c8d'; 
-                        mmCtx.fillRect(e.x*scale - 1.5, e.y*scale - 1.5, 3, 3); // Větší šedé tečky (slabší psi)
+                        mmCtx.fillRect(e.x*scale - 1.5, e.y*scale - 1.5, 3, 3); // Gray dots (weaker dogs)
                     }
                 }
             }
@@ -1570,7 +1593,7 @@
             document.getElementById('boss-arrow').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; 
             document.getElementById('death-screen').style.display = 'flex'; 
             
-            // Misclick ochrana (Tlačítka se objeví za 1.5 sekundy)
+            // Misclick protection
             let deathBtns = document.getElementById('death-buttons');
             deathBtns.style.opacity = '0';
             deathBtns.style.pointerEvents = 'none';
@@ -1598,6 +1621,25 @@
 
     <!-- FIREBASE MODULE -->
     <script type="module">
+        // --- LOADING BAR ANIMATION ---
+        let loadProgress = 0;
+        const loadBar = document.getElementById('loading-bar-fill');
+        const loadText = document.getElementById('loading-status-text');
+        
+        let loadInterval = setInterval(() => {
+            if (loadProgress < 85) {
+                loadProgress += Math.random() * 15;
+                if(loadBar) loadBar.style.width = Math.min(loadProgress, 85) + '%';
+            }
+        }, 300);
+
+        function completeLoading() {
+            clearInterval(loadInterval);
+            if(loadBar) loadBar.style.width = '100%';
+            if(loadText) loadText.innerText = "Welcome!";
+        }
+        // -----------------------------
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -1620,6 +1662,7 @@
         try { 
             app = initializeApp(firebaseConfig); 
             auth = getAuth(app); 
+            // Force Long Polling to bypass WebSocket blocks
             db = initializeFirestore(app, { experimentalForceLongPolling: true }); 
             console.log("[CatWars] Firebase initialized successfully.");
         } catch (error) { console.error("[CatWars] Firebase init failed:", error); }
@@ -1696,17 +1739,21 @@
             let cloudLoaded = false;
 
             if (window.fetchFromFirestore) {
+                 console.log(`[CatWars] Attempting to fetch cloud data for UID: ${uid}...`);
                  let cloudData = await window.fetchFromFirestore(uid);
                  if (cloudData) {
+                     // CLOUD IS THE ABSOLUTE MASTER
                      prog = { ...defaultProg, ...cloudData };
                      cloudLoaded = true;
-                     console.log("[CatWars] Úspěch: Data načtena z Cloudu!");
+                     console.log("[CatWars] Success: Game data SUCCESSFULLY loaded from Firebase Firestore!");
+                 } else {
+                     console.log("[CatWars] Info: Cloud returned no data (might be a new account).");
                  }
             }
             
             if (!cloudLoaded) {
                  prog = localProg ? localProg : { ...defaultProg };
-                 console.log("[CatWars] Info: Použita lokální záloha (nebo čistý účet).");
+                 console.log("[CatWars] Info: Using local backup data.");
             }
             
             if(!prog.dogKills) prog.dogKills = {};
@@ -1719,38 +1766,48 @@
         };
 
         window.fetchFromFirestore = async (uid) => {
-            if (!db) return null;
+            if (!db) {
+                console.error("[CatWars] db object missing, cannot fetch.");
+                return null;
+            }
             try {
-                console.log(`[CatWars] Downloading data for UID: ${uid}`);
                 console.time("[CatWars] Firestore Download took");
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
                 
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (15s) - Firebase is slow")), 15000));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (15s) - Firebase slow")), 15000));
                 const snap = await Promise.race([getDoc(docRef), timeoutPromise]);
                 
                 console.timeEnd("[CatWars] Firestore Download took");
                 
                 if (snap.exists()) {
-                    console.log("[CatWars] Data found on server.");
+                    console.log("[CatWars] Data document found on server.");
                     return snap.data();
+                } else {
+                    console.log("[CatWars] Data document DOES NOT EXIST yet on server.");
+                    return null;
                 }
-                console.log("[CatWars] No server data found (new account).");
-                return null;
             } catch(e) { 
                 console.timeEnd("[CatWars] Firestore Download took");
-                console.error("[CatWars] Error downloading data:", e); 
+                console.error("[CatWars] ERROR fetching from Firestore:", e); 
                 return null; 
             }
         };
 
         window.saveToFirestore = async (progressData) => {
-            if (!auth || !auth.currentUser || !db) return;
+            if (!auth || !auth.currentUser || !db) {
+                console.warn("[CatWars] Cannot save: Not logged in or db missing.");
+                return;
+            }
             try {
                 const uid = auth.currentUser.uid;
                 console.time("[CatWars] Firestore Save took");
                 
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
-                await setDoc(docRef, progressData, { merge: true });
+                const dataToSave = JSON.parse(JSON.stringify(progressData));
+                
+                console.log(`[CatWars] Saving to Firestore for UID: ${uid}...`, dataToSave);
+                await setDoc(docRef, dataToSave, { merge: true });
+                console.log("[CatWars] Success: Data successfully saved to Firestore!");
                 
                 let nick = document.getElementById('login-nick').value || 'Hero';
                 if (auth.currentUser.email) nick = auth.currentUser.email.split('@')[0];
@@ -1766,7 +1823,9 @@
                 }, { merge: true });
                 
                 console.timeEnd("[CatWars] Firestore Save took");
-            } catch (error) { console.error("[CatWars] Firestore save error:", error); }
+            } catch (error) { 
+                console.error("[CatWars] CRITICAL ERROR saving to Firestore:", error); 
+            }
         };
 
         window.fetchLeaderboard = async () => {
@@ -1804,7 +1863,8 @@
             let authResolved = false;
             setTimeout(() => {
                 if (!authResolved) {
-                    console.warn("[CatWars] Forced login screen after 15s. Firebase might be lagging.");
+                    console.warn("[CatWars] Forced login screen after 15s.");
+                    completeLoading();
                     document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('login-screen').style.display = 'flex';
                 }
@@ -1812,6 +1872,7 @@
 
             onAuthStateChanged(auth, async (user) => {
                 authResolved = true;
+                completeLoading();
                 const loadingScreen = document.getElementById('loading-screen'); if (loadingScreen) loadingScreen.style.display = 'none';
                 
                 if (user) {
@@ -1819,7 +1880,7 @@
                     console.log(`[CatWars] User logged in, UID: ${user.uid}`);
                     
                     const statusText = document.getElementById('auth-status-text');
-                    statusText.innerText = "Syncing cloud data... (Might take a while)";
+                    statusText.innerText = "Syncing cloud data...";
                     
                     await window.loadCloudProgress(user.uid);
 
