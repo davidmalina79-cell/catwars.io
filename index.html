@@ -299,10 +299,10 @@
                         <div class="mode-icon">💀</div>
                         <div class="mode-name">Hardcore</div>
                     </div>
-                    <div class="mode-card locked" id="mode-team" onclick="selectMode('team')">
+                    <div class="mode-card" id="mode-team" onclick="selectMode('team')">
                         <div class="mode-icon">🔵</div>
                         <div class="mode-name">Cats vs Dogs</div>
-                        <div class="mode-badge">AI Soon</div>
+                        <div class="mode-badge" style="background: var(--info);">NEW</div>
                     </div>
                     <div class="mode-card locked" id="mode-ffa" onclick="selectMode('ffa')">
                         <div class="mode-icon">🔴</div>
@@ -605,6 +605,8 @@
             { id: 'combo10', text: 'Reach a 10x combo', goal: 10, reward: 60, type: 'combo' },
             { id: 'boss1', text: 'Defeat 1 boss', goal: 1, reward: 150, type: 'boss' }
         ];
+
+        const BOT_NAMES = ['ShadowPaws', 'KittySlayer99', 'xX_Meow_Xx', 'ProGamerCat', 'CatZilla', 'PawsOfFury', 'Meowster', 'FelineGood', 'Scratchy', 'Purrfect', 'SirMeows', 'CatnipLover', 'NinjaClaw', 'DogeHater', 'FluffDemon'];
     </script>
 
     <!-- ================================================================================================= -->
@@ -719,7 +721,7 @@
         // LOGIKA PRO VÝBĚR MÓDU
         let selectedGameMode = 'solo';
         function selectMode(mode) {
-            if (mode === 'team' || mode === 'ffa') return; // Zatím uzamčeno
+            if (mode === 'ffa') return; // Zatím uzamčeno
             
             document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
             document.getElementById('mode-' + mode).classList.add('active');
@@ -739,6 +741,12 @@
                 startBtn.innerHTML = '💀 PLAY HARDCORE';
                 startBtn.style.background = '#e74c3c';
                 startBtn.style.boxShadow = '0 6px 0 #c0392b';
+                startBtn.style.color = 'white';
+            } else if (mode === 'team') {
+                modPanel.style.display = 'none';
+                startBtn.innerHTML = '🔵 PLAY CO-OP';
+                startBtn.style.background = 'var(--info)';
+                startBtn.style.boxShadow = '0 6px 0 #2980b9';
                 startBtn.style.color = 'white';
             }
         }
@@ -1319,7 +1327,7 @@
         // GAME STATE & MAIN LOGIC
         let playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 };
         let chests = [], droppedGems = [], player, currentZoom = 1;
-        let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [];
+        let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [], aiCats = [];
         let gameState = 'menu', hitStop = 0, bossSpawnTimer = 0, miniBossSpawnTimer = 0, currentReviveCost = 0;
         let combo = 0, comboTimer = 0;
         let isHardcoreMode = false; // Příznak módu
@@ -1375,7 +1383,7 @@
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
             
-            foods = []; enemies = []; decorations = []; chests = []; droppedGems = []; hitStop = 0; bossSpawnTimer = 60; miniBossSpawnTimer = 30; 
+            foods = []; enemies = []; decorations = []; chests = []; droppedGems = []; aiCats = []; hitStop = 0; bossSpawnTimer = 60; miniBossSpawnTimer = 30; 
             mouseX = width/2; mouseY = height/2; isMouseDown = false; dashRequested = false;
             
             for(let i=0; i<DECORATION_COUNT; i++) {
@@ -1385,6 +1393,11 @@
             for(let i=0; i<CHEST_COUNT; i++) spawnChest(true);
             for(let i=0; i<FOOD_COUNT; i++) spawnFood();
             for(let i=0; i<ENEMY_COUNT; i++) spawnEnemy(true);
+            
+            // AI Kočky se spawnou POUZE v Cats vs Dogs módu
+            if (selectedGameMode === 'team') {
+                for(let i=0; i<8; i++) spawnAICat(true);
+            }
             
             document.getElementById('tutorial').style.display = 'none';
             tutorialActive = false;
@@ -1401,6 +1414,30 @@
             }
             let rand = Math.random(); let type = 'wood'; let cumulative = 0; for (let t in CHEST_TYPES) { cumulative += CHEST_TYPES[t].weight; if (rand <= cumulative) { type = t; break; } }
             chests.push({ x: cx, y: cy, type: type, hp: CHEST_TYPES[type].hp, maxHp: CHEST_TYPES[type].hp, size: CHEST_TYPES[type].size });
+        }
+
+        function spawnAICat(isInitial = false) {
+            let baseLevel = player ? player.level : 1;
+            let cLvl = Math.max(1, Math.min(50, baseLevel + Math.floor(Math.random() * 5) - 2));
+            let cx, cy; 
+            if (isInitial || !player) { 
+                cx = Math.random() * WORLD_SIZE; cy = Math.random() * WORLD_SIZE; 
+            } else {
+                let cameraDiag = Math.sqrt(width * width + height * height) / (2 * currentZoom); let attempts = 0;
+                do { let angle = Math.random() * Math.PI * 2; let dist = cameraDiag + 800 + Math.random() * 1000; cx = Math.max(120, Math.min(WORLD_SIZE - 120, player.x + Math.cos(angle) * dist)); cy = Math.max(120, Math.min(WORLD_SIZE - 120, player.y + Math.sin(angle) * dist)); attempts++; } while (Math.hypot(cx - player.x, cy - player.y) < cameraDiag && attempts < 10);
+            }
+            
+            let cStats = evolutions[cLvl - 1];
+            let wTier = Math.min(4, Math.floor(cLvl / 12) + (Math.random()>0.5?1:0));
+            let hTier = Math.min(5, Math.floor(cLvl / 10));
+            let cName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+            
+            aiCats.push({ 
+                x: cx, y: cy, level: cLvl, name: cName, hp: cStats.maxHp, maxHp: cStats.maxHp, 
+                size: cStats.baseSize, speed: cStats.speed, angle: Math.random() * Math.PI * 2, 
+                attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, attackProgress: 0,
+                knockbackVx: 0, knockbackVy: 0, state: 'wander', wTier: wTier, hTier: hTier, xp: 0
+            });
         }
 
         function spawnBoss() {
@@ -1559,6 +1596,9 @@
                 let targetZoom = Math.max(0.45, 1 / (1 + (player.level - 1) * 0.02)); 
                 currentZoom += (targetZoom - currentZoom) * (dt * 3);
                 
+                // Určíme poloměr, ve kterém budeme přehrávat zvuky z okolí (dle aktuálního přiblížení)
+                let viewRadius = (Math.max(width, height) / currentZoom) * 0.6;
+                
                 for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx * dt; particles[i].y += particles[i].vy * dt; particles[i].life -= dt; if (particles[i].life <= 0) { releaseParticle(particles[i]); particles.splice(i, 1); } }
                 for (let i = damageNumbers.length - 1; i >= 0; i--) { damageNumbers[i].y += damageNumbers[i].vy * dt; damageNumbers[i].vy += 800 * dt; damageNumbers[i].life -= dt; if (damageNumbers[i].life <= 0) { releaseDmgNumber(damageNumbers[i]); damageNumbers.splice(i, 1); } }
                 for (let i = droppedGems.length - 1; i >= 0; i--) { 
@@ -1584,6 +1624,168 @@
 
                 if (frameCounter % 2 === 0) rebuildGrid(enemies);
                 
+                // --- AI CATS LOGIC ---
+                for (let i = aiCats.length - 1; i >= 0; i--) {
+                    let c = aiCats[i];
+                    if (c.hp <= 0) {
+                        dropGems(c.x, c.y, 5 + Math.floor(Math.random()*10)); // AI kočka dropne gemy, když zemře
+                        aiCats.splice(i, 1);
+                        continue;
+                    } else if (Math.hypot(player.x - c.x, player.y - c.y) > 4000) {
+                        aiCats.splice(i, 1); // Despawn příliš vzdálených
+                        continue;
+                    }
+
+                    // ROZESTUPY (Separation) - Zabrání shlukování koček do jednoho bodu
+                    for (let other of aiCats) {
+                        if (c === other) continue;
+                        let dist = Math.hypot(c.x - other.x, c.y - other.y);
+                        let minDist = (c.size + other.size) * 1.5;
+                        if (dist > 0 && dist < minDist) {
+                            let overlap = minDist - dist;
+                            c.x += ((c.x - other.x) / dist) * overlap * 0.1;
+                            c.y += ((c.y - other.y) / dist) * overlap * 0.1;
+                        }
+                    }
+                    // Rozestup AI koček od hráče
+                    let distToPlayer = Math.hypot(c.x - player.x, c.y - player.y);
+                    let pMinDist = (c.size + pSize) * 1.5;
+                    if (distToPlayer > 0 && distToPlayer < pMinDist) {
+                        let overlap = pMinDist - distToPlayer;
+                        c.x += ((c.x - player.x) / distToPlayer) * overlap * 0.1;
+                        c.y += ((c.y - player.y) / distToPlayer) * overlap * 0.1;
+                    }
+
+                    let nearestDog = null, minDogDist = Infinity;
+                    let nearestBoss = null, minBossDist = Infinity;
+                    enemies.forEach(e => {
+                        let d = Math.hypot(e.x - c.x, e.y - c.y);
+                        if (e.isBoss && d < minBossDist) { nearestBoss = e; minBossDist = d; }
+                        if (d < minDogDist) { nearestDog = e; minDogDist = d; }
+                    });
+
+                    // Target boss if nearby, otherwise target nearest dog
+                    let targetDog = (nearestBoss && minBossDist < 2500) ? nearestBoss : nearestDog;
+
+                    let nearestFood = null, minFoodDist = Infinity;
+                    foods.forEach(f => {
+                        let d = Math.hypot(f.x - c.x, f.y - c.y);
+                        // Omezený dohled na jídlo (1200px), aby nešly všechny kočky přes celou mapu pro jedno jídlo
+                        if (d < minFoodDist && d < 1200) { nearestFood = f; minFoodDist = d; }
+                    });
+
+                    // AI kočka hledá nejbližší gemy
+                    let nearestGem = null, minGemDist = Infinity;
+                    droppedGems.forEach(g => {
+                        let d = Math.hypot(g.x - c.x, g.y - c.y);
+                        if (d < minGemDist) { nearestGem = g; minGemDist = d; }
+                    });
+
+                    let cStats = evolutions[Math.min(c.level - 1, 49)];
+                    let cArchStats = ARCH_STATS[getWeaponArchetype(cStats.weaponType)];
+                    let pTier = c.wTier;
+                    let cDmgMult = UPGRADE_MULT[pTier] * cArchStats.dmgMult;
+                    let cReachMult = UPGRADE_SIZE_MULT[pTier] * cArchStats.reachMult;
+                    let cAttackReach = (c.size * 1.5) + (cStats.weaponLength * cReachMult);
+                    let cSpeed = cStats.speed;
+
+                    // AI State Machine
+                    if (c.hp < c.maxHp * 0.25) c.state = 'flee';
+                    else if (targetDog && minDogDist < 1200) c.state = 'chase';
+                    else c.state = 'wander';
+
+                    // Movement
+                    if (c.state === 'flee' && nearestFood) {
+                        c.angle = Math.atan2(nearestFood.y - c.y, nearestFood.x - c.x);
+                    } else if (c.state === 'chase' && targetDog) {
+                        c.angle = Math.atan2(targetDog.y - c.y, targetDog.x - c.x);
+                        if (minDogDist < cAttackReach * 0.8) cSpeed *= 0.5; // Zpomalí u cíle
+                    } else if (nearestGem && minGemDist < 800) { // Pokud vidí gemy, jde si pro ně
+                        c.angle = Math.atan2(nearestGem.y - c.y, nearestGem.x - c.x);
+                    } else if (nearestFood) {
+                        c.angle = Math.atan2(nearestFood.y - c.y, nearestFood.x - c.x);
+                    } else {
+                        if (Math.random() < 0.05) c.angle += (Math.random() - 0.5);
+                    }
+
+                    c.x += Math.cos(c.angle) * cSpeed * dt + c.knockbackVx * dt;
+                    c.y += Math.sin(c.angle) * cSpeed * dt + c.knockbackVy * dt;
+                    c.knockbackVx *= Math.pow(0.001, dt); c.knockbackVy *= Math.pow(0.001, dt);
+                    c.x = Math.max(c.size, Math.min(WORLD_SIZE - c.size, c.x)); c.y = Math.max(c.size, Math.min(WORLD_SIZE - c.size, c.y));
+
+                    // Attack logic
+                    if (c.attackTimer > 0) {
+                        c.attackTimer -= dt;
+                        c.attackProgress = 1 - (c.attackTimer / c.attackCooldown);
+                    } else {
+                        c.attackProgress = 0;
+                        c.hasAttacked = false;
+                    }
+
+                    if (c.state === 'chase' && targetDog && minDogDist < cAttackReach + targetDog.size && c.attackTimer <= 0) {
+                        c.attackTimer = cStats.attackCooldown || (0.66 * cArchStats.cdMult);
+                        c.attackCooldown = c.attackTimer;
+                        c.hasAttacked = false;
+                        if (Math.hypot(player.x - c.x, player.y - c.y) < viewRadius) playSound('swing');
+                    }
+
+                    if (c.attackTimer > 0 && c.attackProgress >= 0.25 && !c.hasAttacked) {
+                        c.hasAttacked = true;
+                        if (targetDog) {
+                            let aToE = Math.atan2(targetDog.y - c.y, targetDog.x - c.x);
+                            let aDiff = Math.abs(((aToE - c.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
+                            if (aDiff < Math.PI / 1.5 && minDogDist < cAttackReach + targetDog.size) {
+                                let dmg = cStats.playerDamage * cDmgMult;
+                                targetDog.hp -= dmg;
+                                let d = getDmgNumber(); d.x = targetDog.x; d.y = targetDog.y - targetDog.size; d.val = Math.round(dmg); d.color = '#3498db'; d.life = 1.0; d.vy = -200; damageNumbers.push(d);
+                                if (Math.hypot(player.x - c.x, player.y - c.y) < viewRadius) playSound('hit');
+                                if (cArchStats.knockback > 0) { let ang = Math.atan2(targetDog.y - c.y, targetDog.x - c.x); targetDog.knockbackVx = Math.cos(ang) * cArchStats.knockback; targetDog.knockbackVy = Math.sin(ang) * cArchStats.knockback; }
+                                
+                                if (targetDog.hp <= 0) {
+                                    // Dropne gemy (které hráč může AI kočce ukrást!)
+                                    if (targetDog.isBoss) dropGems(targetDog.x, targetDog.y, 100, 'boss');
+                                    else if (targetDog.isMiniBoss) dropGems(targetDog.x, targetDog.y, 30, 'boss');
+                                    else if (targetDog.level >= c.level + 1) dropGems(targetDog.x, targetDog.y, 3 + Math.floor(Math.random() * 4)); 
+                                    else if (Math.random() > 0.75) dropGems(targetDog.x, targetDog.y, 1);
+                                    
+                                    // Smaže psa ze hry
+                                    let eIdx = enemies.indexOf(targetDog);
+                                    if (eIdx > -1) enemies.splice(eIdx, 1);
+                                }
+                            }
+                        }
+                    }
+
+                    // Steal Food (Level up!)
+                    for (let j = foods.length - 1; j >= 0; j--) {
+                        let f = foods[j];
+                        if (Math.hypot(c.x - f.x, c.y - f.y) < c.size + f.size + 15) {
+                            foods.splice(j, 1);
+                            if (c.hp < c.maxHp) {
+                                c.hp = Math.min(c.maxHp, c.hp + c.maxHp * 0.15);
+                            } else {
+                                c.xp += 18;
+                                if (c.xp >= cStats.nextXp && c.level < 50) {
+                                    c.level++; c.xp = 0;
+                                    let newStats = evolutions[Math.min(c.level - 1, 49)];
+                                    c.maxHp = newStats.maxHp; c.hp = c.maxHp; c.size = newStats.baseSize;
+                                    for(let p=0; p<15; p++) { let pt = getParticle(); pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
+                                }
+                            }
+                            spawnFood();
+                        }
+                    }
+                    
+                    // Steal Gems
+                    for (let j = droppedGems.length - 1; j >= 0; j--) {
+                        let g = droppedGems[j];
+                        if (Math.hypot(c.x - g.x, c.y - g.y) < c.size + 20) {
+                            droppedGems.splice(j, 1); // Zloději jedni!
+                        }
+                    }
+                }
+                // --- END AI CATS LOGIC ---
+
                 if (player.dashTimer > 0) player.dashTimer -= dt;
                 if (player.dashActive > 0) player.dashActive -= dt;
                 
@@ -1641,6 +1843,11 @@
                 for (let i = chests.length - 1; i >= 0; i--) { if (Math.hypot(player.x - chests[i].x, player.y - chests[i].y) > 2500) chests.splice(i, 1); }
                 while (enemies.length < ENEMY_COUNT) spawnEnemy(); while (chests.length < CHEST_COUNT) spawnChest();
                 
+                // Udržování populace AI koček POUZE v team módu
+                if (selectedGameMode === 'team') {
+                    while (aiCats.length < 8) spawnAICat();
+                }
+                
                 for (let i = foods.length - 1; i >= 0; i--) { 
                     let f = foods[i]; if (Math.abs(player.x - f.x) > 200 || Math.abs(player.y - f.y) > 200) continue;
                     if (Math.hypot(player.x - f.x, player.y - f.y) < pSize + f.size + 15) { 
@@ -1682,32 +1889,40 @@
 
                 for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i]; if (e.hp <= 0) continue;
-                    let distToP = Math.hypot(player.x - e.x, player.y - e.y);
                     
+                    // TARGETING LOGIC (Nearest Cat - Player or AI)
+                    let target = player;
+                    let minDistToTarget = Math.hypot(player.x - e.x, player.y - e.y);
+                    for (let c of aiCats) {
+                        let d = Math.hypot(c.x - e.x, c.y - e.y);
+                        if (d < minDistToTarget) { minDistToTarget = d; target = c; }
+                    }
+                    let targetSize = target === player ? pSize : target.size;
+
                     let nearEnemies = queryGrid(e.x, e.y, e.size * 3);
                     for (let o of nearEnemies) {
                         if (e === o) continue;
                         let odx = e.x - o.x, ody = e.y - o.y; let odist = Math.hypot(odx, ody); let minDist = (e.size + o.size) * 0.8;
                         if (odist > 0 && odist < minDist) { let overlap = minDist - odist; e.x += (odx / odist) * overlap * 0.5; e.y += (ody / odist) * overlap * 0.5; }
                     }
-                    let pMinDist = (e.size + pSize) * 0.8;
-                    if (distToP > 0 && distToP < pMinDist) { let overlap = pMinDist - distToP; e.x += ((e.x - player.x) / distToP) * overlap * 0.5; e.y += ((e.y - player.y) / distToP) * overlap * 0.5; }
+                    let pMinDist = (e.size + targetSize) * 0.8;
+                    if (minDistToTarget > 0 && minDistToTarget < pMinDist) { let overlap = pMinDist - minDistToTarget; e.x += ((e.x - target.x) / minDistToTarget) * overlap * 0.5; e.y += ((e.y - target.y) / minDistToTarget) * overlap * 0.5; }
 
                     e.stateTimer -= dt; 
                     if (e.stateTimer <= 0 && !e.isBoss && !e.isMiniBoss) { 
                         e.stateTimer = 0.7 + Math.random() * 1.3; 
-                        if (distToP < 1200) { 
+                        if (minDistToTarget < 1200) { 
                             let packMembers = queryGrid(e.x, e.y, 350); 
                             let sumLevels = 0; let hasLeader = false;
-                            for (let mate of packMembers) { if (Math.hypot(mate.x - e.x, mate.y - e.y) <= 350) { sumLevels += mate.level; if (mate.isBoss || mate.level >= player.level - 2) { hasLeader = true; } } }
+                            for (let mate of packMembers) { if (Math.hypot(mate.x - e.x, mate.y - e.y) <= 350) { sumLevels += mate.level; if (mate.isBoss || mate.level >= target.level - 2) { hasLeader = true; } } }
                             
-                            if (hasLeader || sumLevels >= player.level * 0.7 || player.level >= 30) { e.state = 'chase'; } else { e.state = 'flee'; }
+                            if (hasLeader || sumLevels >= target.level * 0.7 || target.level >= 30) { e.state = 'chase'; } else { e.state = 'flee'; }
                         } else { e.state = 'wander'; }
                     }
                     
-                    if (e.attackTimer > 0) e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
-                    else if (e.state === 'chase') e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
-                    else if (e.state === 'flee') e.angle = Math.atan2(e.y - player.y, e.x - player.x); 
+                    if (e.attackTimer > 0) e.angle = Math.atan2(target.y - e.y, target.x - e.x); 
+                    else if (e.state === 'chase') e.angle = Math.atan2(target.y - e.y, target.x - e.x); 
+                    else if (e.state === 'flee') e.angle = Math.atan2(e.y - target.y, e.x - target.x); 
                     else if (Math.random() < 0.05) e.angle += (Math.random() - 0.5);
                     
                     let eSpeed = e.attackTimer > 0 ? e.speed * 0.5 : e.speed;
@@ -1723,22 +1938,33 @@
                                 isSpecialCasting = true; eSpeed = 0; // Boss stops moving
                                 e.castProgress += dt / 1.5; // 1.5s cast time
                                 if (e.castProgress >= 1) {
-                                    playSound('hit');
+                                    if (Math.hypot(player.x - e.x, player.y - e.y) < viewRadius) playSound('hit');
                                     for(let p=0; p<30; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.8; pt.color='#e74c3c'; particles.push(pt); }
-                                    if (distToP < e.size * 4.5 && player.invuln <= 0) {
-                                        let dmgTaken = (e.damage * 1.5) * (activeMods.doubleDmg ? 2 : 1);
-                                        player.hp -= dmgTaken; updateUI(); hitStop = 0.1; 
-                                        let ang = Math.atan2(player.y - e.y, player.x - e.x); player.knockbackVx = Math.cos(ang) * 600; player.knockbackVy = Math.sin(ang) * 600;
-                                        let d = getDmgNumber(); d.x=player.x; d.y=player.y-pSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                                        if (player.hp <= 0) { player.hp = 0; showDeathScreen(); }
+                                    
+                                    // Boss AoE zasáhne všechny (Hráče i AI kočky)
+                                    let allTargets = [player, ...aiCats];
+                                    for (let t of allTargets) {
+                                        let tSize = t === player ? pSize : t.size;
+                                        if (Math.hypot(t.x - e.x, t.y - e.y) < e.size * 4.5) {
+                                            if (t.invuln === undefined || t.invuln <= 0) {
+                                                let dmgTaken = (e.damage * 1.5) * (activeMods.doubleDmg ? 2 : 1);
+                                                t.hp -= dmgTaken;
+                                                let ang = Math.atan2(t.y - e.y, t.x - e.x); t.knockbackVx = Math.cos(ang) * 600; t.knockbackVy = Math.sin(ang) * 600;
+                                                let d = getDmgNumber(); d.x=t.x; d.y=t.y-tSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
+                                                if (t === player) {
+                                                    updateUI(); hitStop = 0.1;
+                                                    if (player.hp <= 0 || activeMods.oneHit) { player.hp = 0; showDeathScreen(); }
+                                                }
+                                            }
+                                        }
                                     }
                                     e.specialTimer = 6.0; e.specialPhase = 0;
                                 }
                             } else if (e.ability === 'dash') {
                                 if (e.specialPhase === 1) {
-                                    isSpecialCasting = true; eSpeed = 0; e.angle = Math.atan2(player.y - e.y, player.x - e.x);
+                                    isSpecialCasting = true; eSpeed = 0; e.angle = Math.atan2(target.y - e.y, target.x - e.x);
                                     e.castProgress += dt / 0.8; // 0.8s windup
-                                    if (e.castProgress >= 1) { e.specialPhase = 2; e.castProgress = 0; e.dashForceX = Math.cos(e.angle); e.dashForceY = Math.sin(e.angle); playSound('dash'); }
+                                    if (e.castProgress >= 1) { e.specialPhase = 2; e.castProgress = 0; e.dashForceX = Math.cos(e.angle); e.dashForceY = Math.sin(e.angle); if (Math.hypot(player.x - e.x, player.y - e.y) < viewRadius) playSound('dash'); }
                                 } else if (e.specialPhase === 2) {
                                     eSpeed = e.speed * 4.0; e.angle = Math.atan2(e.dashForceY, e.dashForceX); // Dash phase
                                     e.castProgress += dt / 0.5; // 0.5s dash duration
@@ -1756,13 +1982,14 @@
                     if (e.x < e.size || e.x > WORLD_SIZE - e.size || e.y < e.size || e.y > WORLD_SIZE - e.size) { e.x = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.x)); e.y = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.y)); e.state = 'wander'; e.angle = Math.atan2(WORLD_SIZE/2 - e.y, WORLD_SIZE/2 - e.x); e.stateTimer = 1.0; }
                     
                     if (e.attackTimer > 0) e.attackTimer -= dt; 
-                    else if (distToP < e.weaponLength + pSize * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; playSound('swing'); }
+                    else if (minDistToTarget < e.weaponLength + targetSize * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; if(Math.hypot(player.x-e.x, player.y-e.y) < viewRadius) playSound('swing'); }
                     
                     if (pDealDamage) {
-                        if (distToP > pAttackReach + e.size) continue; 
+                        let distToPFromE = Math.hypot(player.x - e.x, player.y - e.y); // Znovu změříme distanci od hráče pro hráčův útok
+                        if (distToPFromE > pAttackReach + e.size) continue; 
                         let aToE = Math.atan2(e.y - player.y, e.x - player.x), aDiff = Math.abs(((aToE - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
                         
-                        if (aDiff < Math.PI / 1.5 || distToP < (pSize + e.size) * 1.5) { 
+                        if (aDiff < Math.PI / 1.5 || distToPFromE < (pSize + e.size) * 1.5) { 
                             let dmg = stats.playerDamage * pDmgMult; e.hp -= dmg; hitStop = 0.05; playSound('hit');
                             if (archStats.knockback > 0) { let ang = Math.atan2(e.y - player.y, e.x - player.x); e.knockbackVx = Math.cos(ang) * archStats.knockback; e.knockbackVy = Math.sin(ang) * archStats.knockback; }
                             let d = getDmgNumber(); d.x=e.x; d.y=e.y-e.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
@@ -1787,15 +2014,20 @@
                         let eProgress = 1 - (e.attackTimer / e.attackCooldown);
                         if (eProgress >= 0.4 && eProgress <= 0.65) {
                             e.hasAttacked = true;
-                            let aToP = Math.atan2(player.y - e.y, player.x - e.x), aDiff = Math.abs(((aToP - e.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                            if (distToP < (e.size * 1.5) + e.weaponLength + pSize && (aDiff < Math.PI / 1.7 || distToP < (e.size + pSize) * 1.3)) { 
-                                if (player.invuln <= 0) { 
+                            let aToP = Math.atan2(target.y - e.y, target.x - e.x), aDiff = Math.abs(((aToP - e.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
+                            if (minDistToTarget < (e.size * 1.5) + e.weaponLength + targetSize && (aDiff < Math.PI / 1.7 || minDistToTarget < (e.size + targetSize) * 1.3)) { 
+                                if (target.invuln === undefined || target.invuln <= 0) { 
                                     let dmgTaken = e.damage * (activeMods.doubleDmg ? 2 : 1);
-                                    player.hp -= dmgTaken; updateUI(); hitStop = 0.08; playSound('hit'); if (combo > 0) { combo = 0; updateUI(); }
-                                    let ang = Math.atan2(player.y - e.y, player.x - e.x); let kb = e.isBoss ? 350 : 180; player.knockbackVx = Math.cos(ang) * kb; player.knockbackVy = Math.sin(ang) * kb;
-                                    let d = getDmgNumber(); d.x=player.x; d.y=player.y-pSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                                    for(let p=0; p<12; p++) { let pt = getParticle(); pt.x=player.x; pt.y=player.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
-                                    if (player.hp <= 0) { player.hp = 0; showDeathScreen(); } 
+                                    target.hp -= dmgTaken; 
+                                    let ang = Math.atan2(target.y - e.y, target.x - e.x); let kb = e.isBoss ? 350 : 180; target.knockbackVx = Math.cos(ang) * kb; target.knockbackVy = Math.sin(ang) * kb;
+                                    
+                                    if (target === player) {
+                                        updateUI(); hitStop = 0.08; playSound('hit'); if (combo > 0) { combo = 0; updateUI(); }
+                                        if (player.hp <= 0 || activeMods.oneHit) { player.hp = 0; showDeathScreen(); } 
+                                    }
+                                    
+                                    let d = getDmgNumber(); d.x=target.x; d.y=target.y-targetSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
+                                    for(let p=0; p<12; p++) { let pt = getParticle(); pt.x=target.x; pt.y=target.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
                                 } 
                             }
                         }
@@ -1827,6 +2059,20 @@
             let bobT = Date.now() / 300; 
             foods.forEach(f => { if (f.x < camL - 100 || f.x > camR + 100 || f.y < camT - 100 || f.y > camB + 100) return; ctx.save(); ctx.translate(f.x, f.y + Math.sin(bobT + f.bobOffset)*5); if (f.type === 'dot') { ctx.fillStyle = f.color; ctx.beginPath(); ctx.arc(0, 0, f.size, 0, Math.PI * 2); ctx.fill(); } else { let scale = f.size / 14; ctx.scale(scale, scale); if (f.type === 'fish') { ctx.fillStyle = '#00bcd4'; ctx.beginPath(); ctx.ellipse(0, 0, 14, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-18, -6); ctx.lineTo(-18, 6); ctx.fill(); ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(8, -2, 1.5, 0, Math.PI*2); ctx.fill(); } else if (f.type === 'mouse') { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 4, 12, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#ffb6c1'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-8,0); ctx.quadraticCurveTo(-15, 8, -20, 2); ctx.stroke(); ctx.fillStyle = '#888888'; ctx.beginPath(); ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(6, -5, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(6, 5, 4, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#ffb6c1'; ctx.beginPath(); ctx.arc(6, -5, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(6, 5, 2, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(8, -2.5, 1.5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, 2.5, 1.5, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#ffb6c1'; ctx.beginPath(); ctx.arc(11, 0, 1.5, 0, Math.PI*2); ctx.fill(); } else if (f.type === 'milk') { ctx.fillStyle = '#eeeeee'; ctx.fillRect(-11, -12, 22, 24); ctx.fillStyle = '#3498db'; ctx.fillRect(-11, 0, 22, 12); ctx.fillStyle = '#ffffff'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'center'; ctx.fillText('MILK', 0, 9); } } ctx.restore(); });
             
+            // DRAW AI CATS
+            aiCats.forEach(c => {
+                if (c.x < camL - c.size * 5 || c.x > camR + c.size * 5 || c.y < camT - c.size * 5 || c.y > camB + c.size * 5) return;
+                ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.angle);
+                let cStats = evolutions[Math.min(c.level - 1, 49)];
+                drawEntity(ctx, true, c.size, cStats.catColor, cStats.accent, cStats.pattern, c.attackProgress, cStats.weaponType, c.level, c.hTier, c.wTier); 
+                ctx.restore();
+                
+                ctx.fillStyle = "#3498db"; ctx.font = "bold 14px Arial"; ctx.textAlign = "center"; 
+                ctx.fillText(`Lv.${c.level} ${c.name}`, c.x, c.y - c.size - 35);
+                ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(c.x - c.size, c.y - c.size - 25, c.size * 2, 9); 
+                ctx.fillStyle = "#3498db"; ctx.fillRect(c.x - c.size, c.y - c.size - 25, (c.size * 2) * Math.max(0, c.hp / c.maxHp), 9); 
+            });
+
             let bossAlive = null;
             enemies.forEach(e => { 
                 if (e.isBoss) bossAlive = e;
@@ -1879,6 +2125,10 @@
             mmCtx.fillStyle = 'rgba(20,30,40,0.85)'; mmCtx.fillRect(0,0,160,160);
             let scale = 160 / WORLD_SIZE;
             mmCtx.fillStyle = '#f1c40f'; for (let c of chests) mmCtx.fillRect(c.x*scale - 1, c.y*scale - 1, 3, 3);
+            
+            // Minimap for AI cats
+            mmCtx.fillStyle = '#3498db'; for (let c of aiCats) { mmCtx.beginPath(); mmCtx.arc(c.x*scale, c.y*scale, 2, 0, Math.PI*2); mmCtx.fill(); }
+
             for (let e of enemies) {
                 if (e.isBoss) { 
                     mmCtx.fillStyle = e.color; mmCtx.beginPath(); mmCtx.arc(e.x*scale, e.y*scale, 5, 0, Math.PI*2); mmCtx.fill(); mmCtx.strokeStyle='#fff'; mmCtx.stroke(); 
