@@ -149,18 +149,32 @@
         .controls-hint { text-align: center; font-size: 14px; opacity: 0.8; font-weight: normal; margin-top: auto; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; pointer-events: none; }
         @media (max-width: 600px) { .stats-bar { top: 10px; left: 10px; flex-direction: column; gap: 5px; } .stat-box { font-size: 14px; padding: 5px 10px; } .controls-hint { font-size: 12px; } #minimap { width: 120px; height: 120px; } .enc-tab { font-size: 12px; padding: 8px; } }
 
-        /* NOVE CSS PRO 16:9 MENU */
+        /* VLASTNÍ HERNÍ POSUVNÍKY (Odstraní hnusné šedé pruhy) */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
+
+        /* NOVE CSS PRO RESPONZIVNÍ 16:9 MENU */
         .menu-container {
-            display: flex; flex-wrap: wrap; gap: 20px; width: 95%; max-width: 1300px;
-            height: 85vh; justify-content: center; align-items: stretch; margin-top: 30px;
+            display: flex; flex-direction: row; gap: 20px; width: 95%; max-width: 1200px;
+            height: 85vh; justify-content: center; align-items: stretch; margin-top: 10px;
         }
         .menu-col {
             background: var(--panel-bg); border: 4px solid var(--primary); border-radius: 20px;
-            padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); display: flex;
-            flex-direction: column; overflow-y: auto; text-align: center;
+            padding: 15px; box-shadow: 0 0 50px rgba(0,0,0,0.8); display: flex;
+            flex-direction: column; overflow-y: auto; overflow-x: hidden; text-align: center;
+            box-sizing: border-box;
         }
-        .menu-col.side { flex: 1; min-width: 250px; }
-        .menu-col.center { flex: 2; min-width: 350px; align-items: center; justify-content: flex-start; }
+        .menu-col.side { flex: 1; min-width: 200px; max-width: 320px; }
+        .menu-col.center { flex: 2; min-width: 300px; align-items: center; justify-content: flex-start; }
+
+        /* PRAVIDLO PRO MENŠÍ OBRAZOVKY (Přeskládá sloupce pod sebe) */
+        @media (max-width: 850px) {
+            .menu-container { flex-direction: column; height: 90vh; overflow-y: auto; align-items: center; padding-right: 5px; }
+            .menu-col.side, .menu-col.center { width: 100%; max-width: 500px; min-height: auto; flex: none; }
+        }
+
         .nickname-input {
             width: 80%; max-width: 300px; padding: 15px; margin: 15px 0; font-size: 22px; font-weight: bold; 
             text-align: center; background: #2c3e50; color: white; border: 3px solid var(--primary);
