@@ -238,14 +238,26 @@
         <div class="menu-container">
             <!-- LEFT COLUMN: Profile & Stats -->
             <div class="menu-col side">
-                <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 0;">📊 Profile</h2>
-                <div class="stat-box" style="margin-bottom: 10px;">Kills: <span id="mm-kills">0</span></div>
-                <div class="stat-box" style="margin-bottom: 10px;">Max Lv: <span id="mm-level">1</span></div>
-                <div class="stat-box gem-text" style="margin-bottom: 20px;">💎 <span id="mm-gems">0</span></div>
                 
-                <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 20px;">🏆 Global</h2>
-                <button class="btn-main" onclick="window.openLeaderboard()" style="background: #e67e22; box-shadow: 0 4px 0 #d35400; width: 100%; font-size: 16px; padding: 12px;">🏆 Leaderboard</button>
-                <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; width: 100%; font-size: 16px; padding: 12px; margin-top: 10px;">📺 Watch Ad (+500 💎)</button>
+                <!-- GLOBÁLNÍ RANK A XP (Zvětšeno, nahrazuje nadpis) -->
+                <div id="mm-global-rank-badge" style="background: #7f8c8d; color: white; padding: 10px 18px; border-radius: 10px; font-weight: bold; border: 3px solid #fff; display: inline-block; margin: 10px auto 10px auto; font-size: 18px; text-shadow: 1px 1px 3px #000; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                    Stray Recruit ★
+                </div>
+                <div style="font-size: 15px; color: #aaa; margin-bottom: 8px; font-weight: bold;">Global Level: <span id="mm-global-level" style="color: #fff;">1</span></div>
+                
+                <div style="width: 100%; height: 18px; background: rgba(0,0,0,0.6); border-radius: 9px; border: 2px solid #444; overflow: hidden; position: relative;">
+                    <div id="global-xp-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3498db, #2ecc71); transition: width 0.3s ease-out;"></div>
+                </div>
+                <div id="global-xp-text" style="font-size: 13px; color: #fff; margin-top: 5px; margin-bottom: 25px; font-weight: bold;">0 / 1000 XP</div>
+                <!-- KONEC GLOBÁLNÍHO RANKU -->
+
+                <div class="stat-box" style="margin-bottom: 12px; font-size: 16px;">Kills: <span id="mm-kills">0</span></div>
+                <div class="stat-box" style="margin-bottom: 12px; font-size: 16px;">Max Lv: <span id="mm-level">1</span></div>
+                <div class="stat-box gem-text" style="margin-bottom: 25px; font-size: 18px;">💎 <span id="mm-gems">0</span></div>
+                
+                <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: auto;">🏆 Global</h2>
+                <button class="btn-main" onclick="window.openLeaderboard()" style="background: #e67e22; box-shadow: 0 6px 0 #d35400; width: 100%; font-size: 18px; padding: 15px; margin-top: 0;">🏆 Leaderboard</button>
+                <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 6px 0 #8e44ad; width: 100%; font-size: 18px; padding: 15px; margin-top: 15px; line-height: 1.2;">📺 Watch Ad<br><span style="font-size: 14px;">(+500 💎)</span></button>
             </div>
 
             <!-- CENTER COLUMN: Play Area -->
@@ -266,11 +278,28 @@
 
             <!-- RIGHT COLUMN: Upgrades -->
             <div class="menu-col side">
-                <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 0;">🛠️ Armory</h2>
-                <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 4px 0 #2980b9; width: 100%; font-size: 16px; padding: 15px; margin-bottom: 10px;">🐱 UPGRADES</button>
-                <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; width: 100%; font-size: 16px; padding: 15px; margin-bottom: 10px;">🐶 BESTIARY</button>
-                <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 4px 0 #d68910; color: #111; width: 100%; font-size: 16px; padding: 15px; margin-bottom: 10px;">🛡️ WEAPONS</button>
-                <button class="btn-main" onclick="openEncyclopedia('quests')" style="background: #e74c3c; box-shadow: 0 4px 0 #c0392b; width: 100%; font-size: 16px; padding: 15px;">📜 QUESTS</button>
+                <!-- ZVĚTŠENÁ A BUCLATÁ TLAČÍTKA S VELKÝMI EMOJI (Nadpis Armory byl odstraněn a zarovnáno nahoru) -->
+                <div style="display: flex; flex-direction: column; gap: 18px; flex-grow: 1; justify-content: flex-start; margin-top: 0;">
+                    <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 8px 0 #2980b9; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
+                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">🐱</span>
+                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">UPGRADES</span>
+                    </button>
+                    
+                    <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 8px 0 #8e44ad; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
+                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">🐶</span>
+                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">BESTIARY</span>
+                    </button>
+                    
+                    <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 8px 0 #d68910; color: #111; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
+                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">🛡️</span>
+                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">WEAPONS</span>
+                    </button>
+                    
+                    <button class="btn-main" onclick="openEncyclopedia('quests')" style="background: #e74c3c; box-shadow: 0 8px 0 #c0392b; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
+                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">💎</span>
+                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">QUESTS</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -521,9 +550,37 @@
     <!-- ================================= MODULE: GAME ENGINE & UI ====================================== -->
     <!-- ================================================================================================= -->
     <script>
-        let defaultProg = { nickname: '', maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
+        let defaultProg = { nickname: '', globalLevel: 1, globalXp: 0, maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
         let prog = { ...defaultProg };
         window.currentUserUid = null;
+
+        // TABULKA GLOBÁLNÍCH HODNOSTÍ
+        function getGlobalRankInfo(level) {
+            const tiers = [
+                { name: "Stray Recruit", color: "#7f8c8d" },       // Tier 0: Šedá (Lv 1-5)
+                { name: "Paw-rivate", color: "#27ae60" },          // Tier 1: Zelená (Lv 6-10)
+                { name: "Claw-poral", color: "#2980b9" },          // Tier 2: Modrá (Lv 11-15)
+                { name: "Purr-geant", color: "#8e44ad" },          // Tier 3: Fialová (Lv 16-20)
+                { name: "Lieu-tail-nant", color: "#cd7f32" },      // Tier 4: Bronzová (Lv 21-25)
+                { name: "Cat-tain", color: "#bdc3c7" },            // Tier 5: Stříbrná (Lv 26-30)
+                { name: "Meow-jor", color: "#f1c40f" },            // Tier 6: Zlatá (Lv 31-35)
+                { name: "Purr-onel", color: "#00d4ff" },           // Tier 7: Platinová/Cyan (Lv 36-40)
+                { name: "Gen-furball", color: "#e74c3c" },         // Tier 8: Rubínová/Červená (Lv 41-45)
+                { name: "Supreme Comm-meow-nder", color: "#ff00ff" } // Tier 9: Duhová/Magenta (Lv 46-50)
+            ];
+            let safeLevel = Math.max(1, Math.min(50, level));
+            let tierIndex = Math.floor((safeLevel - 1) / 5);
+            let starsCount = ((safeLevel - 1) % 5) + 1;
+            let starsStr = "★".repeat(starsCount);
+            
+            return {
+                title: tiers[tierIndex].name,
+                color: tiers[tierIndex].color,
+                stars: starsStr,
+                fullText: `${tiers[tierIndex].name} ${starsStr}`,
+                nextXp: safeLevel * 1000
+            };
+        }
 
         // --- LOCAL SAVE ONLY (Během hry běží pouze lokální ukládání pro brutální úsporu Firebase kvót) ---
         function saveProgress() { 
@@ -558,6 +615,20 @@
             if(document.getElementById('player-nickname')) {
                 document.getElementById('player-nickname').value = prog.nickname || '';
             }
+            
+            // Globální Rank UI Update
+            let rankInfo = getGlobalRankInfo(prog.globalLevel || 1);
+            let badgeEl = document.getElementById('mm-global-rank-badge');
+            if(badgeEl) {
+                badgeEl.innerText = rankInfo.fullText;
+                badgeEl.style.background = rankInfo.color;
+                document.getElementById('mm-global-level').innerText = prog.globalLevel || 1;
+                
+                let xpPct = prog.globalLevel >= 50 ? 100 : ((prog.globalXp || 0) / rankInfo.nextXp) * 100;
+                document.getElementById('global-xp-bar').style.width = `${Math.min(100, xpPct)}%`;
+                document.getElementById('global-xp-text').innerText = prog.globalLevel >= 50 ? "MAX RANK REACHED" : `${prog.globalXp || 0} / ${rankInfo.nextXp} XP`;
+            }
+
             if(document.getElementById('mm-cat-preview') && typeof getSpriteDataURL === 'function') {
                 try {
                     let wTier = prog.weaponUpgrades[prog.maxCatLevel] || 0;
@@ -928,12 +999,13 @@
             document.getElementById('lb-content').innerHTML = '<p style="text-align: center; color: #aaa;">Fetching global ranks...</p>';
             if (window.fetchLeaderboard) {
                 let data = await window.fetchLeaderboard();
-                let html = '<table class="stats-table" style="margin-bottom:0;"><tr><th>Rank</th><th>Player</th><th>Max Lvl</th><th>Kills</th></tr>';
+                let html = '<table class="stats-table" style="margin-bottom:0;"><tr><th>Rank</th><th>Player</th><th>Global Rank</th><th>Kills</th></tr>';
                 data.forEach((p, i) => {
+                    let gRank = getGlobalRankInfo(p.globalLevel || 1);
                     html += `<tr>
                         <td style="color:var(--primary);font-weight:bold;">#${i+1}</td>
                         <td>${p.nickname || 'Unknown'}</td>
-                        <td style="color:var(--success);font-weight:bold;">${p.maxLevel}</td>
+                        <td style="color:${gRank.color};font-weight:bold;text-shadow:1px 1px 2px #000;">Lv.${p.globalLevel || 1} ${gRank.stars}</td>
                         <td>${p.kills}</td>
                     </tr>`;
                 });
@@ -1106,7 +1178,7 @@
         window.togglePause = togglePause;
 
         // GAME STATE & MAIN LOGIC
-        let playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0 };
+        let playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 };
         let chests = [], droppedGems = [], player, currentZoom = 1;
         let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [];
         let gameState = 'menu', hitStop = 0, bossSpawnTimer = 0, miniBossSpawnTimer = 0, currentReviveCost = 0;
@@ -1140,7 +1212,7 @@
             let pMaxHpBase = evolutions[0].maxHp;
             let pHpMult = HELMET_HP_MULT[prog.helmetUpgrades[1] || 0];
             player = { name: prog.nickname, x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: pMaxHpBase * pHpMult, maxHp: pMaxHpBase * pHpMult, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
-            playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0 }; combo = 0; comboTimer = 0;
+            playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 }; combo = 0; comboTimer = 0;
             
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
@@ -1498,8 +1570,8 @@
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
                                 if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
                                 
-                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = 90; } // FIX: Reset timeru až po zabití
-                                else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss'); }
+                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = 90; playerRunData.bossKills++; } 
+                                else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss'); playerRunData.bossKills++; }
                                 else if (e.level >= player.level + 1) dropGems(e.x, e.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(e.x, e.y, 1); 
                                 enemies.splice(i, 1); continue; 
                             } 
@@ -1584,9 +1656,18 @@
             let pHTier = prog.helmetUpgrades[player.level] || 0;
             drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier); ctx.restore();
             
-            // Renderování jména nad hráčem
-            ctx.fillStyle = "white"; ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
-            ctx.fillText(player.name, player.x, player.y - playerStats.baseSize - 35);
+            // Renderování GLOBÁLNÍ HODNOSTI a jména nad hráčem
+            let gRank = getGlobalRankInfo(prog.globalLevel || 1);
+            let badgeWidth = gRank.stars.length * 12 + 20;
+            ctx.fillStyle = gRank.color;
+            ctx.fillRect(player.x - badgeWidth/2, player.y - playerStats.baseSize - 62, badgeWidth, 16);
+            ctx.strokeStyle = "#fff"; ctx.lineWidth = 1;
+            ctx.strokeRect(player.x - badgeWidth/2, player.y - playerStats.baseSize - 62, badgeWidth, 16);
+            ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center";
+            ctx.fillText(gRank.stars, player.x, player.y - playerStats.baseSize - 50);
+
+            ctx.fillStyle = "white"; ctx.font = "bold 16px Arial"; 
+            ctx.fillText(player.name, player.x, player.y - playerStats.baseSize - 30);
 
             particles.forEach(p => { if (p.x < camL || p.x > camR || p.y < camT || p.y > camB) return; ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
             damageNumbers.forEach(n => { if (n.x < camL || n.x > camR || n.y < camT || n.y > camB) return; ctx.globalAlpha = Math.max(0, n.life); ctx.fillStyle = n.color; ctx.strokeStyle = '#000000'; ctx.lineWidth = 3.5; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.strokeText(n.val, n.x, n.y); ctx.fillText(n.val, n.x, n.y); });
@@ -1633,12 +1714,15 @@
             gameState = 'death_menu'; document.body.classList.remove('low-hp'); 
             currentReviveCost = player.level * 10 + 20; 
             
+            // VÝPOČET GLOBÁLNÍCH XP Z RUNU
+            let gainedXp = (player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500);
+            document.getElementById('ds-final-gems').innerText = `${playerRunData.totalRunGems} (XP: +${gainedXp})`; // Ukážeme hráči XP zisk
+            
             let stats = evolutions[Math.min(player.level - 1, 49)];
             document.getElementById('ds-final-level').innerText = player.level;
             document.getElementById('ds-final-name').innerText = stats.catName;
             document.getElementById('ds-final-kills').innerText = playerRunData.kills;
             document.getElementById('ds-final-combo').innerText = playerRunData.bestCombo;
-            document.getElementById('ds-final-gems').innerText = playerRunData.totalRunGems;
             
             document.getElementById('ds-current-gems').innerText = prog.gems + playerRunData.gems; 
             
@@ -1701,10 +1785,27 @@
 
         async function giveUp() { 
             document.getElementById('death-screen').style.display = 'none'; 
-            document.getElementById('pause-overlay').style.display = 'none'; // OPRAVA: Okamžité skrytí pauzy
+            document.getElementById('pause-overlay').style.display = 'none'; 
             document.getElementById('game-ui').style.display = 'none'; 
             prog.gems += playerRunData.gems; 
             if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; 
+            
+            // APLIKACE GLOBÁLNÍCH XP PŘI OPUŠTĚNÍ HRY
+            let gainedXp = (player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500);
+            prog.globalXp = (prog.globalXp || 0) + gainedXp;
+            
+            // KONTROLA LEVEL-UPU (Může poskočit o více levelů, pokud má hodně XP z jedné hry)
+            if (!prog.globalLevel) prog.globalLevel = 1;
+            while (prog.globalLevel < 50) {
+                let rankInfo = getGlobalRankInfo(prog.globalLevel);
+                if (prog.globalXp >= rankInfo.nextXp) {
+                    prog.globalXp -= rankInfo.nextXp;
+                    prog.globalLevel++;
+                } else {
+                    break;
+                }
+            }
+            if (prog.globalLevel > 50) { prog.globalLevel = 50; prog.globalXp = 0; } // Hard cap
             
             await forceSaveNow(); 
             goToMenu(); 
@@ -1882,6 +1983,7 @@
                     await setDoc(pubRef, {
                         nickname: nick,
                         maxLevel: progressData.maxCatLevel,
+                        globalLevel: progressData.globalLevel || 1, // Přidáno uložení globalLevel pro leaderboard
                         kills: progressData.totalKills,
                         gems: progressData.gems,
                         lastActive: new Date().toISOString()
@@ -1895,11 +1997,11 @@
         window.fetchLeaderboard = async () => {
             if (!db) return [];
             try {
-                // FIX: Omezení dotazu na databázi na 50 řádků (šetří Reads kvóty)
+                // FIX: Omezení dotazu na databázi na 50 řádků a úprava řazení na globalLevel
                 try {
                     const q = query(
                         collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'),
-                        orderBy('maxLevel', 'desc'),
+                        orderBy('globalLevel', 'desc'),
                         orderBy('kills', 'desc'),
                         limit(50)
                     );
@@ -1908,13 +2010,12 @@
                     querySnapshot.forEach((doc) => { players.push(doc.data()); });
                     return players;
                 } catch (idxError) {
-                    if (idxError.code === 'permission-denied') throw idxError; // Pokud je to problém s právy, hodí to rovnou do hlavního chytáku
-                    // Fallback, pokud ještě ve Firebase nemáš naklikaný Index
-                    console.warn("[CatWars] Missing Firebase Index, using fallback sort.");
+                    if (idxError.code === 'permission-denied') throw idxError;
+                    console.warn("[CatWars] Missing Firebase Index for globalLevel, using fallback sort.");
                     const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
                     let players = [];
                     querySnapshot.forEach((doc) => { players.push(doc.data()); });
-                    players.sort((a, b) => b.maxLevel - a.maxLevel || b.kills - a.kills);
+                    players.sort((a, b) => (b.globalLevel || 1) - (a.globalLevel || 1) || b.kills - a.kills);
                     return players.slice(0, 50);
                 }
             } catch (error) { 
