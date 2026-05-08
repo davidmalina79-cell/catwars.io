@@ -1602,10 +1602,10 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        console.log("[CatWars] Zahajuji inicializaci Firebase...");
+        console.log("[CatWars] Initializing Firebase...");
         let isCanvasEnv = typeof __firebase_config !== 'undefined';
         
-        // TVŮJ SKUTEČNÝ FIREBASE CONFIG PRO PRODUKCI I TESTOVÁNÍ
+        // YOUR REAL FIREBASE CONFIG
         let firebaseConfig = isCanvasEnv ? JSON.parse(__firebase_config) : { 
             apiKey: "AIzaSyA6EOidw5V5q45xINGnDbh1Szoho5_Ksd0", 
             authDomain: "catwars-63a0c.firebaseapp.com", 
@@ -1620,59 +1620,70 @@
         try { 
             app = initializeApp(firebaseConfig); 
             auth = getAuth(app); 
-            // Vynucení Long Pollingu obchází 30s timeout WebSockets způsobený Cloudflare / Adblockery
             db = initializeFirestore(app, { experimentalForceLongPolling: true }); 
-            console.log("[CatWars] Firebase úspěšně inicializován.");
-        } catch (error) { console.error("[CatWars] Firebase init selhal:", error); }
+            console.log("[CatWars] Firebase initialized successfully.");
+        } catch (error) { console.error("[CatWars] Firebase init failed:", error); }
         
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'catwars-default';
 
         function getFakeEmail() { const nick = document.getElementById('login-nick').value.trim(); if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } return `${nick.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}@catwars.local`; }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
 
+        function checkValidKey() {
+            if (firebaseConfig.apiKey === "TVUJ_API_KEY") {
+                document.getElementById('login-error').innerHTML = "<b>ERROR:</b> You must set your real Firebase API key in the code!";
+                return false;
+            }
+            return true;
+        }
+
         window.loginAsGuest = () => {
-            console.time("[CatWars] Auth trvalo");
-            document.getElementById('login-error').innerHTML = "⏳ Připojuji jako hosta...";
-            signInAnonymously(auth).then(()=> console.timeEnd("[CatWars] Auth trvalo")).catch(e => { document.getElementById('login-error').innerText = "Error (" + e.code + ")"; console.timeEnd("[CatWars] Auth trvalo"); });
+            if (!checkValidKey()) return;
+            console.time("[CatWars] Auth took");
+            document.getElementById('login-error').innerHTML = "⏳ Connecting as Guest...";
+            signInAnonymously(auth).then(()=> console.timeEnd("[CatWars] Auth took")).catch(e => { document.getElementById('login-error').innerText = "Error (" + e.code + ")"; console.timeEnd("[CatWars] Auth took"); });
         };
         
         window.loginWithGoogle = () => { 
-            console.time("[CatWars] Auth trvalo");
-            document.getElementById('login-error').innerHTML = "⏳ Čekám na Google... (zkontroluj případně vyskakovací okna)";
+            if (!checkValidKey()) return;
+            console.time("[CatWars] Auth took");
+            document.getElementById('login-error').innerHTML = "⏳ Waiting for Google... (check popups)";
             const provider = new GoogleAuthProvider(); 
             signInWithPopup(auth, provider).then(() => {
-                console.timeEnd("[CatWars] Auth trvalo");
-                document.getElementById('login-error').innerText = "Úspěch! Načítám data...";
+                console.timeEnd("[CatWars] Auth took");
+                document.getElementById('login-error').innerText = "Success! Loading data...";
             }).catch(e => { 
                 console.error("[CatWars] Google Auth Error:", e);
-                console.timeEnd("[CatWars] Auth trvalo");
+                console.timeEnd("[CatWars] Auth took");
                 if (e.code === 'auth/unauthorized-domain') {
-                    document.getElementById('login-error').innerHTML = "<b>CHYBA DOMÉNY:</b> Musíš přidat URL tohoto webu do Firebase Authorized Domains.";
+                    document.getElementById('login-error').innerHTML = "<b>DOMAIN ERROR:</b> Add this URL to Firebase Authorized Domains.";
                 } else {
-                    document.getElementById('login-error').innerText = "Přihlášení selhalo: " + e.message; 
+                    document.getElementById('login-error').innerText = "Login failed: " + e.message; 
                 }
             }); 
         };
         
         window.loginWithPassword = () => { 
+            if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
-                console.time("[CatWars] Auth trvalo");
-                document.getElementById('login-error').innerHTML = "⏳ Ověřuji heslo... (prosím čekej)";
+                console.time("[CatWars] Auth took");
+                document.getElementById('login-error').innerHTML = "⏳ Verifying password... (please wait)";
                 signInWithEmailAndPassword(auth, email, pass)
-                    .then(() => { console.timeEnd("[CatWars] Auth trvalo"); document.getElementById('login-error').innerText = "Úspěch! Načítám data..."; })
-                    .catch(e => { console.timeEnd("[CatWars] Auth trvalo"); document.getElementById('login-error').innerText = "Špatná přezdívka nebo heslo."; }); 
+                    .then(() => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = "Success! Loading data..."; })
+                    .catch(e => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = "Wrong nickname or password."; }); 
             }
         };
         
         window.registerWithPassword = () => { 
+            if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
-                console.time("[CatWars] Auth trvalo");
-                document.getElementById('login-error').innerHTML = "⏳ Vytvářím účet... (prosím čekej)";
+                console.time("[CatWars] Auth took");
+                document.getElementById('login-error').innerHTML = "⏳ Creating account... (please wait)";
                 createUserWithEmailAndPassword(auth, email, pass)
-                    .then(() => { console.timeEnd("[CatWars] Auth trvalo"); document.getElementById('login-error').innerText = "Účet vytvořen! Načítám..."; })
-                    .catch(e => { console.timeEnd("[CatWars] Auth trvalo"); document.getElementById('login-error').innerText = (e.code === 'auth/email-already-in-use' ? "Přezdívka je již zabraná." : "Chyba: " + e.message); }); 
+                    .then(() => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = "Account created! Loading..."; })
+                    .catch(e => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = (e.code === 'auth/email-already-in-use' ? "Nickname already in use." : "Error: " + e.message); }); 
             }
         };
         
@@ -1681,25 +1692,24 @@
         window.fetchFromFirestore = async (uid) => {
             if (!db) return null;
             try {
-                console.log(`[CatWars] Začínám stahovat data pro UID: ${uid}`);
-                console.time("[CatWars] Firestore Download trvalo");
+                console.log(`[CatWars] Downloading data for UID: ${uid}`);
+                console.time("[CatWars] Firestore Download took");
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
                 
-                // 5s Timeout pojistka - pokud Firebase mlčí/je blokován, hra se i tak po 5s spustí s lokálními daty
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (5s) - Firebase neodpovídá")), 5000));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (5s) - Firebase not responding")), 5000));
                 const snap = await Promise.race([getDoc(docRef), timeoutPromise]);
                 
-                console.timeEnd("[CatWars] Firestore Download trvalo");
+                console.timeEnd("[CatWars] Firestore Download took");
                 
                 if (snap.exists()) {
-                    console.log("[CatWars] Data nalezena na serveru.");
+                    console.log("[CatWars] Data found on server.");
                     return snap.data();
                 }
-                console.log("[CatWars] Hráč nemá na serveru uložená data (nový účet).");
+                console.log("[CatWars] No server data found (new account).");
                 return null;
             } catch(e) { 
-                console.timeEnd("[CatWars] Firestore Download trvalo");
-                console.error("[CatWars] Chyba při stahování dat:", e); 
+                console.timeEnd("[CatWars] Firestore Download took");
+                console.error("[CatWars] Error downloading data:", e); 
                 return null; 
             }
         };
@@ -1708,7 +1718,7 @@
             if (!auth || !auth.currentUser || !db) return;
             try {
                 const uid = auth.currentUser.uid;
-                console.time("[CatWars] Firestore Ukládání trvalo");
+                console.time("[CatWars] Firestore Save took");
                 
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
                 await setDoc(docRef, progressData, { merge: true });
@@ -1726,20 +1736,20 @@
                     lastActive: new Date().toISOString()
                 }, { merge: true });
                 
-                console.timeEnd("[CatWars] Firestore Ukládání trvalo");
+                console.timeEnd("[CatWars] Firestore Save took");
             } catch (error) { console.error("[CatWars] Firestore save error:", error); }
         };
 
         window.fetchLeaderboard = async () => {
             if (!db) return [];
             try {
-                console.time("[CatWars] Leaderboard Download trvalo");
+                console.time("[CatWars] Leaderboard Download took");
                 const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
                 let players = [];
                 querySnapshot.forEach((doc) => { players.push(doc.data()); });
                 
                 players.sort((a, b) => b.maxLevel - a.maxLevel || b.kills - a.kills);
-                console.timeEnd("[CatWars] Leaderboard Download trvalo");
+                console.timeEnd("[CatWars] Leaderboard Download took");
                 return players.slice(0, 50);
             } catch (error) { console.error("[CatWars] Leaderboard fetch error:", error); return []; }
         };
@@ -1747,13 +1757,11 @@
         const initAuth = async () => {
             if (!auth) return;
             try { 
-                // Zdejší prostředí (Canvas náhled) - automatický login přes token nebo anonymně
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
                     await signInWithCustomToken(auth, __initial_auth_token); 
                 } else if (isCanvasEnv) {
                     await signInAnonymously(auth);
                 }
-                // Mimo Canvas (tvoje doména) - neděláme nic, čekáme až uživatel klikne na tlačítko (zavolá např. loginWithGoogle)
             } 
             catch (e) { 
                 document.getElementById('loading-screen').style.display = 'none'; 
@@ -1767,7 +1775,7 @@
             let authResolved = false;
             setTimeout(() => {
                 if (!authResolved) {
-                    console.warn("[CatWars] Vynuceno zobrazení Login obrazovky po 15 sekundách. Firebase možná laguje.");
+                    console.warn("[CatWars] Forced login screen after 15s. Firebase might be lagging.");
                     document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('login-screen').style.display = 'flex';
                 }
@@ -1779,10 +1787,10 @@
                 
                 if (user) {
                     window.currentUserUid = user.uid;
-                    console.log(`[CatWars] Uživatel je přihlášen, UID: ${user.uid}`);
+                    console.log(`[CatWars] User logged in, UID: ${user.uid}`);
                     
                     const statusText = document.getElementById('auth-status-text');
-                    statusText.innerText = "Syncing cloud data... (Může trvat déle)";
+                    statusText.innerText = "Syncing cloud data... (Might take a while)";
                     
                     await window.loadCloudProgress(user.uid);
 
