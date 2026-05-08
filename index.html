@@ -148,6 +148,25 @@
         
         .controls-hint { text-align: center; font-size: 14px; opacity: 0.8; font-weight: normal; margin-top: auto; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; pointer-events: none; }
         @media (max-width: 600px) { .stats-bar { top: 10px; left: 10px; flex-direction: column; gap: 5px; } .stat-box { font-size: 14px; padding: 5px 10px; } .controls-hint { font-size: 12px; } #minimap { width: 120px; height: 120px; } .enc-tab { font-size: 12px; padding: 8px; } }
+
+        /* NOVE CSS PRO 16:9 MENU */
+        .menu-container {
+            display: flex; flex-wrap: wrap; gap: 20px; width: 95%; max-width: 1300px;
+            height: 85vh; justify-content: center; align-items: stretch; margin-top: 30px;
+        }
+        .menu-col {
+            background: var(--panel-bg); border: 4px solid var(--primary); border-radius: 20px;
+            padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); display: flex;
+            flex-direction: column; overflow-y: auto; text-align: center;
+        }
+        .menu-col.side { flex: 1; min-width: 250px; }
+        .menu-col.center { flex: 2; min-width: 350px; align-items: center; justify-content: flex-start; }
+        .nickname-input {
+            width: 80%; max-width: 300px; padding: 15px; margin: 15px 0; font-size: 22px; font-weight: bold; 
+            text-align: center; background: #2c3e50; color: white; border: 3px solid var(--primary);
+            border-radius: 12px; outline: none; box-shadow: inset 0 0 10px #000; transition: 0.2s;
+        }
+        .nickname-input:focus { border-color: var(--primary-hover); box-shadow: 0 0 20px var(--primary); }
     </style>
 </head>
 <body>
@@ -195,34 +214,49 @@
         </div>
     </div>
 
-    <!-- MAIN MENU -->
+    <!-- MAIN MENU (COMPLETELY REDESIGNED FOR 16:9) -->
     <div id="main-menu" class="overlay" style="display: none;">
         <div style="position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; z-index: 10;">
             <div id="auth-status-text" style="color: #aaa; font-size: 14px; margin-bottom: 5px; font-weight: bold; text-shadow: 1px 1px 2px black;">Playing as: ...</div>
             <button class="btn-main" onclick="window.logout()" style="font-size: 14px; padding: 8px 16px; margin: 0; background: #e74c3c; box-shadow: 0 4px 0 #c0392b;">🚪 Logout</button>
         </div>
 
-        <div class="panel">
-            <div class="game-art-banner" style="min-height: 200px;">
-                <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
+        <div class="menu-container">
+            <!-- LEFT COLUMN: Profile & Stats -->
+            <div class="menu-col side">
+                <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 0;">📊 Profile</h2>
+                <div class="stat-box" style="margin-bottom: 10px;">Kills: <span id="mm-kills">0</span></div>
+                <div class="stat-box" style="margin-bottom: 10px;">Max Lv: <span id="mm-level">1</span></div>
+                <div class="stat-box gem-text" style="margin-bottom: 20px;">💎 <span id="mm-gems">0</span></div>
+                
+                <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 20px;">🏆 Global</h2>
+                <button class="btn-main" onclick="window.openLeaderboard()" style="background: #e67e22; box-shadow: 0 4px 0 #d35400; width: 100%; font-size: 16px; padding: 12px;">🏆 Leaderboard</button>
+                <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; width: 100%; font-size: 16px; padding: 12px; margin-top: 10px;">📺 Watch Ad (+500 💎)</button>
             </div>
-            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.3.0: Bosses & Hardcore Balance Update</p>
-            
-            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
-                <div class="stat-box">Kills: <span id="mm-kills">0</span></div>
-                <div class="stat-box">Max Lv: <span id="mm-level">1</span></div>
-                <div class="stat-box gem-text">💎 <span id="mm-gems">0</span></div>
+
+            <!-- CENTER COLUMN: Play Area -->
+            <div class="menu-col center">
+                <div class="game-art-banner" style="width: 100%; min-height: 140px; margin-bottom: 10px;">
+                    <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
+                </div>
+                <p style="margin-top: 0; margin-bottom: 10px; color: #aaa; font-size: 14px;">Version 4.4.0: Bosses & PC Edition</p>
+                
+                <div style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
+                    <img id="mm-cat-preview" src="" style="width: 130px; height: 130px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); margin-bottom: 5px;">
+                    <div id="mm-cat-name" style="font-weight: bold; color: var(--primary); font-size: 18px; margin-top: 5px;">Lv.1 Kitten</div>
+                    <input type="text" id="player-nickname" class="nickname-input" placeholder="Enter your name..." autocomplete="off" maxlength="15">
+                </div>
+                
+                <button class="btn-main" onclick="startGame()" style="font-size: 32px; padding: 20px 40px; width: 100%; max-width: 400px; margin-top: auto; background: var(--success); color: #111; box-shadow: 0 6px 0 #27ae60;">▶️ PLAY GAME</button>
             </div>
-            
-            <button class="btn-main" onclick="startGame()" style="font-size: 24px; padding: 15px 40px; width: 100%; max-width: 400px; margin-bottom: 5px;">▶️ PLAY GAME</button>
-            <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; width: 100%; max-width: 400px; margin-bottom: 5px; font-size: 18px; padding: 10px 20px;">📺 Watch Ad (+500 💎)</button>
-            
-            <button class="btn-main" onclick="window.openLeaderboard()" style="background: #e67e22; box-shadow: 0 4px 0 #d35400; width: 100%; max-width: 400px; margin-bottom: 15px; font-size: 18px; padding: 10px 20px;">🏆 Leaderboard</button>
-            
-            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap;">
-                <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 4px 0 #2980b9; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🐱 UPGRADES</button>
-                <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🐶 BESTIARY</button>
-                <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 4px 0 #d68910; color: #111; margin: 0; flex: 1; min-width: 120px; font-size: 14px; padding: 12px;">🛡️ ARMORY</button>
+
+            <!-- RIGHT COLUMN: Upgrades -->
+            <div class="menu-col side">
+                <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 0;">🛠️ Armory</h2>
+                <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 4px 0 #2980b9; width: 100%; font-size: 16px; padding: 15px; margin-bottom: 10px;">🐱 UPGRADES</button>
+                <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 4px 0 #8e44ad; width: 100%; font-size: 16px; padding: 15px; margin-bottom: 10px;">🐶 BESTIARY</button>
+                <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 4px 0 #d68910; color: #111; width: 100%; font-size: 16px; padding: 15px; margin-bottom: 10px;">🛡️ WEAPONS</button>
+                <button class="btn-main" onclick="openEncyclopedia('quests')" style="background: #e74c3c; box-shadow: 0 4px 0 #c0392b; width: 100%; font-size: 16px; padding: 15px;">📜 QUESTS</button>
             </div>
         </div>
     </div>
@@ -465,7 +499,7 @@
             { id: 'chest15', text: 'Open 15 chests', goal: 15, reward: 100, type: 'chests' },
             { id: 'combo10', text: 'Reach a 10x combo', goal: 10, reward: 60, type: 'combo' },
             { id: 'boss1', text: 'Defeat 1 boss', goal: 1, reward: 150, type: 'boss' },
-            { id: 'test50', text: '🧪 [TEST] Reach Level 50', goal: 50, reward: 100000, type: 'level' }, // DOČASNÝ TESTOVACÍ QUEST
+            { id: 'test2', text: '🧪 [TEST] Reach Level 2', goal: 2, reward: 100000, type: 'level' }, // DOČASNÝ TESTOVACÍ QUEST
         ];
     </script>
 
@@ -473,7 +507,7 @@
     <!-- ================================= MODULE: GAME ENGINE & UI ====================================== -->
     <!-- ================================================================================================= -->
     <script>
-        let defaultProg = { maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
+        let defaultProg = { nickname: '', maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
         let prog = { ...defaultProg };
         window.currentUserUid = null;
 
@@ -505,6 +539,20 @@
             document.getElementById('mm-level').innerText = prog.maxCatLevel;
             document.getElementById('mm-gems').innerText = prog.gems;
             document.getElementById('enc-gems').innerText = prog.gems;
+            
+            // Logika pro nové menu (Náhled postavy a vyplnění jména)
+            if(document.getElementById('player-nickname')) {
+                document.getElementById('player-nickname').value = prog.nickname || '';
+            }
+            if(document.getElementById('mm-cat-preview') && typeof getSpriteDataURL === 'function') {
+                try {
+                    let wTier = prog.weaponUpgrades[prog.maxCatLevel] || 0;
+                    let hTier = prog.helmetUpgrades[prog.maxCatLevel] || 0;
+                    document.getElementById('mm-cat-preview').src = getSpriteDataURL('cats', prog.maxCatLevel, wTier, hTier);
+                    let stats = evolutions[Math.min(prog.maxCatLevel - 1, 49)];
+                    document.getElementById('mm-cat-name').innerText = `Lv.${prog.maxCatLevel} ${stats.catName}`;
+                } catch(e) { console.log('Waiting for engine init...'); }
+            }
         }
 
         function watchAdForGems() {
@@ -527,14 +575,14 @@
             const today = new Date().toISOString().slice(0, 10);
             if (prog.questDate !== today || !prog.quests || !prog.quests.length) {
                 prog.questDate = today;
-                const shuffled = [...QUEST_POOL].filter(q => q.id !== 'test50').sort(() => Math.random() - 0.5);
+                const shuffled = [...QUEST_POOL].filter(q => q.id !== 'test2').sort(() => Math.random() - 0.5);
                 prog.quests = shuffled.slice(0, 3).map(q => ({ ...q, progress: 0, claimed: false }));
                 saveProgress();
             }
             
             // --- DOČASNÝ KÓD PRO TESTOVÁNÍ (Garantuje přidání testovacího questu na první místo) ---
-            if (!prog.quests.some(q => q.id === 'test50')) {
-                const testQ = QUEST_POOL.find(q => q.id === 'test50');
+            if (!prog.quests.some(q => q.id === 'test2')) {
+                const testQ = QUEST_POOL.find(q => q.id === 'test2');
                 if (testQ) {
                     prog.quests.unshift({ ...testQ, progress: prog.maxCatLevel || 0, claimed: false });
                     saveProgress();
@@ -575,7 +623,7 @@
         window.toggleSound = toggleSound;
         function playSound(type) {
             if (!soundEnabled || !audioCtx) return; 
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx.state === 'suspended') return; // FIX: Ochrana proti pádu při uspaném audiu
             let now = audioCtx.currentTime;
             if (type === 'gem') { if (now - lastGemSoundTime < 0.07) return; lastGemSoundTime = now; }
             let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
@@ -1068,10 +1116,15 @@
 
         function startGame() {
             initAudio(); document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
+            
+            // Uložení nicku z menu před startem
+            prog.nickname = document.getElementById('player-nickname').value.trim() || 'Hero';
+            saveProgress();
+
             currentZoom = 1; 
             let pMaxHpBase = evolutions[0].maxHp;
             let pHpMult = HELMET_HP_MULT[prog.helmetUpgrades[1] || 0];
-            player = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: pMaxHpBase * pHpMult, maxHp: pMaxHpBase * pHpMult, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
+            player = { name: prog.nickname, x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: pMaxHpBase * pHpMult, maxHp: pMaxHpBase * pHpMult, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
             playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0 }; combo = 0; comboTimer = 0;
             
             for(let p of particles) releaseParticle(p); particles = [];
@@ -1430,7 +1483,7 @@
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
                                 if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
                                 
-                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); } 
+                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = 90; } // FIX: Reset timeru až po zabití
                                 else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss'); }
                                 else if (e.level >= player.level + 1) dropGems(e.x, e.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(e.x, e.y, 1); 
                                 enemies.splice(i, 1); continue; 
@@ -1516,6 +1569,10 @@
             let pHTier = prog.helmetUpgrades[player.level] || 0;
             drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier); ctx.restore();
             
+            // Renderování jména nad hráčem
+            ctx.fillStyle = "white"; ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
+            ctx.fillText(player.name, player.x, player.y - playerStats.baseSize - 35);
+
             particles.forEach(p => { if (p.x < camL || p.x > camR || p.y < camT || p.y > camB) return; ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
             damageNumbers.forEach(n => { if (n.x < camL || n.x > camR || n.y < camT || n.y > camB) return; ctx.globalAlpha = Math.max(0, n.life); ctx.fillStyle = n.color; ctx.strokeStyle = '#000000'; ctx.lineWidth = 3.5; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.strokeText(n.val, n.x, n.y); ctx.fillText(n.val, n.x, n.y); });
             ctx.globalAlpha = 1; ctx.restore();
@@ -1571,12 +1628,15 @@
             document.getElementById('ds-current-gems').innerText = prog.gems + playerRunData.gems; 
             
             let gemBtn = document.getElementById('btn-revive-gem'); 
-            if (prog.gems + playerRunData.gems < currentReviveCost) { 
+            let totalGems = prog.gems + playerRunData.gems;
+            if (totalGems < currentReviveCost) { 
                 gemBtn.disabled = true; 
+                let missing = currentReviveCost - totalGems;
+                gemBtn.innerHTML = `💎 Need ${missing} more gems`; // FIX: Ukáže, kolik chybí
             } else { 
                 gemBtn.disabled = false; 
+                gemBtn.innerHTML = `💎 Revive (Cost: ${currentReviveCost})`;
             } 
-            gemBtn.innerHTML = `💎 Revive (Cost: ${currentReviveCost})`;
             
             document.getElementById('dash-container').style.display = 'none'; document.getElementById('minimap').style.display = 'none'; 
             document.getElementById('boss-arrow').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; 
@@ -1660,7 +1720,7 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         console.log("[CatWars] Initializing Firebase...");
         let isCanvasEnv = typeof __firebase_config !== 'undefined';
@@ -1679,7 +1739,7 @@
         try { 
             app = initializeApp(firebaseConfig); 
             auth = getAuth(app); 
-            db = initializeFirestore(app, { experimentalForceLongPolling: true }); 
+            db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); // FIX: AutoDetect pro lepší konektivitu
             console.log("[CatWars] Firebase initialized successfully.");
         } catch (error) { console.error("[CatWars] Firebase init failed:", error); }
         
@@ -1688,7 +1748,7 @@
         function getFakeEmail() { 
             const nick = document.getElementById('login-nick').value.trim(); 
             if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } 
-            return `${nick.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}@catwars.local`; 
+            return `${nick.replace(/[^a-zA-Z0-9]/g, '')}@catwars.local`; // FIX: Bez toLowerCase pro zabránění kolizím účtů
         }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
 
@@ -1817,12 +1877,27 @@
         window.fetchLeaderboard = async () => {
             if (!db) return [];
             try {
-                const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
-                let players = [];
-                querySnapshot.forEach((doc) => { players.push(doc.data()); });
-                
-                players.sort((a, b) => b.maxLevel - a.maxLevel || b.kills - a.kills);
-                return players.slice(0, 50);
+                // FIX: Omezení dotazu na databázi na 50 řádků (šetří Reads kvóty)
+                try {
+                    const q = query(
+                        collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'),
+                        orderBy('maxLevel', 'desc'),
+                        orderBy('kills', 'desc'),
+                        limit(50)
+                    );
+                    const querySnapshot = await getDocs(q);
+                    let players = [];
+                    querySnapshot.forEach((doc) => { players.push(doc.data()); });
+                    return players;
+                } catch (idxError) {
+                    // Fallback, pokud ještě ve Firebase nemáš naklikaný Index
+                    console.warn("[CatWars] Missing Firebase Index, using fallback sort.");
+                    const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
+                    let players = [];
+                    querySnapshot.forEach((doc) => { players.push(doc.data()); });
+                    players.sort((a, b) => b.maxLevel - a.maxLevel || b.kills - a.kills);
+                    return players.slice(0, 50);
+                }
             } catch (error) { console.error("[CatWars] Leaderboard fetch error:", error); return []; }
         };
 
