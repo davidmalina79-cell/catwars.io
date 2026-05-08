@@ -1605,14 +1605,15 @@
         console.log("[CatWars] Zahajuji inicializaci Firebase...");
         let isCanvasEnv = typeof __firebase_config !== 'undefined';
         
-        // ZDE SI NECH SVŮJ FIREBASE CONFIG PRO LOKÁLNÍ TESTOVÁNÍ / PRODUKCI
+        // TVŮJ SKUTEČNÝ FIREBASE CONFIG PRO PRODUKCI I TESTOVÁNÍ
         let firebaseConfig = isCanvasEnv ? JSON.parse(__firebase_config) : { 
-            apiKey: "TVUJ_API_KEY", 
-            authDomain: "tvuj-projekt.firebaseapp.com", 
-            projectId: "tvuj-projekt", 
-            storageBucket: "tvuj-projekt.firebasestorage.app", 
-            messagingSenderId: "123456789", 
-            appId: "1:123456789:web:abcdef" 
+            apiKey: "AIzaSyA6EOidw5V5q45xINGnDbh1Szoho5_Ksd0", 
+            authDomain: "catwars-63a0c.firebaseapp.com", 
+            projectId: "catwars-63a0c", 
+            storageBucket: "catwars-63a0c.firebasestorage.app", 
+            messagingSenderId: "918204912047", 
+            appId: "1:918204912047:web:3059fc2c0a7ff1e48f5f5a",
+            measurementId: "G-02ZYGPQSZ7"
         };
 
         let app, auth, db;
@@ -1628,23 +1629,13 @@
         function getFakeEmail() { const nick = document.getElementById('login-nick').value.trim(); if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } return `${nick.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}@catwars.local`; }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
 
-        function checkValidKey() {
-            if (firebaseConfig.apiKey === "TVUJ_API_KEY") {
-                document.getElementById('login-error').innerHTML = "<b>CHYBA:</b> Musíš v kódu (řádek cca 1618) nastavit svůj skutečný Firebase API klíč z Google konzole!";
-                return false;
-            }
-            return true;
-        }
-
         window.loginAsGuest = () => {
-            if (!checkValidKey()) return;
             console.time("[CatWars] Auth trvalo");
             document.getElementById('login-error').innerHTML = "⏳ Připojuji jako hosta...";
             signInAnonymously(auth).then(()=> console.timeEnd("[CatWars] Auth trvalo")).catch(e => { document.getElementById('login-error').innerText = "Error (" + e.code + ")"; console.timeEnd("[CatWars] Auth trvalo"); });
         };
         
         window.loginWithGoogle = () => { 
-            if (!checkValidKey()) return;
             console.time("[CatWars] Auth trvalo");
             document.getElementById('login-error').innerHTML = "⏳ Čekám na Google... (zkontroluj případně vyskakovací okna)";
             const provider = new GoogleAuthProvider(); 
@@ -1663,7 +1654,6 @@
         };
         
         window.loginWithPassword = () => { 
-            if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
                 console.time("[CatWars] Auth trvalo");
@@ -1675,7 +1665,6 @@
         };
         
         window.registerWithPassword = () => { 
-            if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
                 console.time("[CatWars] Auth trvalo");
