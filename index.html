@@ -1600,7 +1600,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         console.log("[CatWars] Zahajuji inicializaci Firebase...");
         let isCanvasEnv = typeof __firebase_config !== 'undefined';
@@ -1620,7 +1620,8 @@
         try { 
             app = initializeApp(firebaseConfig); 
             auth = getAuth(app); 
-            db = getFirestore(app); 
+            // Vynucení Long Pollingu obchází 30s timeout WebSockets způsobený Cloudflare / Adblockery
+            db = initializeFirestore(app, { experimentalForceLongPolling: true }); 
             console.log("[CatWars] Firebase úspěšně inicializován.");
         } catch (error) { console.error("[CatWars] Firebase init selhal:", error); }
         
@@ -1683,7 +1684,11 @@
                 console.log(`[CatWars] Začínám stahovat data pro UID: ${uid}`);
                 console.time("[CatWars] Firestore Download trvalo");
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
-                const snap = await getDoc(docRef);
+                
+                // 5s Timeout pojistka - pokud Firebase mlčí/je blokován, hra se i tak po 5s spustí s lokálními daty
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (5s) - Firebase neodpovídá")), 5000));
+                const snap = await Promise.race([getDoc(docRef), timeoutPromise]);
+                
                 console.timeEnd("[CatWars] Firestore Download trvalo");
                 
                 if (snap.exists()) {
