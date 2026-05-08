@@ -550,8 +550,7 @@
             { id: 'chest5', text: 'Open 5 chests', goal: 5, reward: 40, type: 'chests' },
             { id: 'chest15', text: 'Open 15 chests', goal: 15, reward: 100, type: 'chests' },
             { id: 'combo10', text: 'Reach a 10x combo', goal: 10, reward: 60, type: 'combo' },
-            { id: 'boss1', text: 'Defeat 1 boss', goal: 1, reward: 150, type: 'boss' },
-            { id: 'test2', text: '🧪 [TEST] Reach Level 2', goal: 2, reward: 100000, type: 'level' }, // DOČASNÝ TESTOVACÍ QUEST
+            { id: 'boss1', text: 'Defeat 1 boss', goal: 1, reward: 150, type: 'boss' }
         ];
     </script>
 
@@ -676,20 +675,10 @@
             const today = new Date().toISOString().slice(0, 10);
             if (prog.questDate !== today || !prog.quests || !prog.quests.length) {
                 prog.questDate = today;
-                const shuffled = [...QUEST_POOL].filter(q => q.id !== 'test2').sort(() => Math.random() - 0.5);
+                const shuffled = [...QUEST_POOL].sort(() => Math.random() - 0.5);
                 prog.quests = shuffled.slice(0, 3).map(q => ({ ...q, progress: 0, claimed: false }));
                 saveProgress();
             }
-            
-            // --- DOČASNÝ KÓD PRO TESTOVÁNÍ (Garantuje přidání testovacího questu na první místo) ---
-            if (!prog.quests.some(q => q.id === 'test2')) {
-                const testQ = QUEST_POOL.find(q => q.id === 'test2');
-                if (testQ) {
-                    prog.quests.unshift({ ...testQ, progress: prog.maxCatLevel || 0, claimed: false });
-                    saveProgress();
-                }
-            }
-            // -------------------------------------------------------------------------
         }
 
         function questProgress(type, amount) {
@@ -1944,7 +1933,7 @@
         function getFakeEmail() { 
             const nick = document.getElementById('login-nick').value.trim(); 
             if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } 
-            return `${nick.replace(/[^a-zA-Z0-9]/g, '')}@catwars.local`; // FIX: Bez toLowerCase pro zabránění kolizím účtů
+            return `${nick.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}@catwars.local`; 
         }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
 
