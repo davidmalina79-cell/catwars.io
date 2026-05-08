@@ -469,31 +469,17 @@
         let defaultProg = { maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
         let prog = { ...defaultProg };
         window.currentUserUid = null;
-        let saveDebounceTimer = null; // Debounce timer pro ochranu Firebase limitů
 
-        // --- DEBOUNCED SAVE PROGRESS ---
+        // --- LOCAL SAVE ONLY (Během hry běží pouze lokální ukládání pro brutální úsporu Firebase kvót) ---
         function saveProgress() { 
             if (window.currentUserUid) {
                 localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
             }
             updateMenuStats(); 
-            
-            // Firebase uložení je zpožděné o 5 sekund, abychom zamezili spamu (např. při zabíjení)
-            if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-            saveDebounceTimer = setTimeout(async () => {
-                if (window.saveToFirestore) {
-                    try {
-                        await window.saveToFirestore(prog);
-                    } catch (e) {
-                        console.error('Cloud save failed in background:', e);
-                    }
-                }
-            }, 5000);
         }
 
-        // Okamžité uložení (např. při smrti nebo odchodu do menu)
+        // --- CLOUD SAVE (Volá se pouze na konci kola nebo při nákupech v menu) ---
         async function forceSaveNow() {
-            if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
             if (window.currentUserUid) {
                 localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
             }
@@ -521,7 +507,7 @@
             btn.disabled = true;
             setTimeout(() => {
                 prog.gems += 500;
-                saveProgress();
+                forceSaveNow(); // Cloud sync
                 playSound('gem');
                 updateMenuStats();
                 btn.innerHTML = originalText;
@@ -559,7 +545,7 @@
             if (!q || q.claimed || q.progress < q.goal) return;
             q.claimed = true;
             prog.gems += q.reward;
-            saveProgress();
+            forceSaveNow(); // Cloud sync
             playSound('gem');
             switchTab('quests');
         }
@@ -1023,7 +1009,7 @@
                 prog.gems -= cost; 
                 if (type === 'weapon') prog.weaponUpgrades[level] = nextTier; 
                 if (type === 'helmet') prog.helmetUpgrades[level] = nextTier; 
-                saveProgress(); playSound('gem'); switchTab('cats'); 
+                forceSaveNow(); playSound('gem'); switchTab('cats'); // Cloud sync
             } 
         }
 
@@ -1506,6 +1492,9 @@
                     deathBtns.style.pointerEvents = 'auto';
                 }
             }, 1500);
+
+            // Cloud sync (Pojistka pro případ, že hráč zavře okno prohlížeče dříve, než klikne na Give Up)
+            forceSaveNow();
         }
 
         function executeRevive() { 
@@ -1527,7 +1516,7 @@
         function reviveWithGems() { 
             let need = currentReviveCost; 
             if (playerRunData.gems >= need) { playerRunData.gems -= need; } 
-            else { let fromMeta = need - playerRunData.gems; playerRunData.gems = 0; prog.gems -= fromMeta; saveProgress(); } 
+            else { let fromMeta = need - playerRunData.gems; playerRunData.gems = 0; prog.gems -= fromMeta; forceSaveNow(); } 
             playSound('gem'); executeRevive(); 
         } window.reviveWithGems = reviveWithGems;
 
@@ -1753,6 +1742,7 @@
                 }
             } 
             catch (e) { 
+                completeLoading();
                 document.getElementById('loading-screen').style.display = 'none'; 
                 document.getElementById('login-screen').style.display = 'flex'; 
             }
@@ -1772,29 +1762,42 @@
 
             onAuthStateChanged(auth, async (user) => {
                 authResolved = true;
-                completeLoading();
-                const loadingScreen = document.getElementById('loading-screen'); if (loadingScreen) loadingScreen.style.display = 'none';
+                const loadingScreen = document.getElementById('loading-screen');
+                const loadText = document.getElementById('loading-status-text');
                 
                 if (user) {
                     window.currentUserUid = user.uid;
-                    const statusText = document.getElementById('auth-status-text');
-                    statusText.innerText = "Syncing cloud data...";
+                    if (loadText) loadText.innerText = "Syncing cloud profile...";
                     
+                    // Čekáme na stažení dat ZATÍMCO je loading screen stále zobrazený
                     await window.loadCloudProgress(user.uid);
 
-                    statusText.innerText = "Playing as: " + (user.isAnonymous ? "Guest" : (user.email ? user.email.split('@')[0] : "Hero"));
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('main-menu').style.display = 'flex'; 
+                    completeLoading();
                     
-                    if (window.startApp) { window.startApp(); window.startApp = null; }
+                    // Malé zpoždění pro plynulý vizuální dojezd lišty na 100%
+                    setTimeout(() => {
+                        if (loadingScreen) loadingScreen.style.display = 'none';
+                        const statusText = document.getElementById('auth-status-text');
+                        statusText.innerText = "Playing as: " + (user.isAnonymous ? "Guest" : (user.email ? user.email.split('@')[0] : "Hero"));
+                        document.getElementById('login-screen').style.display = 'none';
+                        document.getElementById('main-menu').style.display = 'flex'; 
+                        
+                        if (window.startApp) { window.startApp(); window.startApp = null; }
+                    }, 400);
                 } else {
                     window.currentUserUid = null;
-                    document.getElementById('login-screen').style.display = 'flex';
-                    document.getElementById('main-menu').style.display = 'none';
+                    completeLoading();
+                    setTimeout(() => {
+                        if (loadingScreen) loadingScreen.style.display = 'none';
+                        document.getElementById('login-screen').style.display = 'flex';
+                        document.getElementById('main-menu').style.display = 'none';
+                    }, 400);
                 }
             });
         } else {
-             document.getElementById('loading-screen').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex';
+             completeLoading();
+             document.getElementById('loading-screen').style.display = 'none'; 
+             document.getElementById('login-screen').style.display = 'flex';
         }
     </script>
 </body>
