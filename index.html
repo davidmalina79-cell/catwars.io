@@ -139,7 +139,7 @@
         table.stats-table tr:last-child td { border-bottom: none; }
         table.stats-table tr:hover { background: rgba(255,255,255,0.05); }
 
-        #dash-container { position: absolute; bottom: 80px; left: 20px; width: 60px; height: 60px; background: rgba(0,0,0,0.5); border: 2px solid #555; border-radius: 50%; display: none; align-items: center; justify-content: center; overflow: hidden; pointer-events: auto; cursor: pointer; z-index: 30;}
+        #dash-container { position: absolute; bottom: 80px; left: 20px; width: 60px; height: 60px; background: rgba(0,0,0,0.5); border: 2px solid #555; border-radius: 50%; display: none; align-items: center; justify-content: center; overflow: hidden; pointer-events: auto; cursor: pointer; z-index: 30; transition: opacity 0.2s;}
         #dash-fill { position: absolute; bottom: 0; width: 100%; height: 100%; background: #00d4ff; opacity: 0.6; transition: height 0.1s linear; }
         #dash-icon { position: relative; z-index: 2; font-size: 24px; color: white; }
 
@@ -202,6 +202,10 @@
         .mod-label:hover { background: rgba(255,255,255,0.1); }
         .mod-label input { transform: scale(1.2); cursor: pointer; accent-color: var(--danger); }
         .mod-bonus { color: #2ecc71; font-weight: bold; margin-left: auto; font-size: 12px; }
+
+        /* KILL FEED ANIMACE */
+        @keyframes fadeOutKillFeed { 0%, 75% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(-20px); } }
+        .kill-feed-item { animation: fadeOutKillFeed 4s forwards; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 6px; border-left: 3px solid; }
     </style>
 </head>
 <body>
@@ -315,14 +319,14 @@
                 <div id="modifiers-panel" style="display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; border: 2px solid var(--danger); width: 100%; max-width: 400px; margin-bottom: 15px; box-sizing: border-box;">
                     <h3 style="margin-top: 0; color: var(--danger); font-size: 16px; margin-bottom: 10px;">💀 Hardcore Modifiers</h3>
                     <div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">
-                        <label class="mod-label"><input type="checkbox" id="mod-double-dmg" onchange="calcModMultiplier()" checked> 💀 Double Enemy Damage <span class="mod-bonus">+200%</span></label>
+                        <label class="mod-label"><input type="checkbox" id="mod-double-dmg" onchange="calcModMultiplier()"> 💀 Double Enemy Damage <span class="mod-bonus">+200%</span></label>
                         <label class="mod-label"><input type="checkbox" id="mod-noheal" onchange="calcModMultiplier()"> 🚫 No Food Healing <span class="mod-bonus">+100%</span></label>
                         <label class="mod-label"><input type="checkbox" id="mod-doubleboss" onchange="calcModMultiplier()"> 👹 Double Bosses <span class="mod-bonus">+100%</span></label>
                         <label class="mod-label"><input type="checkbox" id="mod-fast" onchange="calcModMultiplier()"> ⚡ Rabid Dogs (Fast) <span class="mod-bonus">+50%</span></label>
                         <label class="mod-label"><input type="checkbox" id="mod-nodash" onchange="calcModMultiplier()"> 🐢 No Dash <span class="mod-bonus">+50%</span></label>
                     </div>
                     <div style="margin-top: 10px; font-weight: bold; color: #f1c40f; text-align: center; border-top: 1px solid #444; padding-top: 10px;">
-                        Gem Multiplier: <span id="mod-total-mult" style="font-size: 20px;">3.0</span>x
+                        Gem Multiplier: <span id="mod-total-mult" style="font-size: 20px;">1.0</span>x
                     </div>
                 </div>
                 
@@ -398,6 +402,7 @@
             </div>
             
             <div class="stat-box">⚔️ <span id="ui-kills">0</span></div>
+            <div class="stat-box" id="ui-team-kills-box" style="display:none; color: #3498db; border-color: #3498db;">👥 <span id="ui-team-kills">0</span></div>
             <div class="stat-box gem-text">💎 <span id="ui-gems">0</span></div>
             <div class="stat-box combo-text" id="combo-box">🔥 <span id="ui-combo">0</span>x</div>
         </div>
@@ -418,6 +423,9 @@
                 Move: Mouse | Attack: Left Click | Dash: Space / Right Click | Pause: ESC
             </div>
         </div>
+        
+        <!-- KILL FEED PRO MULTIPLAYER -->
+        <div id="kill-feed" style="position: absolute; bottom: 100px; left: 20px; display: flex; flex-direction: column-reverse; gap: 5px; z-index: 45; pointer-events: none; text-shadow: 1px 1px 2px #000; font-weight: bold; font-size: 14px; width: 300px;"></div>
     </div>
     
     <canvas id="minimap" width="160" height="160"></canvas>
@@ -607,6 +615,14 @@
         ];
 
         const BOT_NAMES = ['ShadowPaws', 'KittySlayer99', 'xX_Meow_Xx', 'ProGamerCat', 'CatZilla', 'PawsOfFury', 'Meowster', 'FelineGood', 'Scratchy', 'Purrfect', 'SirMeows', 'CatnipLover', 'NinjaClaw', 'DogeHater', 'FluffDemon'];
+        let availableBotNames = [...BOT_NAMES];
+        
+        function getBotName() {
+            if (availableBotNames.length === 0) availableBotNames = [...BOT_NAMES];
+            let idx = Math.floor(Math.random() * availableBotNames.length);
+            return availableBotNames.splice(idx, 1)[0];
+        }
+
     </script>
 
     <!-- ================================================================================================= -->
@@ -616,21 +632,20 @@
         let defaultProg = { nickname: '', globalLevel: 1, globalXp: 0, maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
         let prog = { ...defaultProg };
         window.currentUserUid = null;
-        let currentGemMultiplier = 1.0; // Pro Hardcore Modifikátory
+        let currentGemMultiplier = 1.0; 
 
-        // TABULKA GLOBÁLNÍCH HODNOSTÍ
         function getGlobalRankInfo(level) {
             const tiers = [
-                { name: "Stray Recruit", color: "#7f8c8d" },       // Tier 0: Šedá (Lv 1-5)
-                { name: "Paw-rivate", color: "#27ae60" },          // Tier 1: Zelená (Lv 6-10)
-                { name: "Claw-poral", color: "#2980b9" },          // Tier 2: Modrá (Lv 11-15)
-                { name: "Purr-geant", color: "#8e44ad" },          // Tier 3: Fialová (Lv 16-20)
-                { name: "Lieu-tail-nant", color: "#cd7f32" },      // Tier 4: Bronzová (Lv 21-25)
-                { name: "Cat-tain", color: "#bdc3c7" },            // Tier 5: Stříbrná (Lv 26-30)
-                { name: "Meow-jor", color: "#f1c40f" },            // Tier 6: Zlatá (Lv 31-35)
-                { name: "Purr-onel", color: "#00d4ff" },           // Tier 7: Platinová/Cyan (Lv 36-40)
-                { name: "Gen-furball", color: "#e74c3c" },         // Tier 8: Rubínová/Červená (Lv 41-45)
-                { name: "Supreme Comm-meow-nder", color: "#ff00ff" } // Tier 9: Duhová/Magenta (Lv 46-50)
+                { name: "Stray Recruit", color: "#7f8c8d" },       
+                { name: "Paw-rivate", color: "#27ae60" },          
+                { name: "Claw-poral", color: "#2980b9" },          
+                { name: "Purr-geant", color: "#8e44ad" },          
+                { name: "Lieu-tail-nant", color: "#cd7f32" },      
+                { name: "Cat-tain", color: "#bdc3c7" },            
+                { name: "Meow-jor", color: "#f1c40f" },            
+                { name: "Purr-onel", color: "#00d4ff" },           
+                { name: "Gen-furball", color: "#e74c3c" },         
+                { name: "Supreme Comm-meow-nder", color: "#ff00ff" } 
             ];
             let safeLevel = Math.max(1, Math.min(50, level));
             let tierIndex = Math.floor((safeLevel - 1) / 5);
@@ -646,7 +661,6 @@
             };
         }
 
-        // --- LOCAL SAVE ONLY (Během hry běží pouze lokální ukládání pro brutální úsporu Firebase kvót) ---
         function saveProgress() { 
             if (window.currentUserUid) {
                 localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
@@ -654,7 +668,6 @@
             updateMenuStats(); 
         }
 
-        // --- CLOUD SAVE (Volá se pouze na konci kola nebo při nákupech v menu) ---
         async function forceSaveNow() {
             if (window.currentUserUid) {
                 localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
@@ -679,7 +692,6 @@
                 document.getElementById('player-nickname').value = prog.nickname || '';
             }
             
-            // Globální Rank UI Update
             let rankInfo = getGlobalRankInfo(prog.globalLevel || 1);
             let badgeEl = document.getElementById('mm-global-rank-badge');
             if(badgeEl) {
@@ -692,7 +704,6 @@
                 document.getElementById('global-xp-text').innerText = prog.globalLevel >= 50 ? "MAX RANK REACHED" : `${prog.globalXp || 0} / ${rankInfo.nextXp} XP`;
             }
 
-            // Nastavení ikon pro tlačítka na pravé straně menu
             if(typeof getSpriteDataURL === 'function' && document.getElementById('btn-icon-cats')) {
                 try {
                     let wTier = prog.weaponUpgrades[prog.maxCatLevel] || 0;
@@ -704,7 +715,6 @@
             }
         }
 
-        // VÝPOČET MODIFIKÁTORŮ
         let activeMods = { doubleDmg: false, noHeal: false, doubleBoss: false, fast: false, noDash: false };
         function calcModMultiplier() {
             let mult = 1.0;
@@ -718,10 +728,9 @@
         }
         window.calcModMultiplier = calcModMultiplier;
 
-        // LOGIKA PRO VÝBĚR MÓDU
         let selectedGameMode = 'solo';
         function selectMode(mode) {
-            if (mode === 'ffa') return; // Zatím uzamčeno
+            if (mode === 'ffa') return; 
             
             document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
             document.getElementById('mode-' + mode).classList.add('active');
@@ -759,7 +768,7 @@
             btn.disabled = true;
             setTimeout(() => {
                 prog.gems += 500;
-                forceSaveNow(); // Cloud sync
+                forceSaveNow(); 
                 playSound('gem');
                 updateMenuStats();
                 btn.innerHTML = originalText;
@@ -797,22 +806,27 @@
             if (!q || q.claimed || q.progress < q.goal) return;
             q.claimed = true;
             prog.gems += q.reward;
-            forceSaveNow(); // Cloud sync
+            forceSaveNow(); 
             playSound('gem');
             switchTab('quests');
         }
         window.claimQuest = claimQuest;
 
         // AUDIO
-        let audioCtx = null; let soundEnabled = true; let lastGemSoundTime = 0;
+        let audioCtx = null; let soundEnabled = true; let lastGemSoundTime = 0, lastHitSoundTime = 0, lastSwingSoundTime = 0;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function toggleSound() { soundEnabled = !soundEnabled; document.getElementById('sound-toggle').innerText = soundEnabled ? '🔊' : '🔇'; }
         window.toggleSound = toggleSound;
         function playSound(type) {
             if (!soundEnabled || !audioCtx) return; 
-            if (audioCtx.state === 'suspended') return; // FIX: Ochrana proti pádu při uspaném audiu
+            if (audioCtx.state === 'suspended') return; 
             let now = audioCtx.currentTime;
+            
+            // Audio throttling
             if (type === 'gem') { if (now - lastGemSoundTime < 0.07) return; lastGemSoundTime = now; }
+            if (type === 'hit') { if (now - lastHitSoundTime < 0.05) return; lastHitSoundTime = now; }
+            if (type === 'swing') { if (now - lastSwingSoundTime < 0.05) return; lastSwingSoundTime = now; }
+            
             let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             
@@ -873,27 +887,42 @@
         function getDmgNumber() { return dmgNumberPool.pop() || { x:0, y:0, vy:0, val:0, life:0, color:'#fff' }; }
         function releaseDmgNumber(d) { dmgNumberPool.push(d); }
 
-        const spatialGrid = new Map();
         function getGridKey(x, y) { return Math.floor(x / GRID_CELL) + '_' + Math.floor(y / GRID_CELL); }
-        function rebuildGrid(items) {
-            spatialGrid.clear();
-            for (let i = 0; i < items.length; i++) {
-                let key = getGridKey(items[i].x, items[i].y);
-                if (!spatialGrid.has(key)) spatialGrid.set(key, []);
-                spatialGrid.get(key).push(items[i]);
-            }
+        
+        const gridEnemies = new Map();
+        const gridFoods = new Map();
+        const gridGems = new Map();
+
+        function rebuildGrids() {
+            gridEnemies.clear(); gridFoods.clear(); gridGems.clear();
+            for (let e of enemies) { let k = getGridKey(e.x, e.y); if (!gridEnemies.has(k)) gridEnemies.set(k, []); gridEnemies.get(k).push(e); }
+            for (let f of foods) { let k = getGridKey(f.x, f.y); if (!gridFoods.has(k)) gridFoods.set(k, []); gridFoods.get(k).push(f); }
+            for (let g of droppedGems) { let k = getGridKey(g.x, g.y); if (!gridGems.has(k)) gridGems.set(k, []); gridGems.get(k).push(g); }
         }
-        function queryGrid(x, y, radius) {
+
+        function queryGridMap(map, x, y, radius) {
             let r = Math.ceil(radius / GRID_CELL);
             let cx = Math.floor(x / GRID_CELL), cy = Math.floor(y / GRID_CELL);
             let result = [];
             for (let dx = -r; dx <= r; dx++) {
                 for (let dy = -r; dy <= r; dy++) {
-                    let cell = spatialGrid.get((cx + dx) + '_' + (cy + dy));
+                    let cell = map.get((cx + dx) + '_' + (cy + dy));
                     if (cell) result.push(...cell);
                 }
             }
             return result;
+        }
+
+        function pushKillFeed(html) {
+            if(selectedGameMode !== 'team') return;
+            let container = document.getElementById('kill-feed');
+            let el = document.createElement('div');
+            el.className = 'kill-feed-item';
+            el.style.borderColor = html.includes('💀') ? '#e74c3c' : '#3498db';
+            el.innerHTML = html;
+            container.prepend(el);
+            setTimeout(() => { if(el.parentElement) el.remove(); }, 4000);
+            if(container.children.length > 5) container.lastChild.remove();
         }
 
         // DRAWING
@@ -1076,10 +1105,7 @@
             
             let stats = evolutions[Math.min(level - 1, 49)];
             let isCat = type === 'cats'; let cColor = isCat ? stats.catColor : stats.dogColor;
-            
-            // OPRAVA GRAFIKY: Zmenšený vizuál (z 1.7 na 1.35), aby zbraně netrčely mimo plátno
             let visSize = (22 + Math.min(level, 50) * 0.35) * 1.35; 
-            
             tCtx.rotate(Math.PI / 2); 
             
             drawEntity(tCtx, isCat, visSize, cColor, stats.accent, stats.pattern, 0, stats.weaponType, level, helmetTier, weaponTier);
@@ -1091,14 +1117,8 @@
             let key = `${weaponType}_${upgradeTier}`;
             if (weaponCache[key]) return weaponCache[key];
             let tempC = document.createElement('canvas'); tempC.width = 180; tempC.height = 180;
-            let tCtx = tempC.getContext('2d'); 
-            
-            // OPRAVA GRAFIKY: Posunuto mírně dolů a rotace nastavena na -90 stupňů (rovně nahoru)
-            tCtx.translate(90, 150); 
-            tCtx.rotate(-Math.PI / 2);
-            
-            let size = 42; // Mírně zmenšeno
-            
+            let tCtx = tempC.getContext('2d'); tCtx.translate(90, 150); tCtx.rotate(-Math.PI / 2);
+            let size = 42; 
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let sizeMult = UPGRADE_SIZE_MULT[upgradeTier];
             let wLen = (size * 2.5) * archStats.reachMult * sizeMult; 
@@ -1139,7 +1159,8 @@
             document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('dash-container').style.display = 'none'; 
             document.getElementById('minimap').style.display = 'none'; document.getElementById('boss-arrow').style.display = 'none';
             document.getElementById('pause-btn').style.display = 'none'; document.getElementById('tutorial').style.display = 'none';
-            document.getElementById('pause-overlay').style.display = 'none'; // OPRAVA: Ujistí se, že se okno pauzy skryje
+            document.getElementById('pause-overlay').style.display = 'none'; 
+            document.getElementById('kill-feed').innerHTML = ''; // Vyčistíme kill feed
             document.getElementById('main-menu').style.display = 'flex'; document.body.classList.remove('low-hp'); 
             gameState = 'menu'; updateMenuStats(); 
         }
@@ -1325,12 +1346,12 @@
         window.togglePause = togglePause;
 
         // GAME STATE & MAIN LOGIC
-        let playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 };
+        let playerRunData = { kills: 0, teamKills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 };
         let chests = [], droppedGems = [], player, currentZoom = 1;
         let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [], aiCats = [];
         let gameState = 'menu', hitStop = 0, bossSpawnTimer = 0, miniBossSpawnTimer = 0, currentReviveCost = 0;
         let combo = 0, comboTimer = 0;
-        let isHardcoreMode = false; // Příznak módu
+        let isHardcoreMode = false; 
         const COMBO_WINDOW = 3.0, COMBO_BUFF_THRESHOLD = 5;
         let lastTime = 0; 
         
@@ -1352,13 +1373,11 @@
         function startGame() {
             initAudio(); document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
             
-            // Uložení nicku z menu před startem
             prog.nickname = document.getElementById('player-nickname').value.trim() || 'Hero';
             saveProgress();
 
             isHardcoreMode = (selectedGameMode === 'hardcore');
 
-            // Aktivace zvolených modifikátorů
             if (isHardcoreMode) {
                 activeMods.doubleDmg = document.getElementById('mod-double-dmg').checked;
                 activeMods.noHeal = document.getElementById('mod-noheal').checked;
@@ -1371,17 +1390,31 @@
                 currentGemMultiplier = 1.0;
             }
 
+            if (activeMods.noDash) {
+                document.getElementById('dash-container').style.opacity = '0.3';
+                document.getElementById('dash-icon').innerText = '🚫';
+            } else {
+                document.getElementById('dash-container').style.opacity = '1';
+                document.getElementById('dash-icon').innerText = '⚡';
+            }
+
+            if (selectedGameMode === 'team') {
+                document.getElementById('ui-team-kills-box').style.display = 'flex';
+            } else {
+                document.getElementById('ui-team-kills-box').style.display = 'none';
+            }
+
             currentZoom = 1; 
             let pMaxHpBase = evolutions[0].maxHp;
             let pHpMult = HELMET_HP_MULT[prog.helmetUpgrades[1] || 0];
-            
             let finalMaxHp = pMaxHpBase * pHpMult;
 
             player = { name: prog.nickname, x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: finalMaxHp, maxHp: finalMaxHp, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
-            playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 }; combo = 0; comboTimer = 0;
+            playerRunData = { kills: 0, teamKills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 }; combo = 0; comboTimer = 0;
             
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
+            document.getElementById('kill-feed').innerHTML = ''; // Vyčistit feed
             
             foods = []; enemies = []; decorations = []; chests = []; droppedGems = []; aiCats = []; hitStop = 0; bossSpawnTimer = 60; miniBossSpawnTimer = 30; 
             mouseX = width/2; mouseY = height/2; isMouseDown = false; dashRequested = false;
@@ -1394,7 +1427,6 @@
             for(let i=0; i<FOOD_COUNT; i++) spawnFood();
             for(let i=0; i<ENEMY_COUNT; i++) spawnEnemy(true);
             
-            // AI Kočky se spawnou POUZE v Cats vs Dogs módu
             if (selectedGameMode === 'team') {
                 for(let i=0; i<8; i++) spawnAICat(true);
             }
@@ -1424,19 +1456,23 @@
                 cx = Math.random() * WORLD_SIZE; cy = Math.random() * WORLD_SIZE; 
             } else {
                 let cameraDiag = Math.sqrt(width * width + height * height) / (2 * currentZoom); let attempts = 0;
-                do { let angle = Math.random() * Math.PI * 2; let dist = cameraDiag + 800 + Math.random() * 1000; cx = Math.max(120, Math.min(WORLD_SIZE - 120, player.x + Math.cos(angle) * dist)); cy = Math.max(120, Math.min(WORLD_SIZE - 120, player.y + Math.sin(angle) * dist)); attempts++; } while (Math.hypot(cx - player.x, cy - player.y) < cameraDiag && attempts < 10);
+                // Despawn je na 5000, takže spawn do 4000
+                do { let angle = Math.random() * Math.PI * 2; let dist = cameraDiag + 800 + Math.random() * 500; cx = Math.max(120, Math.min(WORLD_SIZE - 120, player.x + Math.cos(angle) * dist)); cy = Math.max(120, Math.min(WORLD_SIZE - 120, player.y + Math.sin(angle) * dist)); attempts++; } while (Math.hypot(cx - player.x, cy - player.y) < cameraDiag && attempts < 10);
             }
             
             let cStats = evolutions[cLvl - 1];
             let wTier = Math.min(4, Math.floor(cLvl / 12) + (Math.random()>0.5?1:0));
             let hTier = Math.min(5, Math.floor(cLvl / 10));
-            let cName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+            let cMaxHp = cStats.maxHp * HELMET_HP_MULT[hTier];
+            let cName = getBotName();
+            let pType = ['aggro', 'defender', 'greedy'][Math.floor(Math.random() * 3)];
             
             aiCats.push({ 
-                x: cx, y: cy, level: cLvl, name: cName, hp: cStats.maxHp, maxHp: cStats.maxHp, 
+                x: cx, y: cy, level: cLvl, name: cName, hp: cMaxHp, maxHp: cMaxHp, 
                 size: cStats.baseSize, speed: cStats.speed, angle: Math.random() * Math.PI * 2, 
                 attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, attackProgress: 0,
-                knockbackVx: 0, knockbackVy: 0, state: 'wander', wTier: wTier, hTier: hTier, xp: 0
+                knockbackVx: 0, knockbackVy: 0, state: 'wander', wTier: wTier, hTier: hTier, xp: 0,
+                invuln: 0, personality: pType
             });
         }
 
@@ -1452,7 +1488,7 @@
             let bossDmg = Math.floor(40 * Math.pow(1.28, player.level)) * variant.dmgMult; 
             
             let eSpeed = pStats.speed * 0.7 * variant.speedMult;
-            if (activeMods.fast) eSpeed *= 1.5; // Modifikátor rychlosti pro bosse
+            if (activeMods.fast) eSpeed *= 1.5; 
             
             enemies.push({ x: ex, y: ey, level: bossLvl, name: variant.name, size: stats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: stats.weaponLength * 1.2, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.4 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#ffffff', pattern: 'god', weaponType: variant.weapon, hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), ability: variant.ability, specialTimer: 5.0, specialPhase: 0 });
             playSound('boss'); let alert = document.getElementById('boss-alert'); alert.innerText = variant.alert; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 3500);
@@ -1470,7 +1506,7 @@
             let mbDmg = Math.floor(25 * Math.pow(1.28, player.level)) * variant.dmgMult; 
             
             let eSpeed = pStats.speed * 0.85 * variant.speedMult;
-            if (activeMods.fast) eSpeed *= 1.5; // Modifikátor rychlosti pro minibosse
+            if (activeMods.fast) eSpeed *= 1.5;
 
             enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#111111', pattern: 'demon', weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon) });
             
@@ -1506,7 +1542,7 @@
             
             let arch = getWeaponArchetype(stats.weaponType); let archStats = ARCH_STATS[arch];
             let eSpeed = stats.speed * 0.82;
-            if (activeMods.fast) eSpeed *= 1.5; // Modifikátor rychlosti pro obyčejné nepřátele
+            if (activeMods.fast) eSpeed *= 1.5; 
 
             enemies.push({ x: ex, y: ey, level: enemyLevel, name: stats.dogName, size: stats.baseSize, speed: eSpeed, weaponLength: stats.weaponLength * archStats.reachMult, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 0.83 * archStats.cdMult, hasAttacked: false, state: 'wander', stateTimer: 0, color: stats.dogColor, accent: stats.accent, pattern: stats.pattern, weaponType: stats.weaponType, hp: stats.maxHp, maxHp: stats.maxHp, damage: stats.enemyDamage * archStats.dmgMult, isBoss: false, isMiniBoss: false, knockbackVx: 0, knockbackVy: 0, archetype: arch });
         }
@@ -1565,7 +1601,9 @@
             document.getElementById('hp-bar').style.width = (hpPct * 100) + '%'; 
             if(hpPct < 0.25) document.body.classList.add('low-hp'); else document.body.classList.remove('low-hp');
             
-            document.getElementById('ui-kills').innerText = playerRunData.kills; document.getElementById('ui-gems').innerText = prog.gems + playerRunData.gems; 
+            document.getElementById('ui-kills').innerText = playerRunData.kills; 
+            document.getElementById('ui-team-kills').innerText = playerRunData.teamKills;
+            document.getElementById('ui-gems').innerText = prog.gems + playerRunData.gems; 
             
             if (combo >= 2) { document.getElementById('combo-box').style.display = 'block'; document.getElementById('ui-combo').innerText = combo; } 
             else { document.getElementById('combo-box').style.display = 'none'; }
@@ -1595,8 +1633,6 @@
                 let stats = evolutions[Math.min(player.level - 1, 49)]; let pSize = stats.baseSize;
                 let targetZoom = Math.max(0.45, 1 / (1 + (player.level - 1) * 0.02)); 
                 currentZoom += (targetZoom - currentZoom) * (dt * 3);
-                
-                // Určíme poloměr, ve kterém budeme přehrávat zvuky z okolí (dle aktuálního přiblížení)
                 let viewRadius = (Math.max(width, height) / currentZoom) * 0.6;
                 
                 for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx * dt; particles[i].y += particles[i].vy * dt; particles[i].life -= dt; if (particles[i].life <= 0) { releaseParticle(particles[i]); particles.splice(i, 1); } }
@@ -1608,10 +1644,7 @@
                     if (gDist < pSize + 20) { 
                         droppedGems.splice(i, 1); 
                         let val = g.size > 15 ? 10 : 1; 
-                        
-                        // Modifikátor se aplikuje přímo na sebrané gemy
                         val = Math.floor(val * currentGemMultiplier);
-                        
                         playerRunData.gems += val; playerRunData.totalRunGems += val; playSound('gem'); updateUI(); 
                     } 
                     else if (g.life <= 0) droppedGems.splice(i, 1); 
@@ -1622,64 +1655,64 @@
 
                 if (hitStop > 0) { hitStop -= dt; draw(stats); requestAnimationFrame(gameLoop); return; }
 
-                if (frameCounter % 2 === 0) rebuildGrid(enemies);
+                if (frameCounter % 2 === 0) rebuildGrids();
                 
                 // --- AI CATS LOGIC ---
                 for (let i = aiCats.length - 1; i >= 0; i--) {
                     let c = aiCats[i];
                     if (c.hp <= 0) {
-                        dropGems(c.x, c.y, 5 + Math.floor(Math.random()*10)); // AI kočka dropne gemy, když zemře
+                        dropGems(c.x, c.y, 5 + Math.floor(Math.random()*10));
                         aiCats.splice(i, 1);
                         continue;
-                    } else if (Math.hypot(player.x - c.x, player.y - c.y) > 4000) {
-                        aiCats.splice(i, 1); // Despawn příliš vzdálených
+                    } else if (Math.hypot(player.x - c.x, player.y - c.y) > 5000) {
+                        aiCats.splice(i, 1); 
                         continue;
                     }
+                    if (c.invuln > 0) c.invuln -= dt;
 
-                    // ROZESTUPY (Separation) - Zabrání shlukování koček do jednoho bodu
                     for (let other of aiCats) {
                         if (c === other) continue;
                         let dist = Math.hypot(c.x - other.x, c.y - other.y);
                         let minDist = (c.size + other.size) * 1.5;
                         if (dist > 0 && dist < minDist) {
                             let overlap = minDist - dist;
-                            c.x += ((c.x - other.x) / dist) * overlap * 0.1;
-                            c.y += ((c.y - other.y) / dist) * overlap * 0.1;
+                            c.x += ((c.x - other.x) / dist) * overlap * (dt * 60) * 0.1;
+                            c.y += ((c.y - other.y) / dist) * overlap * (dt * 60) * 0.1;
                         }
                     }
-                    // Rozestup AI koček od hráče
                     let distToPlayer = Math.hypot(c.x - player.x, c.y - player.y);
                     let pMinDist = (c.size + pSize) * 1.5;
                     if (distToPlayer > 0 && distToPlayer < pMinDist) {
                         let overlap = pMinDist - distToPlayer;
-                        c.x += ((c.x - player.x) / distToPlayer) * overlap * 0.1;
-                        c.y += ((c.y - player.y) / distToPlayer) * overlap * 0.1;
+                        c.x += ((c.x - player.x) / distToPlayer) * overlap * (dt * 60) * 0.1;
+                        c.y += ((c.y - player.y) / distToPlayer) * overlap * (dt * 60) * 0.1;
                     }
 
+                    let searchRadiusDog = c.personality === 'aggro' ? 2200 : 1200;
+                    let nearEnemies = queryGridMap(gridEnemies, c.x, c.y, searchRadiusDog);
                     let nearestDog = null, minDogDist = Infinity;
                     let nearestBoss = null, minBossDist = Infinity;
-                    enemies.forEach(e => {
+                    for(let e of nearEnemies) {
                         let d = Math.hypot(e.x - c.x, e.y - c.y);
                         if (e.isBoss && d < minBossDist) { nearestBoss = e; minBossDist = d; }
                         if (d < minDogDist) { nearestDog = e; minDogDist = d; }
-                    });
-
-                    // Target boss if nearby, otherwise target nearest dog
+                    }
                     let targetDog = (nearestBoss && minBossDist < 2500) ? nearestBoss : nearestDog;
 
+                    let searchRadiusFood = c.personality === 'greedy' ? 1800 : 1000;
+                    let nearFoods = queryGridMap(gridFoods, c.x, c.y, searchRadiusFood);
                     let nearestFood = null, minFoodDist = Infinity;
-                    foods.forEach(f => {
+                    for(let f of nearFoods) {
                         let d = Math.hypot(f.x - c.x, f.y - c.y);
-                        // Omezený dohled na jídlo (1200px), aby nešly všechny kočky přes celou mapu pro jedno jídlo
-                        if (d < minFoodDist && d < 1200) { nearestFood = f; minFoodDist = d; }
-                    });
+                        if (d < minFoodDist) { nearestFood = f; minFoodDist = d; }
+                    }
 
-                    // AI kočka hledá nejbližší gemy
+                    let nearGems = queryGridMap(gridGems, c.x, c.y, searchRadiusFood);
                     let nearestGem = null, minGemDist = Infinity;
-                    droppedGems.forEach(g => {
+                    for(let g of nearGems) {
                         let d = Math.hypot(g.x - c.x, g.y - c.y);
                         if (d < minGemDist) { nearestGem = g; minGemDist = d; }
-                    });
+                    }
 
                     let cStats = evolutions[Math.min(c.level - 1, 49)];
                     let cArchStats = ARCH_STATS[getWeaponArchetype(cStats.weaponType)];
@@ -1689,38 +1722,31 @@
                     let cAttackReach = (c.size * 1.5) + (cStats.weaponLength * cReachMult);
                     let cSpeed = cStats.speed;
 
-                    // AI State Machine
+                    // PERSONALITY STATE MACHINE
                     if (c.hp < c.maxHp * 0.25) c.state = 'flee';
-                    else if (targetDog && minDogDist < 1200) c.state = 'chase';
+                    else if (c.personality === 'defender' && distToPlayer > 800 && distToPlayer < 3500) c.state = 'follow_player';
+                    else if (c.personality === 'greedy' && nearestGem && minGemDist < 1200) c.state = 'greedy_gem';
+                    else if (targetDog && minDogDist < searchRadiusDog) c.state = 'chase';
                     else c.state = 'wander';
 
-                    // Movement
-                    if (c.state === 'flee' && nearestFood) {
-                        c.angle = Math.atan2(nearestFood.y - c.y, nearestFood.x - c.x);
-                    } else if (c.state === 'chase' && targetDog) {
+                    if (c.state === 'flee' && nearestFood) c.angle = Math.atan2(nearestFood.y - c.y, nearestFood.x - c.x);
+                    else if (c.state === 'follow_player') c.angle = Math.atan2(player.y - c.y, player.x - c.x);
+                    else if (c.state === 'greedy_gem' && nearestGem) c.angle = Math.atan2(nearestGem.y - c.y, nearestGem.x - c.x);
+                    else if (c.state === 'chase' && targetDog) {
                         c.angle = Math.atan2(targetDog.y - c.y, targetDog.x - c.x);
-                        if (minDogDist < cAttackReach * 0.8) cSpeed *= 0.5; // Zpomalí u cíle
-                    } else if (nearestGem && minGemDist < 800) { // Pokud vidí gemy, jde si pro ně
-                        c.angle = Math.atan2(nearestGem.y - c.y, nearestGem.x - c.x);
-                    } else if (nearestFood) {
-                        c.angle = Math.atan2(nearestFood.y - c.y, nearestFood.x - c.x);
-                    } else {
-                        if (Math.random() < 0.05) c.angle += (Math.random() - 0.5);
-                    }
+                        if (minDogDist < cAttackReach * 0.8) cSpeed *= 0.5;
+                    } else if (nearestFood) c.angle = Math.atan2(nearestFood.y - c.y, nearestFood.x - c.x);
+                    else if (Math.random() < 0.05) c.angle += (Math.random() - 0.5);
 
                     c.x += Math.cos(c.angle) * cSpeed * dt + c.knockbackVx * dt;
                     c.y += Math.sin(c.angle) * cSpeed * dt + c.knockbackVy * dt;
                     c.knockbackVx *= Math.pow(0.001, dt); c.knockbackVy *= Math.pow(0.001, dt);
                     c.x = Math.max(c.size, Math.min(WORLD_SIZE - c.size, c.x)); c.y = Math.max(c.size, Math.min(WORLD_SIZE - c.size, c.y));
 
-                    // Attack logic
                     if (c.attackTimer > 0) {
                         c.attackTimer -= dt;
                         c.attackProgress = 1 - (c.attackTimer / c.attackCooldown);
-                    } else {
-                        c.attackProgress = 0;
-                        c.hasAttacked = false;
-                    }
+                    } else { c.attackProgress = 0; c.hasAttacked = false; }
 
                     if (c.state === 'chase' && targetDog && minDogDist < cAttackReach + targetDog.size && c.attackTimer <= 0) {
                         c.attackTimer = cStats.attackCooldown || (0.66 * cArchStats.cdMult);
@@ -1742,13 +1768,17 @@
                                 if (cArchStats.knockback > 0) { let ang = Math.atan2(targetDog.y - c.y, targetDog.x - c.x); targetDog.knockbackVx = Math.cos(ang) * cArchStats.knockback; targetDog.knockbackVy = Math.sin(ang) * cArchStats.knockback; }
                                 
                                 if (targetDog.hp <= 0) {
-                                    // Dropne gemy (které hráč může AI kočce ukrást!)
+                                    pushKillFeed(`🤖 ${c.name} killed ${targetDog.name}`);
+                                    playerRunData.teamKills++; updateUI();
+                                    
+                                    // Společný postup pro tým! AI Kill se ti zapíše do Bestiáře a celkových killů.
+                                    prog.totalKills++; prog.dogKills[targetDog.name] = (prog.dogKills[targetDog.name] || 0) + 1;
+                                    
                                     if (targetDog.isBoss) dropGems(targetDog.x, targetDog.y, 100, 'boss');
                                     else if (targetDog.isMiniBoss) dropGems(targetDog.x, targetDog.y, 30, 'boss');
                                     else if (targetDog.level >= c.level + 1) dropGems(targetDog.x, targetDog.y, 3 + Math.floor(Math.random() * 4)); 
                                     else if (Math.random() > 0.75) dropGems(targetDog.x, targetDog.y, 1);
                                     
-                                    // Smaže psa ze hry
                                     let eIdx = enemies.indexOf(targetDog);
                                     if (eIdx > -1) enemies.splice(eIdx, 1);
                                 }
@@ -1756,19 +1786,18 @@
                         }
                     }
 
-                    // Steal Food (Level up!)
                     for (let j = foods.length - 1; j >= 0; j--) {
                         let f = foods[j];
                         if (Math.hypot(c.x - f.x, c.y - f.y) < c.size + f.size + 15) {
                             foods.splice(j, 1);
-                            if (c.hp < c.maxHp) {
+                            if (c.hp < c.maxHp && !activeMods.noHeal) {
                                 c.hp = Math.min(c.maxHp, c.hp + c.maxHp * 0.15);
                             } else {
                                 c.xp += 18;
                                 if (c.xp >= cStats.nextXp && c.level < 50) {
                                     c.level++; c.xp = 0;
                                     let newStats = evolutions[Math.min(c.level - 1, 49)];
-                                    c.maxHp = newStats.maxHp; c.hp = c.maxHp; c.size = newStats.baseSize;
+                                    c.maxHp = newStats.maxHp * HELMET_HP_MULT[c.hTier]; c.hp = c.maxHp; c.size = newStats.baseSize;
                                     for(let p=0; p<15; p++) { let pt = getParticle(); pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
                                 }
                             }
@@ -1776,11 +1805,10 @@
                         }
                     }
                     
-                    // Steal Gems
                     for (let j = droppedGems.length - 1; j >= 0; j--) {
                         let g = droppedGems[j];
                         if (Math.hypot(c.x - g.x, c.y - g.y) < c.size + 20) {
-                            droppedGems.splice(j, 1); // Zloději jedni!
+                            droppedGems.splice(j, 1);
                         }
                     }
                 }
@@ -1834,7 +1862,7 @@
                 if(bossSpawnTimer <= 0) { 
                     if (!enemies.some(e=>e.isBoss)) {
                         spawnBoss();
-                        if (activeMods.doubleBoss) spawnBoss(); // Druhý boss
+                        if (activeMods.doubleBoss) spawnBoss(); 
                     }
                     bossSpawnTimer = 120; 
                 }
@@ -1843,7 +1871,6 @@
                 for (let i = chests.length - 1; i >= 0; i--) { if (Math.hypot(player.x - chests[i].x, player.y - chests[i].y) > 2500) chests.splice(i, 1); }
                 while (enemies.length < ENEMY_COUNT) spawnEnemy(); while (chests.length < CHEST_COUNT) spawnChest();
                 
-                // Udržování populace AI koček POUZE v team módu
                 if (selectedGameMode === 'team') {
                     while (aiCats.length < 8) spawnAICat();
                 }
@@ -1890,7 +1917,6 @@
                 for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i]; if (e.hp <= 0) continue;
                     
-                    // TARGETING LOGIC (Nearest Cat - Player or AI)
                     let target = player;
                     let minDistToTarget = Math.hypot(player.x - e.x, player.y - e.y);
                     for (let c of aiCats) {
@@ -1899,7 +1925,7 @@
                     }
                     let targetSize = target === player ? pSize : target.size;
 
-                    let nearEnemies = queryGrid(e.x, e.y, e.size * 3);
+                    let nearEnemies = queryGridMap(gridEnemies, e.x, e.y, e.size * 3);
                     for (let o of nearEnemies) {
                         if (e === o) continue;
                         let odx = e.x - o.x, ody = e.y - o.y; let odist = Math.hypot(odx, ody); let minDist = (e.size + o.size) * 0.8;
@@ -1912,7 +1938,7 @@
                     if (e.stateTimer <= 0 && !e.isBoss && !e.isMiniBoss) { 
                         e.stateTimer = 0.7 + Math.random() * 1.3; 
                         if (minDistToTarget < 1200) { 
-                            let packMembers = queryGrid(e.x, e.y, 350); 
+                            let packMembers = queryGridMap(gridEnemies, e.x, e.y, 350); 
                             let sumLevels = 0; let hasLeader = false;
                             for (let mate of packMembers) { if (Math.hypot(mate.x - e.x, mate.y - e.y) <= 350) { sumLevels += mate.level; if (mate.isBoss || mate.level >= target.level - 2) { hasLeader = true; } } }
                             
@@ -1927,33 +1953,34 @@
                     
                     let eSpeed = e.attackTimer > 0 ? e.speed * 0.5 : e.speed;
                     
-                    // BOSS ABILITIES LOGIC
                     let isSpecialCasting = false;
                     if (e.isBoss && e.ability) {
                         e.specialTimer -= dt;
                         if (e.specialTimer <= 0) {
-                            if (e.specialPhase === 0) { e.specialPhase = 1; e.castProgress = 0; } // Start cast
+                            if (e.specialPhase === 0) { e.specialPhase = 1; e.castProgress = 0; } 
                             
                             if (e.ability === 'stomp') {
-                                isSpecialCasting = true; eSpeed = 0; // Boss stops moving
-                                e.castProgress += dt / 1.5; // 1.5s cast time
+                                isSpecialCasting = true; eSpeed = 0; 
+                                e.castProgress += dt / 1.5; 
                                 if (e.castProgress >= 1) {
                                     if (Math.hypot(player.x - e.x, player.y - e.y) < viewRadius) playSound('hit');
                                     for(let p=0; p<30; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.8; pt.color='#e74c3c'; particles.push(pt); }
                                     
-                                    // Boss AoE zasáhne všechny (Hráče i AI kočky)
                                     let allTargets = [player, ...aiCats];
                                     for (let t of allTargets) {
                                         let tSize = t === player ? pSize : t.size;
                                         if (Math.hypot(t.x - e.x, t.y - e.y) < e.size * 4.5) {
                                             if (t.invuln === undefined || t.invuln <= 0) {
+                                                t.invuln = 0.5; // INVULNERABILITY APLIED TO BOTH PLAYER AND AI CATS!
                                                 let dmgTaken = (e.damage * 1.5) * (activeMods.doubleDmg ? 2 : 1);
                                                 t.hp -= dmgTaken;
                                                 let ang = Math.atan2(t.y - e.y, t.x - e.x); t.knockbackVx = Math.cos(ang) * 600; t.knockbackVy = Math.sin(ang) * 600;
                                                 let d = getDmgNumber(); d.x=t.x; d.y=t.y-tSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
                                                 if (t === player) {
                                                     updateUI(); hitStop = 0.1;
-                                                    if (player.hp <= 0 || activeMods.oneHit) { player.hp = 0; showDeathScreen(); }
+                                                    if (player.hp <= 0) showDeathScreen();
+                                                } else if (t.hp <= 0) {
+                                                    pushKillFeed(`💀 ${t.name} was killed by ${e.name}`);
                                                 }
                                             }
                                         }
@@ -1963,11 +1990,11 @@
                             } else if (e.ability === 'dash') {
                                 if (e.specialPhase === 1) {
                                     isSpecialCasting = true; eSpeed = 0; e.angle = Math.atan2(target.y - e.y, target.x - e.x);
-                                    e.castProgress += dt / 0.8; // 0.8s windup
+                                    e.castProgress += dt / 0.8; 
                                     if (e.castProgress >= 1) { e.specialPhase = 2; e.castProgress = 0; e.dashForceX = Math.cos(e.angle); e.dashForceY = Math.sin(e.angle); if (Math.hypot(player.x - e.x, player.y - e.y) < viewRadius) playSound('dash'); }
                                 } else if (e.specialPhase === 2) {
-                                    eSpeed = e.speed * 4.0; e.angle = Math.atan2(e.dashForceY, e.dashForceX); // Dash phase
-                                    e.castProgress += dt / 0.5; // 0.5s dash duration
+                                    eSpeed = e.speed * 4.0; e.angle = Math.atan2(e.dashForceY, e.dashForceX); 
+                                    e.castProgress += dt / 0.5; 
                                     if (e.castProgress >= 1) { e.specialTimer = 5.0; e.specialPhase = 0; }
                                 }
                             }
@@ -1985,31 +2012,58 @@
                     else if (minDistToTarget < e.weaponLength + targetSize * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; if(Math.hypot(player.x-e.x, player.y-e.y) < viewRadius) playSound('swing'); }
                     
                     if (pDealDamage) {
-                        let distToPFromE = Math.hypot(player.x - e.x, player.y - e.y); // Znovu změříme distanci od hráče pro hráčův útok
+                        let distToPFromE = Math.hypot(player.x - e.x, player.y - e.y); 
                         if (distToPFromE > pAttackReach + e.size) continue; 
                         let aToE = Math.atan2(e.y - player.y, e.x - player.x), aDiff = Math.abs(((aToE - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
                         
                         if (aDiff < Math.PI / 1.5 || distToPFromE < (pSize + e.size) * 1.5) { 
                             let dmg = stats.playerDamage * pDmgMult; e.hp -= dmg; hitStop = 0.05; playSound('hit');
+                            e.playerDamaged = true; // Značka: Hráč se aktivně podílel na poškození
                             if (archStats.knockback > 0) { let ang = Math.atan2(e.y - player.y, e.x - player.x); e.knockbackVx = Math.cos(ang) * archStats.knockback; e.knockbackVy = Math.sin(ang) * archStats.knockback; }
                             let d = getDmgNumber(); d.x=e.x; d.y=e.y-e.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
                             for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : '#ff2a2a'; particles.push(pt); } 
                             
                             if (e.hp <= 0) { 
+                                if(e.isBoss || e.isMiniBoss) pushKillFeed(`👤 You killed ${e.name}`);
                                 player.xp += e.isBoss ? 5000 : Math.floor(25 * Math.pow(1.28, e.level - 1)); playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
                                 combo++; comboTimer = COMBO_WINDOW; if(combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if(combo > prog.bestCombo) prog.bestCombo = combo;
                                 questProgress('combo', combo); questProgress('kills', 1);
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
-                                if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
+                    if (c.attackTimer > 0 && c.attackProgress >= 0.25 && !c.hasAttacked) {
+                        c.hasAttacked = true;
+                        if (targetDog) {
+                            let aToE = Math.atan2(targetDog.y - c.y, targetDog.x - c.x);
+                            let aDiff = Math.abs(((aToE - c.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
+                            if (aDiff < Math.PI / 1.5 && minDogDist < cAttackReach + targetDog.size) {
+                                let dmg = cStats.playerDamage * cDmgMult;
+                                targetDog.hp -= dmg;
+                                let d = getDmgNumber(); d.x = targetDog.x; d.y = targetDog.y - targetDog.size; d.val = Math.round(dmg); d.color = '#3498db'; d.life = 1.0; d.vy = -200; damageNumbers.push(d);
+                                if (Math.hypot(player.x - c.x, player.y - c.y) < viewRadius) playSound('hit');
+                                if (cArchStats.knockback > 0) { let ang = Math.atan2(targetDog.y - c.y, targetDog.x - c.x); targetDog.knockbackVx = Math.cos(ang) * cArchStats.knockback; targetDog.knockbackVy = Math.sin(ang) * cArchStats.knockback; }
                                 
-                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = 90; playerRunData.bossKills++; } 
-                                else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss'); playerRunData.bossKills++; }
-                                else if (e.level >= player.level + 1) dropGems(e.x, e.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(e.x, e.y, 1); 
-                                enemies.splice(i, 1); continue; 
-                            } 
+                                if (targetDog.hp <= 0) {
+                                    pushKillFeed(`🤖 ${c.name} killed ${targetDog.name}`);
+                                    playerRunData.teamKills++; updateUI();
+                                    
+                                    // SPRAVEDLIVÁ ODMĚNA: Zápis do bestiáře a XP dostaneš JEN pokud jsi mu dal nějaký damage
+                                    if (targetDog.playerDamaged) {
+                                        prog.totalKills++; 
+                                        prog.dogKills[targetDog.name] = (prog.dogKills[targetDog.name] || 0) + 1;
+                                        player.xp += targetDog.isBoss ? 5000 : Math.floor(25 * Math.pow(1.28, targetDog.level - 1));
+                                        updateLevel();
+                                    }
+                                    
+                                    if (targetDog.isBoss) dropGems(targetDog.x, targetDog.y, 100, 'boss');
+                                    else if (targetDog.isMiniBoss) dropGems(targetDog.x, targetDog.y, 30, 'boss');
+                                    else if (targetDog.level >= c.level + 1) dropGems(targetDog.x, targetDog.y, 3 + Math.floor(Math.random() * 4)); 
+                                    else if (Math.random() > 0.75) dropGems(targetDog.x, targetDog.y, 1);
+                                    
+                                    let eIdx = enemies.indexOf(targetDog);
+                                    if (eIdx > -1) enemies.splice(eIdx, 1);
+                                }
+                            }
                         }
                     }
-                    
                     if (e.attackTimer > 0 && !e.hasAttacked) {
                         let eProgress = 1 - (e.attackTimer / e.attackCooldown);
                         if (eProgress >= 0.4 && eProgress <= 0.65) {
@@ -2019,11 +2073,14 @@
                                 if (target.invuln === undefined || target.invuln <= 0) { 
                                     let dmgTaken = e.damage * (activeMods.doubleDmg ? 2 : 1);
                                     target.hp -= dmgTaken; 
+                                    target.invuln = 0.5; // INVULNERABILITY APLIED
                                     let ang = Math.atan2(target.y - e.y, target.x - e.x); let kb = e.isBoss ? 350 : 180; target.knockbackVx = Math.cos(ang) * kb; target.knockbackVy = Math.sin(ang) * kb;
                                     
                                     if (target === player) {
                                         updateUI(); hitStop = 0.08; playSound('hit'); if (combo > 0) { combo = 0; updateUI(); }
-                                        if (player.hp <= 0 || activeMods.oneHit) { player.hp = 0; showDeathScreen(); } 
+                                        if (player.hp <= 0) showDeathScreen(); 
+                                    } else if (target.hp <= 0) {
+                                        pushKillFeed(`💀 ${target.name} was killed by ${e.name}`);
                                     }
                                     
                                     let d = getDmgNumber(); d.x=target.x; d.y=target.y-targetSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
@@ -2063,6 +2120,7 @@
             aiCats.forEach(c => {
                 if (c.x < camL - c.size * 5 || c.x > camR + c.size * 5 || c.y < camT - c.size * 5 || c.y > camB + c.size * 5) return;
                 ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.angle);
+                if (c.invuln > 0 && Math.floor(Date.now() / 150) % 2 === 0) ctx.globalAlpha = 0.5;
                 let cStats = evolutions[Math.min(c.level - 1, 49)];
                 drawEntity(ctx, true, c.size, cStats.catColor, cStats.accent, cStats.pattern, c.attackProgress, cStats.weaponType, c.level, c.hTier, c.wTier); 
                 ctx.restore();
@@ -2076,14 +2134,13 @@
             let bossAlive = null;
             enemies.forEach(e => { 
                 if (e.isBoss) bossAlive = e;
-                else if (e.isMiniBoss && !bossAlive) bossAlive = e; // Tracker upřednostní bosse, jinak mini-bosse
+                else if (e.isMiniBoss && !bossAlive) bossAlive = e; 
                 if (e.x < camL - e.size * 5 || e.x > camR + e.size * 5 || e.y < camT - e.size * 5 || e.y > camB + e.size * 5) return; 
                 
                 ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle); 
                 if (e.isBoss) { ctx.shadowColor = e.color; ctx.shadowBlur = 30; } 
                 else if (e.isMiniBoss) { ctx.shadowColor = '#e67e22'; ctx.shadowBlur = 15; }
                 
-                // Vykreslení telegrafování útoků bossů
                 if (e.isBoss && e.specialPhase === 1) {
                     if (e.ability === 'stomp') {
                         ctx.fillStyle = `rgba(231, 76, 60, ${e.castProgress * 0.3})`;
@@ -2108,7 +2165,6 @@
             let pHTier = prog.helmetUpgrades[player.level] || 0;
             drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier); ctx.restore();
             
-            // Renderování POUZE jména nad hráčem (Hodnost se přesunula do levého horního rohu v UI)
             ctx.fillStyle = "white"; ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
             ctx.fillText(player.name, player.x, player.y - playerStats.baseSize - 35);
 
@@ -2126,7 +2182,6 @@
             let scale = 160 / WORLD_SIZE;
             mmCtx.fillStyle = '#f1c40f'; for (let c of chests) mmCtx.fillRect(c.x*scale - 1, c.y*scale - 1, 3, 3);
             
-            // Minimap for AI cats
             mmCtx.fillStyle = '#3498db'; for (let c of aiCats) { mmCtx.beginPath(); mmCtx.arc(c.x*scale, c.y*scale, 2, 0, Math.PI*2); mmCtx.fill(); }
 
             for (let e of enemies) {
@@ -2161,9 +2216,8 @@
             gameState = 'death_menu'; document.body.classList.remove('low-hp'); 
             currentReviveCost = player.level * 10 + 20; 
             
-            // VÝPOČET GLOBÁLNÍCH XP Z RUNU
             let gainedXp = (player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500);
-            document.getElementById('ds-final-gems').innerText = `${playerRunData.totalRunGems} (XP: +${gainedXp})`; // Ukážeme hráči XP zisk
+            document.getElementById('ds-final-gems').innerText = `${playerRunData.totalRunGems} (XP: +${gainedXp})`; 
             
             let stats = evolutions[Math.min(player.level - 1, 49)];
             document.getElementById('ds-final-level').innerText = player.level;
@@ -2178,7 +2232,7 @@
             if (totalGems < currentReviveCost) { 
                 gemBtn.disabled = true; 
                 let missing = currentReviveCost - totalGems;
-                gemBtn.innerHTML = `💎 Need ${missing} more gems`; // FIX: Ukáže, kolik chybí
+                gemBtn.innerHTML = `💎 Need ${missing} more gems`; 
             } else { 
                 gemBtn.disabled = false; 
                 gemBtn.innerHTML = `💎 Revive (Cost: ${currentReviveCost})`;
@@ -2198,7 +2252,6 @@
                 }
             }, 1500);
 
-            // Cloud sync
             forceSaveNow();
         }
 
@@ -2237,11 +2290,9 @@
             prog.gems += playerRunData.gems; 
             if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; 
             
-            // APLIKACE GLOBÁLNÍCH XP PŘI OPUŠTĚNÍ HRY
             let gainedXp = (player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500);
             prog.globalXp = (prog.globalXp || 0) + gainedXp;
             
-            // KONTROLA LEVEL-UPU (Může poskočit o více levelů, pokud má hodně XP z jedné hry)
             if (!prog.globalLevel) prog.globalLevel = 1;
             while (prog.globalLevel < 50) {
                 let rankInfo = getGlobalRankInfo(prog.globalLevel);
@@ -2252,7 +2303,7 @@
                     break;
                 }
             }
-            if (prog.globalLevel > 50) { prog.globalLevel = 50; prog.globalXp = 0; } // Hard cap
+            if (prog.globalLevel > 50) { prog.globalLevel = 50; prog.globalXp = 0; } 
             
             await forceSaveNow(); 
             goToMenu(); 
@@ -2324,10 +2375,43 @@
             return true;
         }
 
+        window.startLocalSession = () => {
+            window.currentUserUid = 'offline_guest';
+            window.saveToFirestore = null; // Vypnout cloud pro offline
+            window.fetchFromFirestore = null; 
+            
+            let local = localStorage.getItem('catwars_save_offline_guest');
+            if (local) prog = { ...defaultProg, ...JSON.parse(local) };
+            
+            rollDailyQuestsIfNeeded();
+            updateMenuStats();
+            
+            completeLoading();
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+            document.getElementById('auth-status-text').innerText = "Playing as: Offline Guest";
+        };
+
         window.loginAsGuest = () => {
-            if (!checkValidKey()) return;
-            document.getElementById('login-error').innerHTML = "⏳ Connecting as Guest...";
-            signInAnonymously(auth).catch(e => { document.getElementById('login-error').innerText = "Error (" + e.code + ")"; });
+            document.getElementById('login-error').innerHTML = "⏳ Starting offline session...";
+            if (auth) {
+                signInAnonymously(auth).then(() => {
+                    // Úspěch - zpracuje se v onAuthStateChanged
+                }).catch(e => { 
+                    console.warn("Firebase Guest Login blocked (likely by iframe restrictions). Forcing Offline Mode.");
+                    window.startLocalSession(); 
+                });
+            } else {
+                window.startLocalSession();
+            }
+            
+            // Failsafe pojistka: Pokud Firebase zamrzne a nevrátí ani chybu, spustíme hru lokálně za 1.5s
+            setTimeout(() => {
+                if(document.getElementById('login-screen').style.display !== 'none') {
+                    window.startLocalSession();
+                }
+            }, 1500);
         };
         
         window.loginWithGoogle = () => { 
@@ -2494,7 +2578,7 @@
                     document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('login-screen').style.display = 'flex';
                 }
-            }, 15000); 
+            }, 3000); // ZKRÁCENÝ TIMEOUT NA 3 VTEŘINY
 
             onAuthStateChanged(auth, async (user) => {
                 authResolved = true;
