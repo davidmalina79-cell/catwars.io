@@ -952,6 +952,7 @@
             document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('dash-container').style.display = 'none'; 
             document.getElementById('minimap').style.display = 'none'; document.getElementById('boss-arrow').style.display = 'none';
             document.getElementById('pause-btn').style.display = 'none'; document.getElementById('tutorial').style.display = 'none';
+            document.getElementById('pause-overlay').style.display = 'none'; // OPRAVA: Ujistí se, že se okno pauzy skryje
             document.getElementById('main-menu').style.display = 'flex'; document.body.classList.remove('low-hp'); 
             gameState = 'menu'; updateMenuStats(); 
         }
@@ -1700,6 +1701,7 @@
 
         async function giveUp() { 
             document.getElementById('death-screen').style.display = 'none'; 
+            document.getElementById('pause-overlay').style.display = 'none'; // OPRAVA: Okamžité skrytí pauzy
             document.getElementById('game-ui').style.display = 'none'; 
             prog.gems += playerRunData.gems; 
             if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; 
@@ -1856,6 +1858,8 @@
                 return null;
             } catch(e) { 
                 console.error("[CatWars] ERROR fetching from Firestore:", e); 
+                // Vylepšené logování pro snadnější debugování
+                if (e.code === 'permission-denied') console.error("FIREBASE RULES ERROR: You need to allow read/write in your Firebase Console!");
                 return null; 
             }
         };
@@ -1904,6 +1908,7 @@
                     querySnapshot.forEach((doc) => { players.push(doc.data()); });
                     return players;
                 } catch (idxError) {
+                    if (idxError.code === 'permission-denied') throw idxError; // Pokud je to problém s právy, hodí to rovnou do hlavního chytáku
                     // Fallback, pokud ještě ve Firebase nemáš naklikaný Index
                     console.warn("[CatWars] Missing Firebase Index, using fallback sort.");
                     const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
@@ -1912,7 +1917,16 @@
                     players.sort((a, b) => b.maxLevel - a.maxLevel || b.kills - a.kills);
                     return players.slice(0, 50);
                 }
-            } catch (error) { console.error("[CatWars] Leaderboard fetch error:", error); return []; }
+            } catch (error) { 
+                console.error("[CatWars] Leaderboard fetch error:", error); 
+                // Pokud chybí pravidla v databázi, vypíše to upozornění přímo hráčům
+                if (error.code === 'permission-denied') {
+                    document.getElementById('lb-content').innerHTML = '<p style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 16px;">Firebase Error: Permission Denied!<br><br>Check your Firestore Security Rules.</p>';
+                } else {
+                    document.getElementById('lb-content').innerHTML = `<p style="text-align: center; color: #e74c3c;">Database Error: ${error.message}</p>`;
+                }
+                return []; 
+            }
         };
 
         const initAuth = async () => {
