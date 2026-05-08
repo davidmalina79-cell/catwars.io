@@ -1991,8 +1991,6 @@
                                                 if (t === player) {
                                                     updateUI(); hitStop = 0.1;
                                                     if (player.hp <= 0) showDeathScreen();
-                                                } else if (t.hp <= 0) {
-                                                    pushKillFeed(`💀 ${t.name} was killed by ${e.name}`);
                                                 }
                                             }
                                         }
@@ -2036,7 +2034,6 @@
                             for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : '#ff2a2a'; particles.push(pt); } 
                             
                             if (e.hp <= 0) { 
-                                if(e.isBoss || e.isMiniBoss) pushKillFeed(`👤 You killed ${e.name}`);
                                 player.xp += e.isBoss ? 5000 : Math.floor(25 * Math.pow(1.28, e.level - 1)); playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
                                 combo++; comboTimer = COMBO_WINDOW; if(combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if(combo > prog.bestCombo) prog.bestCombo = combo;
                                 questProgress('combo', combo); questProgress('kills', 1);
@@ -2066,8 +2063,6 @@
                                     if (target === player) {
                                         updateUI(); hitStop = 0.08; playSound('hit'); if (combo > 0) { combo = 0; updateUI(); }
                                         if (player.hp <= 0) showDeathScreen(); 
-                                    } else if (target.hp <= 0) {
-                                        pushKillFeed(`💀 ${target.name} was killed by ${e.name}`);
                                     }
                                     
                                     let d = getDmgNumber(); d.x=target.x; d.y=target.y-targetSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
