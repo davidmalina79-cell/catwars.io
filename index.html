@@ -198,7 +198,7 @@
             <div class="game-art-banner" style="min-height: 200px;">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
-            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 3.1: Cloud Saving & Global Leaderboard.</p>
+            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.1: Cloud Saving & Global Leaderboard.</p>
             
             <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="stat-box">Kills: <span id="mm-kills">0</span></div>
@@ -1605,7 +1605,7 @@
         console.log("[CatWars] Zahajuji inicializaci Firebase...");
         let isCanvasEnv = typeof __firebase_config !== 'undefined';
         
-        // ZDE SI NECH SVŮJ FIREBASE CONFIG
+        // ZDE SI NECH SVŮJ FIREBASE CONFIG PRO LOKÁLNÍ TESTOVÁNÍ / PRODUKCI
         let firebaseConfig = isCanvasEnv ? JSON.parse(__firebase_config) : { 
             apiKey: "TVUJ_API_KEY", 
             authDomain: "tvuj-projekt.firebaseapp.com", 
@@ -1628,13 +1628,23 @@
         function getFakeEmail() { const nick = document.getElementById('login-nick').value.trim(); if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } return `${nick.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}@catwars.local`; }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
 
+        function checkValidKey() {
+            if (firebaseConfig.apiKey === "TVUJ_API_KEY") {
+                document.getElementById('login-error').innerHTML = "<b>CHYBA:</b> Musíš v kódu (řádek cca 1618) nastavit svůj skutečný Firebase API klíč z Google konzole!";
+                return false;
+            }
+            return true;
+        }
+
         window.loginAsGuest = () => {
+            if (!checkValidKey()) return;
             console.time("[CatWars] Auth trvalo");
             document.getElementById('login-error').innerHTML = "⏳ Připojuji jako hosta...";
             signInAnonymously(auth).then(()=> console.timeEnd("[CatWars] Auth trvalo")).catch(e => { document.getElementById('login-error').innerText = "Error (" + e.code + ")"; console.timeEnd("[CatWars] Auth trvalo"); });
         };
         
         window.loginWithGoogle = () => { 
+            if (!checkValidKey()) return;
             console.time("[CatWars] Auth trvalo");
             document.getElementById('login-error').innerHTML = "⏳ Čekám na Google... (zkontroluj případně vyskakovací okna)";
             const provider = new GoogleAuthProvider(); 
@@ -1653,6 +1663,7 @@
         };
         
         window.loginWithPassword = () => { 
+            if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
                 console.time("[CatWars] Auth trvalo");
@@ -1664,6 +1675,7 @@
         };
         
         window.registerWithPassword = () => { 
+            if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
                 console.time("[CatWars] Auth trvalo");
@@ -1741,11 +1753,18 @@
         const initAuth = async () => {
             if (!auth) return;
             try { 
+                // Zdejší prostředí (Canvas náhled) - automatický login přes token nebo anonymně
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
                     await signInWithCustomToken(auth, __initial_auth_token); 
-                } 
+                } else if (isCanvasEnv) {
+                    await signInAnonymously(auth);
+                }
+                // Mimo Canvas (tvoje doména) - neděláme nic, čekáme až uživatel klikne na tlačítko (zavolá např. loginWithGoogle)
             } 
-            catch (e) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; }
+            catch (e) { 
+                document.getElementById('loading-screen').style.display = 'none'; 
+                document.getElementById('login-screen').style.display = 'flex'; 
+            }
         };
 
         if (auth) {
