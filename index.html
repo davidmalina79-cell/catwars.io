@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CatWars.io - Evolution & Armory</title>
+    <title>CatWars.io - Stabilní Verze</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐱</text></svg>">
     
@@ -132,6 +132,7 @@
         .quest-progress { font-weight: bold; color: #f1c40f; margin-right: 10px; }
         .quest-item.done .quest-progress { color: var(--success); }
 
+        /* Armory Tables */
         table.stats-table { width: 100%; color: white; border-collapse: collapse; margin-bottom: 25px; background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; font-size: 15px; }
         table.stats-table th { background: rgba(0,0,0,0.5); padding: 12px; color: var(--primary); text-align: center; }
         table.stats-table td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -146,27 +147,7 @@
         .game-art-banner img { width: 100%; display: block; filter: drop-shadow(0 0 10px rgba(243, 156, 18, 0.3)); }
         
         .controls-hint { text-align: center; font-size: 14px; opacity: 0.8; font-weight: normal; margin-top: auto; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; pointer-events: none; }
-        
-        /* --- NOVÁ FUNKCE: CSS PRO VIRTUAL JOYSTICK A ÚPRAVY PRO MOBILY --- */
-        #joystick-base {
-            position: absolute; width: 130px; height: 130px; background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: none; pointer-events: none; z-index: 50; transform: translate(-50%, -50%);
-        }
-        #joystick-stick {
-            position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: rgba(255,255,255,0.5);
-            border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;
-        }
-
-        @media (max-width: 800px) { 
-            .stats-bar { top: 10px; left: 10px; flex-direction: column; gap: 5px; } 
-            .stat-box { font-size: 14px; padding: 5px 10px; } 
-            .controls-hint { font-size: 12px; } 
-            #minimap { width: 120px; height: 120px; } 
-            .enc-tab { font-size: 12px; padding: 8px; } 
-            /* Dynamické přesunutí Dash tlačítka na mobilu pod pravý palec */
-            #dash-container { left: auto !important; right: 20px !important; bottom: 100px !important; width: 75px !important; height: 75px !important; }
-            #dash-icon { font-size: 30px !important; }
-        }
+        @media (max-width: 600px) { .stats-bar { top: 10px; left: 10px; flex-direction: column; gap: 5px; } .stat-box { font-size: 14px; padding: 5px 10px; } .controls-hint { font-size: 12px; } #minimap { width: 120px; height: 120px; } .enc-tab { font-size: 12px; padding: 8px; } }
     </style>
 </head>
 <body>
@@ -174,9 +155,17 @@
     <canvas id="gameCanvas"></canvas>
     
     <div id="loading-screen" class="overlay" style="z-index: 400;">
-        <div class="panel">
-            <h1 style="font-size: 40px; margin-bottom: 20px; color: #fff;">Connecting...</h1>
-            <div style="font-size: 20px; color: #aaa;">Authenticating hero...</div>
+        <div class="panel" style="max-width: 500px; padding: 25px;">
+            <div class="game-art-banner" style="margin-bottom: 20px;">
+                <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
+            </div>
+            <h1 style="font-size: 35px; margin-bottom: 15px; color: #fff; text-shadow: 2px 2px 4px #000;">Loading CatWars.io</h1>
+            
+            <div style="width: 100%; background: #2c3e50; border: 2px solid #555; border-radius: 10px; height: 20px; overflow: hidden; position: relative; margin-bottom: 10px;">
+                <div id="loading-bar-fill" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
+            </div>
+            
+            <div id="loading-status-text" style="font-size: 16px; color: #aaa; font-weight: bold;">Connecting to servers...</div>
         </div>
     </div>
 
@@ -217,7 +206,7 @@
             <div class="game-art-banner" style="min-height: 200px;">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
-            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.2.1: Bugfixes & Optimization.</p>
+            <p style="margin-top: 5px; margin-bottom: 10px; color: white; font-size: 16px; opacity: 0.8;">Version 4.2.0: Stabilní Modulární Verze</p>
             
             <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="stat-box">Kills: <span id="mm-kills">0</span></div>
@@ -287,7 +276,7 @@
         
         <div style="display: flex; justify-content: center; width: 100%; pointer-events: none;">
             <div class="controls-hint">
-                Move: Mouse/Touch Left | Attack: Click/Touch Right | Dash: Space / Right Click
+                Move: Mouse | Attack: Left Click | Dash: Space / Right Click | Pause: ESC
             </div>
         </div>
     </div>
@@ -342,67 +331,181 @@
         </div>
     </div>
 
+    <!-- ================================================================================================= -->
+    <!-- ================================= MODULE: DATA & CONSTANTS ====================================== -->
+    <!-- ================================================================================================= -->
     <script>
-        // 1. META PROGRESSION
+        const CHEST_TYPES = { 
+            wood: { hp: 500, gems: [3, 6], color: '#6b4423', metal: '#7f8c8d', weight: 0.70, size: 130 }, 
+            iron: { hp: 1500, gems: [10, 18], color: '#7f8c8d', metal: '#bdc3c7', weight: 0.20, size: 130 }, 
+            gold: { hp: 4000, gems: [30, 60], color: '#d4af37', metal: '#f1c40f', weight: 0.08, size: 150 }, 
+            diamond: { hp: 10000, gems: [120, 250], color: '#00d4ff', metal: '#ffffff', weight: 0.02, size: 180 } 
+        };
+        const WORLD_SIZE = 6000; const FOOD_COUNT = 800; const ENEMY_COUNT = 45; const DECORATION_COUNT = 300; const CHEST_COUNT = 25; 
+        const GRID_CELL = 400; 
+
+        const TIER_VISUALS = [
+          { cat:"Kitten", dog:"Chihuahua", w:"stick", c:"#f5d49a", d:"#e8c89a", acc:"#c89060", pat:"none" }, 
+          { cat:"House Cat", dog:"Pug", w:"stick", c:"#d4a574", d:"#d4a574", acc:"#8b6f47", pat:"stripes" },
+          { cat:"Stray Cat", dog:"Dachshund", w:"dagger", c:"#c89060", d:"#8b4513", acc:"#5a3a1a", pat:"stripes" }, 
+          { cat:"Alley Runt", dog:"Corgi", w:"dagger", c:"#2c2c34", d:"#e8c89a", acc:"#1a1a22", pat:"none" },
+          { cat:"Barn Cat", dog:"Pomeranian", w:"dagger", c:"#e67e22", d:"#f39c12", acc:"#d35400", pat:"spots" },
+          { cat:"Forest Cat", dog:"Terrier", w:"shortsword", c:"#27ae60", d:"#16a085", acc:"#2c3e50", pat:"stripes" },
+          { cat:"Sand Cat", dog:"Beagle", w:"shortsword", c:"#f1c40f", d:"#d8a060", acc:"#d35400", pat:"spots" },
+          { cat:"Lynx", dog:"Spaniel", w:"longsword", c:"#f0e5d0", d:"#bdc3c7", acc:"#d4a060", pat:"fluffy" },
+          { cat:"Caracal", dog:"Basset", w:"longsword", c:"#e67e22", d:"#95a5a6", acc:"#2c3e50", pat:"stripes" },
+          { cat:"Serval", dog:"Bulldog", w:"mace", c:"#f1c40f", d:"#c89060", acc:"#111111", pat:"spots" }, 
+          { cat:"Fat Cat", dog:"Shiba Inu", w:"mace", c:"#e8dcc4", d:"#f39c12", acc:"#6a4a2a", pat:"spots" }, 
+          { cat:"Wildcat", dog:"Dalmatian", w:"hammer", c:"#8b6f47", d:"#ffffff", acc:"#3a2a1a", pat:"stripes" },
+          { cat:"Bobcat", dog:"Boxer", w:"morningstar", c:"#d49a3f", d:"#a8753a", acc:"#3a2a0a", pat:"spots" },
+          { cat:"Cheetah", dog:"Husky", w:"twin blades", c:"#f1c40f", d:"#cccccc", acc:"#111111", pat:"spots" },
+          { cat:"Ocelot", dog:"Malamute", w:"twin blades", c:"#e67e22", d:"#7f8c8d", acc:"#2c3e50", pat:"spots" },
+          { cat:"Panther", dog:"Doberman", w:"naginata", c:"#3a3a4e", d:"#222222", acc:"#1a1a22", pat:"eyepatch" },
+          { cat:"Black Panther", dog:"Rottweiler", w:"broadsword", c:"#111111", d:"#3a2a1a", acc:"#333333", pat:"mask" },
+          { cat:"Leopard", dog:"Mastiff", w:"battleaxe", c:"#d4a060", d:"#8b6f47", acc:"#111111", pat:"spots" },
+          { cat:"Snow Leopard", dog:"Great Dane", w:"colossus axe", c:"#ecf0f1", d:"#34495e", acc:"#7f8c8d", pat:"spots" },
+          { cat:"Jaguar", dog:"Wolfhound", w:"warhammer", c:"#8b8b9a", d:"#888888", acc:"#8b4513", pat:"helm" }, 
+          { cat:"Cougar", dog:"Bloodhound", w:"warhammer", c:"#e8c8a8", d:"#8b4513", acc:"#333333", pat:"spots" }, 
+          { cat:"Puma", dog:"Dire Wolf", w:"katana", c:"#1a1a2e", d:"#444444", acc:"#0a0a14", pat:"mask" },
+          { cat:"Tiger", dog:"Hellhound", w:"battleaxe", c:"#e87f1f", d:"#5a1a1a", acc:"#1a0a00", pat:"stripes" },
+          { cat:"White Tiger", dog:"Cerberus", w:"cutlass", c:"#ecf0f1", d:"#1a1a1a", acc:"#111111", pat:"stripes" },
+          { cat:"Lion", dog:"Mutant Hound", w:"staff", c:"#daa520", d:"#ff00ff", acc:"#8b6f00", pat:"mane" },
+          { cat:"Liger", dog:"Cyborg Dog", w:"naginata", c:"#f1c40f", d:"#00d4ff", acc:"#e67e22", pat:"mane" },
+          { cat:"Cave Lion", dog:"Ninja Dog", w:"great katana", c:"#bdc3c7", d:"#111111", acc:"#7f8c8d", pat:"mane" },
+          { cat:"Dire Tiger", dog:"Samurai Dog", w:"staff", c:"#c4a060", d:"#1a1a2e", acc:"#5a3a1a", pat:"stripes" },
+          { cat:"Sabertooth", dog:"Assassin Hound", w:"twin blades", c:"#d35400", d:"#2c3e50", acc:"#f1c40f", pat:"fangs" },
+          { cat:"Smilodon", dog:"Monk Dog", w:"warhammer", c:"#8b4513", d:"#e67e22", acc:"#ffd700", pat:"fangs" }, 
+          { cat:"Mutant Cat", dog:"Battle Mage", w:"scythe", c:"#a8324a", d:"#9b59b6", acc:"#00ff00", pat:"horns" }, 
+          { cat:"Cyborg Cat", dog:"Warlock Hound", w:"lightsaber", c:"#00d4ff", d:"#8e44ad", acc:"#0088aa", pat:"cyber" },
+          { cat:"Ninja Cat", dog:"Wizard Dog", w:"twin blades", c:"#1a1a2e", d:"#6a3a8a", acc:"#000000", pat:"mask" },
+          { cat:"Assassin Cat", dog:"Dragon Dog", w:"dagger", c:"#34495e", d:"#4a8a3a", acc:"#e74c3c", pat:"mask" },
+          { cat:"Samurai Cat", dog:"Demon Dog", w:"great katana", c:"#a8324a", d:"#7a1a1a", acc:"#ffd700", pat:"helm" },
+          { cat:"Monk Cat", dog:"Phantom Hound", w:"staff", c:"#e67e22", d:"#bdc3c7", acc:"#f39c12", pat:"fluffy" },
+          { cat:"Wizard Cat", dog:"Void Hound", w:"staff", c:"#6a3a8a", d:"#111111", acc:"#ffd700", pat:"hat" },
+          { cat:"Warlock Cat", dog:"Alien Dog", w:"soul reaper", c:"#8e44ad", d:"#33ff33", acc:"#9b59b6", pat:"demon" },
+          { cat:"Dragon Cat", dog:"Nebula Dog", w:"dragonblade", c:"#4a8a3a", d:"#9b59b6", acc:"#1a3a1a", pat:"scales" },
+          { cat:"Demon Cat", dog:"Galaxy Dog", w:"soul reaper", c:"#7a1a1a", d:"#3a5a9a", acc:"#3a0a0a", pat:"demon" }, 
+          { cat:"Angel Cat", dog:"Universe Dog", w:"holy spear", c:"#fff8dc", d:"#2a4a3a", acc:"#ffd700", pat:"halo" }, 
+          { cat:"Phantom Cat", dog:"Cosmic Dog", w:"void blade", c:"#bdc3c7", d:"#111111", acc:"#ecf0f1", pat:"glow" },
+          { cat:"Void Cat", dog:"Astral Hound", w:"scythe", c:"#111111", d:"#9b59b6", acc:"#000000", pat:"glow" },
+          { cat:"Alien Cat", dog:"God Dog", w:"void blade", c:"#5a3a8a", d:"#ffd700", acc:"#1a0a3a", pat:"glow" },
+          { cat:"Nebula Cat", dog:"Titan Hound", w:"star scythe", c:"#9b59b6", d:"#c0392b", acc:"#8e44ad", pat:"galaxy" },
+          { cat:"Galaxy Cat", dog:"Omega Dog", w:"star scythe", c:"#3a5a9a", d:"#e74c3c", acc:"#1a2a5a", pat:"galaxy" },
+          { cat:"Astral Cat", dog:"Eternity Hound", w:"lightsaber", c:"#8e44ad", d:"#f39c12", acc:"#9b59b6", pat:"stars" },
+          { cat:"Universe Cat", dog:"Celestial Dog", w:"colossus axe", c:"#2a4a3a", d:"#00d4ff", acc:"#0a2a1a", pat:"tentacles" },
+          { cat:"Cosmic Cat", dog:"Dimensional Hound", w:"godslayer", c:"#111111", d:"#34495e", acc:"#00ffff", pat:"stars" },
+          { cat:"God Cat", dog:"Supreme Overlord", w:"infinity blade", c:"#ffd700", d:"#ffffff", acc:"#ffffff", pat:"god" } 
+        ];
+
+        const evolutions = TIER_VISUALS.map((t, i) => {
+            let level = i + 1;
+            let size = 20 + (level * 4.5); 
+            let speed = Math.max(120, 310 - (level * 3.5)); 
+            let weaponLength = size * 2.5; 
+            
+            let multiplier = Math.pow(1.25, i);
+            let nextXp = Math.floor(50 * multiplier); 
+            let maxHp = Math.floor(100 * multiplier); 
+            let playerDamage = Math.floor(45 * multiplier); 
+            let enemyDamage = Math.floor(20 * multiplier); 
+            
+            return { 
+                level, catName: t.cat, dogName: t.dog, weaponType: t.w, baseSize: size, speed, 
+                weaponLength, nextXp, catColor: t.c, dogColor: t.d, accent: t.acc, pattern: t.pat,
+                maxHp, playerDamage, enemyDamage 
+            };
+        });
+
+        const WEAPON_TIERS = ["DEFAULT", "BRONZE", "SILVER", "GOLD", "DIAMOND"];
+        const UPGRADE_COSTS = [10, 25, 60, 150]; 
+        const UPGRADE_COLORS = [null, '#cd7f32', '#e3e4e5', '#ffd700', '#00ffff']; 
+        const UPGRADE_MULT = [1.0, 1.25, 1.6, 2.2, 3.5]; 
+        const UPGRADE_SIZE_MULT = [1.0, 1.1, 1.2, 1.3, 1.5]; 
+
+        const HELMET_TIERS = ["NO HELMET", "BRONZE", "IRON", "SILVER", "GOLD", "DIAMOND"];
+        const HELMET_UPGRADE_COSTS = [15, 35, 80, 200, 450];
+        const HELMET_COLORS = [null, '#cd7f32', '#7f8c8d', '#e3e4e5', '#ffd700', '#00ffff'];
+        const HELMET_HP_MULT = [1.0, 1.2, 1.5, 1.9, 2.5, 3.5]; 
+
+        function getWeaponArchetype(weaponName) {
+            const w = (weaponName || '').toLowerCase();
+            if (w.includes('dagger') || w.includes('twin')) return 'fast';
+            if (w.includes('hammer') || w.includes('mace') || w.includes('star') || w.includes('axe')) return 'heavy';
+            if (w.includes('scythe') || w.includes('reaper')) return 'wide';
+            if (w.includes('saber') || w.includes('blade') || w.includes('katana') || w.includes('spear') || w.includes('god')) return 'reach';
+            return 'balanced';
+        }
+
+        const ARCH_STATS = {
+            balanced: { cdMult: 1.0, dmgMult: 1.0, reachMult: 1.0, knockback: 0 },
+            fast:     { cdMult: 0.6, dmgMult: 0.85, reachMult: 0.9, knockback: 0 },
+            heavy:    { cdMult: 1.45, dmgMult: 1.55, reachMult: 1.0, knockback: 280 },
+            wide:     { cdMult: 1.1, dmgMult: 0.9, reachMult: 1.1, knockback: 0 },
+            reach:    { cdMult: 1.0, dmgMult: 1.0, reachMult: 1.35, knockback: 0 },
+        };
+
+        const BOSS_VARIANTS = [
+            { name: '⚡ SWIFT BOSS', hpMult: 0.7, dmgMult: 0.8, speedMult: 1.6, sizeMult: 1.1, cdMult: 0.7, color: '#00d4ff', alert: '⚡ SWIFT BOSS!', weapon: 'twin blades' },
+            { name: '🛡️ TANK BOSS', hpMult: 1.6, dmgMult: 1.3, speedMult: 0.7, sizeMult: 1.5, cdMult: 1.4, color: '#7f8c8d', alert: '🛡️ TANK BOSS!', weapon: 'warhammer' },
+            { name: '👑 MEGA BOSS',  hpMult: 1.0, dmgMult: 1.0, speedMult: 1.0, sizeMult: 1.4, cdMult: 1.0, color: '#ffd700', alert: '👑 MEGA BOSS!', weapon: 'godslayer' },
+        ];
+        
+        const QUEST_POOL = [
+            { id: 'kill20', text: 'Defeat 20 dogs', goal: 20, reward: 30, type: 'kills' },
+            { id: 'kill50', text: 'Defeat 50 dogs', goal: 50, reward: 80, type: 'kills' },
+            { id: 'reach20', text: 'Reach Level 20', goal: 20, reward: 60, type: 'level' },
+            { id: 'reach40', text: 'Reach Level 40', goal: 40, reward: 150, type: 'level' },
+            { id: 'chest5', text: 'Open 5 chests', goal: 5, reward: 40, type: 'chests' },
+            { id: 'chest15', text: 'Open 15 chests', goal: 15, reward: 100, type: 'chests' },
+            { id: 'combo10', text: 'Reach a 10x combo', goal: 10, reward: 60, type: 'combo' },
+            { id: 'boss1', text: 'Defeat 1 boss', goal: 1, reward: 150, type: 'boss' },
+        ];
+    </script>
+
+    <!-- ================================================================================================= -->
+    <!-- ================================= MODULE: GAME ENGINE & UI ====================================== -->
+    <!-- ================================================================================================= -->
+    <script>
         let defaultProg = { maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
         let prog = { ...defaultProg };
-        
         window.currentUserUid = null;
-        let saveDebounceTimer = null; // NOVÉ PRO DEBOUNCE
+        let saveDebounceTimer = null; // Debounce timer pro ochranu Firebase limitů
 
-        async function saveProgress() { 
+        // --- DEBOUNCED SAVE PROGRESS ---
+        function saveProgress() { 
             if (window.currentUserUid) {
                 localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
             }
             updateMenuStats(); 
             
-            // OPRAVA: Debounce save a error handling
-            if (window.saveToFirestore) {
-                if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-                saveDebounceTimer = setTimeout(async () => {
+            // Firebase uložení je zpožděné o 5 sekund, abychom zamezili spamu (např. při zabíjení)
+            if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+            saveDebounceTimer = setTimeout(async () => {
+                if (window.saveToFirestore) {
                     try {
                         await window.saveToFirestore(prog);
                     } catch (e) {
-                        console.error('Cloud save failed:', e);
+                        console.error('Cloud save failed in background:', e);
                     }
-                }, 5000);
-            }
+                }
+            }, 5000);
         }
-        
-        // OPRAVA: Vynucené uložení pro quit
+
+        // Okamžité uložení (např. při smrti nebo odchodu do menu)
         async function forceSaveNow() {
             if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
             if (window.currentUserUid) {
-                localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog));
+                localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
             }
             updateMenuStats();
             if (window.saveToFirestore) {
                 try {
                     await window.saveToFirestore(prog);
                 } catch (e) {
-                    console.error('Cloud force save failed:', e);
+                    console.error('Forced cloud save failed:', e);
                 }
             }
         }
-
-        window.loadCloudProgress = async (uid) => {
-            let local = localStorage.getItem('catwars_save_' + uid);
-            prog = local ? { ...defaultProg, ...JSON.parse(local) } : { ...defaultProg };
-            
-            if (window.fetchFromFirestore) {
-                 let cloudData = await window.fetchFromFirestore(uid);
-                 if (cloudData) {
-                     prog = { ...prog, ...cloudData };
-                 }
-            }
-            
-            if(!prog.dogKills) prog.dogKills = {};
-            if(!prog.weaponUpgrades) prog.weaponUpgrades = {};
-            if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; 
-            if(!prog.quests) prog.quests = [];
-            rollDailyQuestsIfNeeded();
-            updateMenuStats();
-        };
 
         function updateMenuStats() {
             document.getElementById('mm-kills').innerText = prog.totalKills;
@@ -411,7 +514,6 @@
             document.getElementById('enc-gems').innerText = prog.gems;
         }
 
-        // 2. WATCH AD FOR GEMS
         function watchAdForGems() {
             let btn = document.getElementById('btn-ad-gems');
             let originalText = btn.innerHTML;
@@ -427,18 +529,6 @@
             }, 2000);
         }
         window.watchAdForGems = watchAdForGems;
-
-        // 3. DAILY QUESTS
-        const QUEST_POOL = [
-            { id: 'kill20', text: 'Defeat 20 dogs', goal: 20, reward: 30, type: 'kills' },
-            { id: 'kill50', text: 'Defeat 50 dogs', goal: 50, reward: 80, type: 'kills' },
-            { id: 'reach20', text: 'Reach Level 20', goal: 20, reward: 60, type: 'level' },
-            { id: 'reach40', text: 'Reach Level 40', goal: 40, reward: 150, type: 'level' },
-            { id: 'chest5', text: 'Open 5 chests', goal: 5, reward: 40, type: 'chests' },
-            { id: 'chest15', text: 'Open 15 chests', goal: 15, reward: 100, type: 'chests' },
-            { id: 'combo10', text: 'Reach a 10x combo', goal: 10, reward: 60, type: 'combo' },
-            { id: 'boss1', text: 'Defeat 1 boss', goal: 1, reward: 150, type: 'boss' },
-        ];
 
         function rollDailyQuestsIfNeeded() {
             const today = new Date().toISOString().slice(0, 10);
@@ -475,16 +565,14 @@
         }
         window.claimQuest = claimQuest;
 
-        // 4. AUDIO
+        // AUDIO
         let audioCtx = null; let soundEnabled = true; let lastGemSoundTime = 0;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function toggleSound() { soundEnabled = !soundEnabled; document.getElementById('sound-toggle').innerText = soundEnabled ? '🔊' : '🔇'; }
         window.toggleSound = toggleSound;
         function playSound(type) {
             if (!soundEnabled || !audioCtx) return; 
-            // OPRAVA: Prevence pádu pokud je audio suspended
-            if (audioCtx.state === 'suspended') { audioCtx.resume(); return; }
-            
+            if (audioCtx.state === 'suspended') audioCtx.resume(); // FIX: Pokus o probuzení audia
             let now = audioCtx.currentTime;
             if (type === 'gem') { if (now - lastGemSoundTime < 0.07) return; lastGemSoundTime = now; }
             let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
@@ -499,26 +587,16 @@
             else if (type === 'combo') { osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1400, now + 0.15); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); }
         }
 
-        // 5. CONSTANTS & DATA
-        const CHEST_TYPES = { wood: { hp: 500, gems: [3, 6], color: '#6b4423', metal: '#7f8c8d', weight: 0.70, size: 130 }, iron: { hp: 1500, gems: [10, 18], color: '#7f8c8d', metal: '#bdc3c7', weight: 0.20, size: 130 }, gold: { hp: 4000, gems: [30, 60], color: '#d4af37', metal: '#f1c40f', weight: 0.08, size: 150 }, diamond: { hp: 10000, gems: [120, 250], color: '#00d4ff', metal: '#ffffff', weight: 0.02, size: 180 } };
-        const WORLD_SIZE = 6000; const FOOD_COUNT = 800; const ENEMY_COUNT = 45; const DECORATION_COUNT = 300; const CHEST_COUNT = 25; 
-        const GRID_CELL = 400; 
-        
+        // CANVAS INIT
         const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
         const minimapCanvas = document.getElementById('minimap'); const mmCtx = minimapCanvas.getContext('2d');
         let width, height, mouseX = window.innerWidth/2, mouseY = window.innerHeight/2;
         let isMouseDown = false, isRightMouseDown = false, dashRequested = false;
 
-        // --- NOVÁ FUNKCE: VIRTUAL JOYSTICK & MOBILE INIT ---
-        let joyActive = false, joyDx = 0, joyDy = 0, joyStartX = 0, joyStartY = 0;
-        let joyBase = document.createElement('div'); joyBase.id = 'joystick-base';
-        let joyStick = document.createElement('div'); joyStick.id = 'joystick-stick';
-        joyBase.appendChild(joyStick); document.body.appendChild(joyBase);
-
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
         window.addEventListener('resize', resize); resize();
         
-        // 6. INPUT HANDLING
+        // INPUT
         window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
         window.addEventListener('mousedown', (e) => { if(e.button === 0) isMouseDown = true; if(e.button === 2) { isRightMouseDown = true; dashRequested = true; } initAudio(); });
         window.addEventListener('mouseup', (e) => { if(e.button === 0) isMouseDown = false; if(e.button === 2) isRightMouseDown = false; });
@@ -529,170 +607,25 @@
         });
         window.addEventListener('keyup', (e) => { if(e.code === 'Space') isRightMouseDown = false; });
 
-        // --- NOVÁ FUNKCE: PŘEPSANÉ DOTYKOVÉ OVLÁDÁNÍ PRO JOYSTICK A ÚTOK ---
         window.addEventListener('touchstart', (e) => { 
-            // OPRAVA: Touch na mobilu neblokuje tlačítka
-            if(e.target.closest('button, [role="button"], .overlay, input') || e.target.id === 'dash-container') return;
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                let touch = e.changedTouches[i];
-                if (touch.clientX < width / 2 && !joyActive) { 
-                    joyActive = true; joyStartX = touch.clientX; joyStartY = touch.clientY;
-                    joyBase.style.left = joyStartX + 'px'; joyBase.style.top = joyStartY + 'px';
-                    joyBase.style.display = 'block'; joyDx = 0; joyDy = 0;
-                } else if (touch.clientX >= width / 2) { 
-                    isMouseDown = true; initAudio();
-                }
-            }
+            if (e.target.closest('button, [role="button"], .overlay, input')) return; // FIX: Dotyky na UI elementy neblokují pohyb
+            if(e.target.id !== 'dash-container') { 
+                e.preventDefault(); mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; isMouseDown = true; initAudio(); 
+            } 
         }, {passive: false});
-
         window.addEventListener('touchmove', (e) => { 
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                let touch = e.changedTouches[i];
-                if (joyActive && touch.clientX < width / 2 + 50) { 
-                    let dx = touch.clientX - joyStartX; let dy = touch.clientY - joyStartY;
-                    let dist = Math.hypot(dx, dy); let maxDist = 40;
-                    if(dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
-                    joyStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-                    joyDx = dx / maxDist; joyDy = dy / maxDist;
-                } else {
-                    mouseX = touch.clientX; mouseY = touch.clientY;
-                }
-            }
+            if (e.target.closest('button, [role="button"], .overlay, input')) return;
+            e.preventDefault(); mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; 
         }, {passive: false});
-
-        window.addEventListener('touchend', (e) => { 
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                let touch = e.changedTouches[i];
-                if (joyActive && touch.clientX < width / 2 + 50) {
-                    joyActive = false; joyBase.style.display = 'none';
-                    joyStick.style.transform = `translate(-50%, -50%)`;
-                    joyDx = 0; joyDy = 0;
-                } else {
-                    isMouseDown = false;
-                }
-            }
-        }, {passive: false});
+        window.addEventListener('touchend', (e) => { if(e.touches.length === 0) isMouseDown = false; }, {passive: false});
 
         function triggerDash(e) {
             e.stopPropagation(); e.preventDefault(); initAudio();
             if(player && player.dashTimer <= 0 && gameState === 'playing') { dashRequested = true; }
         }
         window.triggerDash = triggerDash;
-        
-        // 7. 50 LEVELS STRUCTURE
-        const TIER_VISUALS = [
-          { cat:"Kitten", dog:"Chihuahua", w:"stick", c:"#f5d49a", d:"#e8c89a", acc:"#c89060", pat:"none" }, 
-          { cat:"House Cat", dog:"Pug", w:"stick", c:"#d4a574", d:"#d4a574", acc:"#8b6f47", pat:"stripes" },
-          { cat:"Stray Cat", dog:"Dachshund", w:"dagger", c:"#c89060", d:"#8b4513", acc:"#5a3a1a", pat:"stripes" }, 
-          { cat:"Alley Runt", dog:"Corgi", w:"dagger", c:"#2c2c34", d:"#e8c89a", acc:"#1a1a22", pat:"none" },
-          { cat:"Barn Cat", dog:"Pomeranian", w:"dagger", c:"#e67e22", d:"#f39c12", acc:"#d35400", pat:"spots" },
-          { cat:"Forest Cat", dog:"Terrier", w:"shortsword", c:"#27ae60", d:"#16a085", acc:"#2c3e50", pat:"stripes" },
-          { cat:"Sand Cat", dog:"Beagle", w:"shortsword", c:"#f1c40f", d:"#d8a060", acc:"#d35400", pat:"spots" },
-          { cat:"Lynx", dog:"Spaniel", w:"longsword", c:"#f0e5d0", d:"#bdc3c7", acc:"#d4a060", pat:"fluffy" },
-          { cat:"Caracal", dog:"Basset", w:"longsword", c:"#e67e22", d:"#95a5a6", acc:"#2c3e50", pat:"stripes" },
-          { cat:"Serval", dog:"Bulldog", w:"mace", c:"#f1c40f", d:"#c89060", acc:"#111111", pat:"spots" }, 
 
-          { cat:"Fat Cat", dog:"Shiba Inu", w:"mace", c:"#e8dcc4", d:"#f39c12", acc:"#6a4a2a", pat:"spots" }, 
-          { cat:"Wildcat", dog:"Dalmatian", w:"hammer", c:"#8b6f47", d:"#ffffff", acc:"#3a2a1a", pat:"stripes" },
-          { cat:"Bobcat", dog:"Boxer", w:"morningstar", c:"#d49a3f", d:"#a8753a", acc:"#3a2a0a", pat:"spots" },
-          { cat:"Cheetah", dog:"Husky", w:"twin blades", c:"#f1c40f", d:"#cccccc", acc:"#111111", pat:"spots" },
-          { cat:"Ocelot", dog:"Malamute", w:"twin blades", c:"#e67e22", d:"#7f8c8d", acc:"#2c3e50", pat:"spots" },
-          { cat:"Panther", dog:"Doberman", w:"naginata", c:"#3a3a4e", d:"#222222", acc:"#1a1a22", pat:"eyepatch" },
-          { cat:"Black Panther", dog:"Rottweiler", w:"broadsword", c:"#111111", d:"#3a2a1a", acc:"#333333", pat:"mask" },
-          { cat:"Leopard", dog:"Mastiff", w:"battleaxe", c:"#d4a060", d:"#8b6f47", acc:"#111111", pat:"spots" },
-          { cat:"Snow Leopard", dog:"Great Dane", w:"colossus axe", c:"#ecf0f1", d:"#34495e", acc:"#7f8c8d", pat:"spots" },
-          { cat:"Jaguar", dog:"Wolfhound", w:"warhammer", c:"#8b8b9a", d:"#888888", acc:"#8b4513", pat:"helm" }, 
-
-          { cat:"Cougar", dog:"Bloodhound", w:"warhammer", c:"#e8c8a8", d:"#8b4513", acc:"#333333", pat:"spots" }, 
-          { cat:"Puma", dog:"Dire Wolf", w:"katana", c:"#1a1a2e", d:"#444444", acc:"#0a0a14", pat:"mask" },
-          { cat:"Tiger", dog:"Hellhound", w:"battleaxe", c:"#e87f1f", d:"#5a1a1a", acc:"#1a0a00", pat:"stripes" },
-          { cat:"White Tiger", dog:"Cerberus", w:"cutlass", c:"#ecf0f1", d:"#1a1a1a", acc:"#111111", pat:"stripes" },
-          { cat:"Lion", dog:"Mutant Hound", w:"staff", c:"#daa520", d:"#ff00ff", acc:"#8b6f00", pat:"mane" },
-          { cat:"Liger", dog:"Cyborg Dog", w:"naginata", c:"#f1c40f", d:"#00d4ff", acc:"#e67e22", pat:"mane" },
-          { cat:"Cave Lion", dog:"Ninja Dog", w:"great katana", c:"#bdc3c7", d:"#111111", acc:"#7f8c8d", pat:"mane" },
-          { cat:"Dire Tiger", dog:"Samurai Dog", w:"staff", c:"#c4a060", d:"#1a1a2e", acc:"#5a3a1a", pat:"stripes" },
-          { cat:"Sabertooth", dog:"Assassin Hound", w:"twin blades", c:"#d35400", d:"#2c3e50", acc:"#f1c40f", pat:"fangs" },
-          { cat:"Smilodon", dog:"Monk Dog", w:"warhammer", c:"#8b4513", d:"#e67e22", acc:"#ffd700", pat:"fangs" }, 
-
-          { cat:"Mutant Cat", dog:"Battle Mage", w:"scythe", c:"#a8324a", d:"#9b59b6", acc:"#00ff00", pat:"horns" }, 
-          { cat:"Cyborg Cat", dog:"Warlock Hound", w:"lightsaber", c:"#00d4ff", d:"#8e44ad", acc:"#0088aa", pat:"cyber" },
-          { cat:"Ninja Cat", dog:"Wizard Dog", w:"twin blades", c:"#1a1a2e", d:"#6a3a8a", acc:"#000000", pat:"mask" },
-          { cat:"Assassin Cat", dog:"Dragon Dog", w:"dagger", c:"#34495e", d:"#4a8a3a", acc:"#e74c3c", pat:"mask" },
-          { cat:"Samurai Cat", dog:"Demon Dog", w:"great katana", c:"#a8324a", d:"#7a1a1a", acc:"#ffd700", pat:"helm" },
-          { cat:"Monk Cat", dog:"Phantom Hound", w:"staff", c:"#e67e22", d:"#bdc3c7", acc:"#f39c12", pat:"fluffy" },
-          { cat:"Wizard Cat", dog:"Void Hound", w:"staff", c:"#6a3a8a", d:"#111111", acc:"#ffd700", pat:"hat" },
-          { cat:"Warlock Cat", dog:"Alien Dog", w:"soul reaper", c:"#8e44ad", d:"#33ff33", acc:"#9b59b6", pat:"demon" },
-          { cat:"Dragon Cat", dog:"Nebula Dog", w:"dragonblade", c:"#4a8a3a", d:"#9b59b6", acc:"#1a3a1a", pat:"scales" },
-          { cat:"Demon Cat", dog:"Galaxy Dog", w:"soul reaper", c:"#7a1a1a", d:"#3a5a9a", acc:"#3a0a0a", pat:"demon" }, 
-
-          { cat:"Angel Cat", dog:"Universe Dog", w:"holy spear", c:"#fff8dc", d:"#2a4a3a", acc:"#ffd700", pat:"halo" }, 
-          { cat:"Phantom Cat", dog:"Cosmic Dog", w:"void blade", c:"#bdc3c7", d:"#111111", acc:"#ecf0f1", pat:"glow" },
-          { cat:"Void Cat", dog:"Astral Hound", w:"scythe", c:"#111111", d:"#9b59b6", acc:"#000000", pat:"glow" },
-          { cat:"Alien Cat", dog:"God Dog", w:"void blade", c:"#5a3a8a", d:"#ffd700", acc:"#1a0a3a", pat:"glow" },
-          { cat:"Nebula Cat", dog:"Titan Hound", w:"star scythe", c:"#9b59b6", d:"#c0392b", acc:"#8e44ad", pat:"galaxy" },
-          { cat:"Galaxy Cat", dog:"Omega Dog", w:"star scythe", c:"#3a5a9a", d:"#e74c3c", acc:"#1a2a5a", pat:"galaxy" },
-          { cat:"Astral Cat", dog:"Eternity Hound", w:"lightsaber", c:"#8e44ad", d:"#f39c12", acc:"#9b59b6", pat:"stars" },
-          { cat:"Universe Cat", dog:"Celestial Dog", w:"colossus axe", c:"#2a4a3a", d:"#00d4ff", acc:"#0a2a1a", pat:"tentacles" },
-          { cat:"Cosmic Cat", dog:"Dimensional Hound", w:"godslayer", c:"#111111", d:"#34495e", acc:"#00ffff", pat:"stars" },
-          { cat:"God Cat", dog:"Supreme Overlord", w:"infinity blade", c:"#ffd700", d:"#ffffff", acc:"#ffffff", pat:"god" } 
-        ];
-
-        // RPG SCALING
-        const evolutions = TIER_VISUALS.map((t, i) => {
-            let level = i + 1;
-            let size = 20 + (level * 4.5); 
-            let speed = Math.max(120, 310 - (level * 3.5)); 
-            let weaponLength = size * 2.5; 
-            
-            let multiplier = Math.pow(1.25, i);
-            let nextXp = Math.floor(50 * multiplier); 
-            let maxHp = Math.floor(100 * multiplier); 
-            let playerDamage = Math.floor(45 * multiplier); 
-            let enemyDamage = Math.floor(20 * multiplier); 
-            
-            return { 
-                level, catName: t.cat, dogName: t.dog, weaponType: t.w, baseSize: size, speed, 
-                weaponLength, nextXp, catColor: t.c, dogColor: t.d, accent: t.acc, pattern: t.pat,
-                maxHp, playerDamage, enemyDamage 
-            };
-        });
-
-        // 8. WEAPONS AND ARMOR STATS
-        const WEAPON_TIERS = ["DEFAULT", "BRONZE", "SILVER", "GOLD", "DIAMOND"];
-        const UPGRADE_COSTS = [10, 25, 60, 150]; 
-        const UPGRADE_COLORS = [null, '#cd7f32', '#e3e4e5', '#ffd700', '#00ffff']; 
-        const UPGRADE_MULT = [1.0, 1.25, 1.6, 2.2, 3.5]; 
-        const UPGRADE_SIZE_MULT = [1.0, 1.1, 1.2, 1.3, 1.5]; 
-
-        const HELMET_TIERS = ["NO HELMET", "BRONZE", "IRON", "SILVER", "GOLD", "DIAMOND"];
-        const HELMET_UPGRADE_COSTS = [15, 35, 80, 200, 450];
-        const HELMET_COLORS = [null, '#cd7f32', '#7f8c8d', '#e3e4e5', '#ffd700', '#00ffff'];
-        const HELMET_HP_MULT = [1.0, 1.2, 1.5, 1.9, 2.5, 3.5]; 
-
-        function getWeaponArchetype(weaponName) {
-            const w = (weaponName || '').toLowerCase();
-            if (w.includes('dagger') || w.includes('twin')) return 'fast';
-            if (w.includes('hammer') || w.includes('mace') || w.includes('star') || w.includes('axe')) return 'heavy';
-            if (w.includes('scythe') || w.includes('reaper')) return 'wide';
-            if (w.includes('saber') || w.includes('blade') || w.includes('katana') || w.includes('spear') || w.includes('god')) return 'reach';
-            return 'balanced';
-        }
-
-        const ARCH_STATS = {
-            balanced: { cdMult: 1.0, dmgMult: 1.0, reachMult: 1.0, knockback: 0 },
-            fast:     { cdMult: 0.6, dmgMult: 0.85, reachMult: 0.9, knockback: 0 },
-            heavy:    { cdMult: 1.45, dmgMult: 1.55, reachMult: 1.0, knockback: 280 },
-            wide:     { cdMult: 1.1, dmgMult: 0.9, reachMult: 1.1, knockback: 0 },
-            reach:    { cdMult: 1.0, dmgMult: 1.0, reachMult: 1.35, knockback: 0 },
-        };
-
-        const BOSS_VARIANTS = [
-            { name: '⚡ SWIFT BOSS', hpMult: 0.7, dmgMult: 0.8, speedMult: 1.6, sizeMult: 1.1, cdMult: 0.7, color: '#00d4ff', alert: '⚡ SWIFT BOSS!', weapon: 'twin blades' },
-            { name: '🛡️ TANK BOSS', hpMult: 1.6, dmgMult: 1.3, speedMult: 0.7, sizeMult: 1.5, cdMult: 1.4, color: '#7f8c8d', alert: '🛡️ TANK BOSS!', weapon: 'warhammer' },
-            { name: '👑 MEGA BOSS',  hpMult: 1.0, dmgMult: 1.0, speedMult: 1.0, sizeMult: 1.4, cdMult: 1.0, color: '#ffd700', alert: '👑 MEGA BOSS!', weapon: 'godslayer' },
-        ];
-        
-        // 9.5 GRAPHICS HELPERS, OBJECT POOLING & SPATIAL GRID
+        // HELPERS
         function shade(color, percent) { if (!color.startsWith('#')) return color; let R = parseInt(color.substring(1,3),16), G = parseInt(color.substring(3,5),16), B = parseInt(color.substring(5,7),16); R = Math.min(255, parseInt(R * (100 + percent) / 100)); G = Math.min(255, parseInt(G * (100 + percent) / 100)); B = Math.min(255, parseInt(B * (100 + percent) / 100)); return "#"+((1<<24)+(R<<16)+(G<<8)+B).toString(16).slice(1); }
         
         const particlePool = [];
@@ -725,161 +658,128 @@
             return result;
         }
 
-        // 9. DRAWING FUNCTIONS
+        // DRAWING
         const spritesCache = { cats: {}, dogs: {} };
         const weaponCache = {};
 
         function drawWeaponShape(ctx, len, wid, weaponType, colorBase, upgradeTier) {
             let w = (weaponType || 'stick').toLowerCase(); 
-            if (upgradeTier > 0 && colorBase !== '#ffffff') { colorBase = UPGRADE_COLORS[upgradeTier]; ctx.shadowColor = colorBase; ctx.shadowBlur = upgradeTier >= 3 ? 15 : 8; }
+            if (upgradeTier > 0) { colorBase = UPGRADE_COLORS[upgradeTier]; ctx.shadowColor = colorBase; ctx.shadowBlur = upgradeTier >= 3 ? 15 : 8; }
             
             ctx.fillStyle = '#5c4033'; // Brown Handle
             ctx.fillRect(-wid*0.5, -wid*0.4, len*0.4, wid*0.8); 
             
-            ctx.fillStyle = (upgradeTier > 0 && colorBase !== '#ffffff') ? colorBase : '#cccccc';
-            if (colorBase === '#ffffff') ctx.fillStyle = '#ffffff'; // Override for flash
+            ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
 
             ctx.beginPath();
             if (w.includes('katana') || w.includes('naginata') || w.includes('dragonblade') || w.includes('cutlass')) {
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : '#111'; ctx.fillRect(len*0.2, -wid*0.8, wid*0.4, wid*1.6); // Tsuba
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#cccccc');
+                ctx.fillStyle = '#111'; ctx.fillRect(len*0.2, -wid*0.8, wid*0.4, wid*1.6); 
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
                 ctx.moveTo(len*0.25, -wid*0.3); ctx.quadraticCurveTo(len*0.6, wid*1.5, len, wid*0.2);
                 ctx.lineTo(len*0.9, -wid*0.8); ctx.quadraticCurveTo(len*0.6, -wid*0.2, len*0.25, -wid*0.8);
             }
             else if (w.includes('sword') || w.includes('blade') || w.includes('godslayer') || w.includes('dagger') || w.includes('spear') || w.includes('twin')) {
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : '#444'; ctx.fillRect(len*0.15, -wid*1.2, wid*0.5, wid*2.4); // Crossguard
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#cccccc');
+                ctx.fillStyle = '#444'; ctx.fillRect(len*0.15, -wid*1.2, wid*0.5, wid*2.4); 
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
                 ctx.moveTo(len*0.2, -wid*0.6); ctx.lineTo(len*0.85, -wid*0.6); ctx.lineTo(len, 0); 
                 ctx.lineTo(len*0.85, wid*0.6); ctx.lineTo(len*0.2, wid*0.6);
             }
             else if (w.includes('axe')) { 
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.5, wid*0.8); // Handle extension
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#cccccc');
-                
+                ctx.fillStyle = '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.5, wid*0.8); 
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
                 let axeSize = w.includes('colossus') ? 1.8 : (w.includes('battle') ? 1.4 : 1.0);
-                let hW = wid * 3.5 * axeSize; // Polovina šířky břitu
-                let headLen = len * 0.25 * axeSize; // Tloušťka hlavy sekery
-                let cx = len * 0.75; // Střed sekery na topůrku
-                
+                let hW = wid * 3.5 * axeSize; 
+                let headLen = len * 0.25 * axeSize; 
+                let cx = len * 0.75; 
                 ctx.moveTo(cx - headLen*0.4, -wid*0.4);
                 ctx.lineTo(cx - headLen*0.8, -hW);
-                ctx.quadraticCurveTo(cx, -hW*1.2, cx + headLen*0.8, -hW); // Horní zakřivený břit
+                ctx.quadraticCurveTo(cx, -hW*1.2, cx + headLen*0.8, -hW); 
                 ctx.lineTo(cx + headLen*0.4, -wid*0.4);
-                
                 ctx.lineTo(cx + headLen*0.4, wid*0.4);
                 ctx.lineTo(cx + headLen*0.8, hW);
-                ctx.quadraticCurveTo(cx, hW*1.2, cx - headLen*0.8, hW); // Spodní zakřivený břit
+                ctx.quadraticCurveTo(cx, hW*1.2, cx - headLen*0.8, hW); 
                 ctx.lineTo(cx - headLen*0.4, wid*0.4);
                 ctx.closePath();
             } 
             else if (w.includes('mace') || w.includes('hammer') || w.includes('star')) { 
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.4, wid*0.8);
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#999999');
-                
+                ctx.fillStyle = '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.4, wid*0.8);
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#999999';
                 if (w.includes('hammer')) { 
                     ctx.rect(len*0.6, -wid*2.5, len*0.3, wid*5); 
                 } 
                 else if (w.includes('mace')) {
-                    let cx = len * 0.8;
-                    let fw = wid * 3.5; 
-                    let fl = len * 0.25; 
-                    
-                    ctx.moveTo(cx - fl, 0);
-                    ctx.lineTo(cx, -fw);
-                    ctx.lineTo(cx + fl, 0);
-                    ctx.lineTo(cx, fw);
-                    ctx.closePath();
-                    ctx.fill(); ctx.stroke();
-                    
-                    ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? shade(colorBase, 40) : '#e6e6e6');
-                    ctx.beginPath();
-                    ctx.moveTo(cx - fl*0.4, 0);
-                    ctx.lineTo(cx, -fw*1.05);
-                    ctx.lineTo(cx + fl*0.4, 0);
-                    ctx.lineTo(cx, fw*1.05);
-                    ctx.closePath();
+                    let cx = len * 0.8; let fw = wid * 3.5; let fl = len * 0.25; 
+                    ctx.moveTo(cx - fl, 0); ctx.lineTo(cx, -fw); ctx.lineTo(cx + fl, 0); ctx.lineTo(cx, fw);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = upgradeTier > 0 ? shade(colorBase, 40) : '#e6e6e6';
+                    ctx.beginPath(); ctx.moveTo(cx - fl*0.4, 0); ctx.lineTo(cx, -fw*1.05); ctx.lineTo(cx + fl*0.4, 0); ctx.lineTo(cx, fw*1.05); ctx.closePath();
                 } 
                 else {
                     ctx.arc(len*0.8, 0, wid*2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                    ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? '#fff' : '#ddd');
+                    ctx.fillStyle = upgradeTier > 0 ? '#fff' : '#ddd';
                     for(let i=0; i<8; i++) { let a = (i/8) * Math.PI*2; ctx.beginPath(); ctx.moveTo(len*0.8 + Math.cos(a)*wid*1.5, Math.sin(a)*wid*1.5); ctx.lineTo(len*0.8 + Math.cos(a)*wid*3.5, Math.sin(a)*wid*3.5); ctx.lineTo(len*0.8 + Math.cos(a+0.3)*wid*1.5, Math.sin(a+0.3)*wid*1.5); ctx.fill(); }
-                    ctx.beginPath(); // reset for stroke
+                    ctx.beginPath(); 
                 }
             } 
             else if (w.includes('scythe') || w.includes('reaper')) { 
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.5, wid*0.8);
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#cccccc');
+                ctx.fillStyle = '#5c4033'; ctx.fillRect(len*0.3, -wid*0.4, len*0.5, wid*0.8);
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#cccccc';
                 ctx.moveTo(len*0.7, -wid*0.5); ctx.quadraticCurveTo(len*1.2, -wid*6, len*0.3, -wid*8);
                 ctx.quadraticCurveTo(len*0.9, -wid*4, len*0.8, -wid*0.5);
             } 
             else if (w.includes('lightsaber')) {
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : '#111'; ctx.fillRect(-wid*0.5, -wid*0.6, len*0.3, wid*1.2);
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#00ffff'); 
+                ctx.fillStyle = '#111'; ctx.fillRect(-wid*0.5, -wid*0.6, len*0.3, wid*1.2);
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#00ffff'; 
                 ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 20;
                 ctx.fillRect(len*0.2, -wid*0.5, len*0.7, wid*1); ctx.arc(len*0.9, 0, wid*0.5, -Math.PI/2, Math.PI/2);
             }
             else if (w === 'stick' || w === 'twig' || w === 'staff') { 
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#8b5a2b'); 
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#8b5a2b'; 
                 ctx.rect(0, -wid*0.6, len, wid*1.2); 
                 if (w === 'staff' && upgradeTier > 0) { 
                     ctx.fill(); ctx.stroke(); 
-                    ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : '#00ffff'; 
+                    ctx.fillStyle = '#00ffff'; 
                     ctx.beginPath(); ctx.arc(len, 0, wid*2, 0, Math.PI*2); 
                 }
             } 
             else { 
-                ctx.fillStyle = colorBase === '#ffffff' ? '#ffffff' : (upgradeTier > 0 ? colorBase : '#e0e0e0'); 
+                ctx.fillStyle = upgradeTier > 0 ? colorBase : '#e0e0e0'; 
                 ctx.moveTo(0, -wid*0.6); ctx.lineTo(len*0.8, -wid*0.6); ctx.lineTo(len, 0); ctx.lineTo(len*0.8, wid*0.6); ctx.lineTo(0, wid*0.6); ctx.closePath();
             } 
-            
-            if (ctx.fillStyle !== '#5c4033' || colorBase === '#ffffff') { ctx.fill(); if(!w.includes('lightsaber')) ctx.stroke(); }
+            if (ctx.fillStyle !== '#5c4033') { ctx.fill(); if(!w.includes('lightsaber')) ctx.stroke(); }
             ctx.shadowBlur = 0;
         }
 
-        // --- ÚPRAVA: WHITE FLASH PODPORA VE FUNKCI DRAWFACE ---
-        function drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier = 0, isFlashing = false) {
-            let baseColor = isFlashing ? '#ffffff' : color;
-            let baseAccent = isFlashing ? '#ffffff' : accent;
+        function drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier = 0) {
+            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size * 0.1); ctx.stroke(); ctx.fillStyle = accent;
             
-            // Base face
-            ctx.fillStyle = baseColor; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size * 0.1); ctx.stroke(); ctx.fillStyle = baseAccent;
+            if (pattern === 'stripes') { ctx.fillRect(-size*0.6, -size*0.1, size*0.4, size*0.2); ctx.fillRect(-size*0.5, -size*0.4, size*0.3, size*0.15); ctx.fillRect(-size*0.5, size*0.25, size*0.3, size*0.15); } 
+            else if (pattern === 'spots') { ctx.beginPath(); ctx.arc(-size*0.3, -size*0.4, size*0.18, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.5, size*0.3, size*0.22, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.1, size*0.5, size*0.15, 0, Math.PI*2); ctx.fill(); } 
+            else if (pattern === 'mane') { for (let i = 0; i < 14; i++) { ctx.beginPath(); ctx.arc(Math.cos(i)*size*0.8, Math.sin(i)*size*0.8, size*0.35, 0, Math.PI*2); ctx.fill(); } } 
+            else if (pattern === 'mask') { ctx.fillStyle = '#111111'; ctx.fillRect(0, -size*0.8, size*0.45, size*1.6); } 
+            else if (pattern === 'cyber') { ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.2); ctx.lineTo(size*0.2, -size*0.2); ctx.lineTo(size*0.5, -size*0.5); ctx.stroke(); } 
+            else if (pattern === 'halo' || pattern === 'god') { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = size * 0.18; ctx.beginPath(); ctx.ellipse(-size*0.4, 0, size*0.5, size*1.3, 0, 0, Math.PI*2); ctx.stroke(); } 
+            else if (pattern === 'hat') { ctx.beginPath(); ctx.moveTo(0, -size*0.4); ctx.lineTo(-size*1.6, 0); ctx.lineTo(0, size*0.4); ctx.fill(); ctx.stroke(); } 
+            else if (pattern === 'demon' || pattern === 'horns') { ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.moveTo(-size*0.2, -size*0.6); ctx.lineTo(size*0.2, -size*1.3); ctx.lineTo(size*0.1, -size*0.5); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.2, size*0.6); ctx.lineTo(size*0.2, size*1.3); ctx.lineTo(size*0.1, size*0.5); ctx.fill(); ctx.stroke(); } 
+            else if (pattern === 'fluffy') { ctx.fillStyle = '#ffffff'; for (let i = 0; i < 8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.arc(Math.cos(a)*size*0.9, Math.sin(a)*size*0.9, size*0.25, 0, Math.PI*2); ctx.fill(); } }
             
-            // Patterns
-            if (!isFlashing) {
-                if (pattern === 'stripes') { ctx.fillRect(-size*0.6, -size*0.1, size*0.4, size*0.2); ctx.fillRect(-size*0.5, -size*0.4, size*0.3, size*0.15); ctx.fillRect(-size*0.5, size*0.25, size*0.3, size*0.15); } 
-                else if (pattern === 'spots') { ctx.beginPath(); ctx.arc(-size*0.3, -size*0.4, size*0.18, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.5, size*0.3, size*0.22, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.1, size*0.5, size*0.15, 0, Math.PI*2); ctx.fill(); } 
-                else if (pattern === 'mane') { for (let i = 0; i < 14; i++) { ctx.beginPath(); ctx.arc(Math.cos(i)*size*0.8, Math.sin(i)*size*0.8, size*0.35, 0, Math.PI*2); ctx.fill(); } } 
-                else if (pattern === 'mask') { ctx.fillStyle = '#111111'; ctx.fillRect(0, -size*0.8, size*0.45, size*1.6); } 
-                else if (pattern === 'cyber') { ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.2); ctx.lineTo(size*0.2, -size*0.2); ctx.lineTo(size*0.5, -size*0.5); ctx.stroke(); } 
-                else if (pattern === 'halo' || pattern === 'god') { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = size * 0.18; ctx.beginPath(); ctx.ellipse(-size*0.4, 0, size*0.5, size*1.3, 0, 0, Math.PI*2); ctx.stroke(); } 
-                else if (pattern === 'hat') { ctx.beginPath(); ctx.moveTo(0, -size*0.4); ctx.lineTo(-size*1.6, 0); ctx.lineTo(0, size*0.4); ctx.fill(); ctx.stroke(); } 
-                else if (pattern === 'demon' || pattern === 'horns') { ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.moveTo(-size*0.2, -size*0.6); ctx.lineTo(size*0.2, -size*1.3); ctx.lineTo(size*0.1, -size*0.5); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.2, size*0.6); ctx.lineTo(size*0.2, size*1.3); ctx.lineTo(size*0.1, size*0.5); ctx.fill(); ctx.stroke(); } 
-                else if (pattern === 'fluffy') { ctx.fillStyle = '#ffffff'; for (let i = 0; i < 8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.arc(Math.cos(a)*size*0.9, Math.sin(a)*size*0.9, size*0.25, 0, Math.PI*2); ctx.fill(); } }
-            }
-
-            // Ears
-            ctx.fillStyle = baseColor;
+            ctx.fillStyle = color;
             if (isCat) { 
                 ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.25); ctx.lineTo(-size*1.2, -size*0.85); ctx.lineTo(-size*0.3, -size*0.65); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.8, size*0.25); ctx.lineTo(-size*1.2, size*0.85); ctx.lineTo(-size*0.3, size*0.65); ctx.fill(); ctx.stroke(); 
-                ctx.fillStyle = isFlashing ? '#ffffff' : '#ff9999'; ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.35); ctx.lineTo(-size*1.05, -size*0.75); ctx.lineTo(-size*0.45, -size*0.6); ctx.fill(); ctx.beginPath(); ctx.moveTo(-size*0.75, size*0.35); ctx.lineTo(-size*1.05, size*0.75); ctx.lineTo(-size*0.45, size*0.6); ctx.fill(); 
-                if (!isFlashing) { ctx.strokeStyle = '#222222'; ctx.lineWidth = Math.max(1, size * 0.04); ctx.beginPath(); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*1.0, -size*0.85); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.8, -size*0.95); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.6, -size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*1.0, size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.8, size*0.95); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.6, size*0.85); ctx.stroke(); }
-                ctx.fillStyle = isFlashing ? '#ffffff' : '#111111'; ctx.beginPath(); ctx.arc(size*0.8, 0, size*0.1, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#ff9999'; ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.35); ctx.lineTo(-size*1.05, -size*0.75); ctx.lineTo(-size*0.45, -size*0.6); ctx.fill(); ctx.beginPath(); ctx.moveTo(-size*0.75, size*0.35); ctx.lineTo(-size*1.05, size*0.75); ctx.lineTo(-size*0.45, size*0.6); ctx.fill(); 
+                ctx.strokeStyle = '#222222'; ctx.lineWidth = Math.max(1, size * 0.04); ctx.beginPath(); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*1.0, -size*0.85); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.8, -size*0.95); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.6, -size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*1.0, size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.8, size*0.95); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.6, size*0.85); ctx.stroke();
+                ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(size*0.8, 0, size*0.1, 0, Math.PI*2); ctx.fill();
             } else { 
-                ctx.fillStyle = isFlashing ? '#ffffff' : shade(color, -20); ctx.beginPath(); ctx.ellipse(-size*0.3, -size*0.85, size*0.45, size*0.25, -Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(-size*0.3, size*0.85, size*0.45, size*0.25, Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
-                ctx.fillStyle = isFlashing ? '#ffffff' : shade(color, 15); ctx.beginPath(); ctx.ellipse(size*0.75, 0, size*0.38, size*0.28, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = isFlashing ? '#ffffff' : '#111111'; ctx.beginPath(); ctx.arc(size*0.95, 0, size*0.12, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillStyle = shade(color, -20); ctx.beginPath(); ctx.ellipse(-size*0.3, -size*0.85, size*0.45, size*0.25, -Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(-size*0.3, size*0.85, size*0.45, size*0.25, Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+                ctx.fillStyle = shade(color, 15); ctx.beginPath(); ctx.ellipse(size*0.75, 0, size*0.38, size*0.28, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(size*0.95, 0, size*0.12, 0, Math.PI*2); ctx.fill(); 
             }
             
-            // Helmet
-            if (isCat && helmetTier > 0 && !isFlashing) {
+            if (isCat && helmetTier > 0) {
                 let hColor = HELMET_COLORS[helmetTier];
-                ctx.fillStyle = hColor;
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = Math.max(2, size*0.05);
-                ctx.shadowColor = (helmetTier >= 5) ? hColor : 'transparent';
-                ctx.shadowBlur = (helmetTier >= 5) ? 15 : 0;
-                
+                ctx.fillStyle = hColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.05);
+                ctx.shadowColor = (helmetTier >= 5) ? hColor : 'transparent'; ctx.shadowBlur = (helmetTier >= 5) ? 15 : 0;
                 ctx.beginPath();
                 if (helmetTier >= 1) { ctx.arc(-size*0.1, 0, size*1.05, Math.PI/2.5, -Math.PI/2.5 + Math.PI*2); ctx.lineTo(-size*0.1, 0); ctx.fill(); ctx.stroke(); }
                 if (helmetTier >= 2) { ctx.fillRect(0, -size*1.05, size*0.4, size*0.35); ctx.strokeRect(0, -size*1.05, size*0.4, size*0.35); ctx.fillRect(0, size*0.7, size*0.4, size*0.35); ctx.strokeRect(0, size*0.7, size*0.4, size*0.35); }
@@ -889,7 +789,6 @@
                 ctx.shadowBlur = 0;
             }
 
-            // EYES SYSTEM
             let eyeColor = '#ffffff'; let glowColor = null;
             if (isCat) {
                 if (level >= 45) { eyeColor = '#ffd700'; glowColor = '#ffaa00'; } 
@@ -898,51 +797,35 @@
             } else {
                 if (level >= 25) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } 
             }
-            if (isFlashing) eyeColor = '#111111'; // make eyes dark during flash
             
             ctx.fillStyle = eyeColor;
-            if (glowColor && !isFlashing) { ctx.shadowColor = glowColor; ctx.shadowBlur = 15; }
+            if (glowColor) { ctx.shadowColor = glowColor; ctx.shadowBlur = 15; }
             ctx.beginPath(); ctx.arc(size*0.2, -size*0.4, size*0.22, 0, Math.PI*2); ctx.fill(); 
             ctx.beginPath(); ctx.arc(size*0.2, size*0.4, size*0.22, 0, Math.PI*2); ctx.fill();
-            
-            if (level < 25 && !isFlashing) { 
+            if (level < 25) { 
                 ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(size*0.3, -size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.3, size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); 
                 ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(size*0.32, -size*0.43, size*0.04, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.32, size*0.37, size*0.04, 0, Math.PI*2); ctx.fill(); 
             } 
             ctx.shadowBlur = 0;
         }
 
-        // --- NOVÁ FUNKCE / ÚPRAVA: WHITE FLASH A WEAPON TRAILS ---
-        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0, isFlashing = false) {
-            ctx.save(); drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier, isFlashing);
+        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0) {
+            ctx.save(); drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier);
             let currentTier = isCat ? (prog.weaponUpgrades[level] || 0) : 0; let sizeMult = isCat ? UPGRADE_SIZE_MULT[currentTier] : 1.0;
             
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let wLen = (size * 2.5) * sizeMult * archStats.reachMult; 
             let wWid = Math.max(6, size * 0.22) * sizeMult; 
             
-            let pawColor = isFlashing ? '#ffffff' : shade(color, -10);
+            let pawColor = shade(color, -10);
             ctx.fillStyle = pawColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.1); ctx.beginPath(); ctx.ellipse(0, -size*1.1, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
             ctx.save(); let swingAng = Math.PI / 4, armExtend = size * 1.1; 
             if (attackProgress > 0) { 
                 if (attackProgress < 0.2) swingAng = Math.PI/3 + attackProgress*0.2; 
                 else if (attackProgress < 0.4) swingAng = Math.PI*0.4 - ((attackProgress-0.2)/0.2)*Math.PI; 
                 else swingAng = -Math.PI*0.6 + ((attackProgress-0.4)/0.6)*Math.PI*0.6; 
-                
-                // Vykreslení WEAPON TRAILS (Šmouhy za zbraní)
-                ctx.globalAlpha = 0.25;
-                for(let i=1; i<=2; i++) {
-                    let trailAng = swingAng + (0.25 * i);
-                    ctx.save(); ctx.rotate(trailAng); ctx.translate(armExtend, 0); ctx.rotate(Math.PI/8);
-                    drawWeaponShape(ctx, wLen, wWid, weaponType, isFlashing ? '#ffffff' : color, currentTier);
-                    ctx.restore();
-                }
-                ctx.globalAlpha = 1.0;
             } 
-            
-            ctx.rotate(swingAng); ctx.translate(armExtend, 0); ctx.save(); ctx.rotate(Math.PI/8); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; 
-            drawWeaponShape(ctx, wLen, wWid, weaponType, isFlashing ? '#ffffff' : color, currentTier); 
-            ctx.restore(); ctx.fillStyle = pawColor; ctx.beginPath(); ctx.ellipse(0, 0, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore(); ctx.restore();
+            ctx.rotate(swingAng); ctx.translate(armExtend, 0); ctx.save(); ctx.rotate(Math.PI/8); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; drawWeaponShape(ctx, wLen, wWid, weaponType, color, currentTier); ctx.restore(); ctx.fillStyle = pawColor; ctx.beginPath(); ctx.ellipse(0, 0, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore(); ctx.restore();
         }
 
         function getSpriteDataURL(type, level, weaponTier = 0, helmetTier = 0) {
@@ -965,18 +848,15 @@
             tCtx.translate(60, 140); 
             tCtx.rotate(-Math.PI / 4);
             let size = 30; 
-            
-            let arch = getWeaponArchetype(weaponType); 
-            let archStats = ARCH_STATS[arch];
+            let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let sizeMult = UPGRADE_SIZE_MULT[upgradeTier];
             let wLen = (size * 2.5) * archStats.reachMult * sizeMult; 
             let wWid = Math.max(6, size * 0.22) * sizeMult;
-            
             drawWeaponShape(tCtx, wLen, wWid, weaponType, '#ffffff', upgradeTier);
             let data = tempC.toDataURL(); weaponCache[key] = data; return data;
         }
 
-        // 10. MENUS & UI
+        // MENUS & UI
         window.openLeaderboard = async () => {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('leaderboard-screen').style.display = 'flex';
@@ -1065,68 +945,31 @@
                 uniqueWeapons.forEach(w => {
                     let arch = getWeaponArchetype(w);
                     let archLabel = { fast:'⚡ Fast', heavy:'🔨 Heavy', wide:'🌀 Wide', reach:'➡️ Reach', balanced:'⚔️ Balanced' }[arch];
-                    
                     let weaponRow = document.createElement('div');
-                    weaponRow.style.background = 'rgba(0,0,0,0.2)';
-                    weaponRow.style.border = '2px solid #34495e';
-                    weaponRow.style.borderRadius = '12px';
-                    weaponRow.style.padding = '15px';
-                    
+                    weaponRow.style.background = 'rgba(0,0,0,0.2)'; weaponRow.style.border = '2px solid #34495e'; weaponRow.style.borderRadius = '12px'; weaponRow.style.padding = '15px';
                     let header = document.createElement('h3');
-                    header.style.margin = '0 0 15px 0';
-                    header.style.textTransform = 'capitalize';
-                    header.style.display = 'flex';
-                    header.style.alignItems = 'center';
-                    header.style.gap = '10px';
+                    header.style.margin = '0 0 15px 0'; header.style.textTransform = 'capitalize'; header.style.display = 'flex'; header.style.alignItems = 'center'; header.style.gap = '10px';
                     header.innerHTML = `${w} <span style="background: var(--panel-light); padding: 4px 10px; border-radius: 8px; color:var(--primary); font-size:12px; font-weight: bold;">${archLabel}</span>`;
                     weaponRow.appendChild(header);
                     
                     let evolutionFlex = document.createElement('div');
-                    evolutionFlex.style.display = 'flex';
-                    evolutionFlex.style.gap = '10px';
-                    evolutionFlex.style.overflowX = 'auto';
-                    evolutionFlex.style.paddingBottom = '5px';
+                    evolutionFlex.style.display = 'flex'; evolutionFlex.style.gap = '10px'; evolutionFlex.style.overflowX = 'auto'; evolutionFlex.style.paddingBottom = '5px';
                     
                     for(let tier = 0; tier <= 4; tier++) {
                         let tierCard = document.createElement('div');
-                        tierCard.style.background = '#1a252f';
-                        let borderColor = UPGRADE_COLORS[tier] || '#555';
-                        tierCard.style.border = `2px solid ${borderColor}`;
-                        tierCard.style.borderRadius = '8px';
-                        tierCard.style.padding = '10px';
-                        tierCard.style.minWidth = '110px';
-                        tierCard.style.textAlign = 'center';
-                        tierCard.style.flex = '1';
+                        tierCard.style.background = '#1a252f'; let borderColor = UPGRADE_COLORS[tier] || '#555';
+                        tierCard.style.border = `2px solid ${borderColor}`; tierCard.style.borderRadius = '8px'; tierCard.style.padding = '10px'; tierCard.style.minWidth = '110px'; tierCard.style.textAlign = 'center'; tierCard.style.flex = '1';
                         if(tier >= 3) tierCard.style.boxShadow = `inset 0 0 15px ${borderColor}40`;
                         
-                        let img = document.createElement('img');
-                        img.src = getWeaponDataURL(w, tier);
-                        img.style.width = '70px';
-                        img.style.height = '70px';
-                        img.style.objectFit = 'contain';
+                        let img = document.createElement('img'); img.src = getWeaponDataURL(w, tier); img.style.width = '70px'; img.style.height = '70px'; img.style.objectFit = 'contain';
                         if(tier > 0) img.style.filter = `drop-shadow(0px 0px 5px ${borderColor})`;
                         
-                        let tierName = document.createElement('div');
-                        tierName.style.fontWeight = 'bold';
-                        tierName.style.fontSize = '14px';
-                        tierName.style.marginTop = '5px';
-                        tierName.style.color = borderColor === '#555' ? '#ccc' : borderColor;
-                        tierName.innerText = WEAPON_TIERS[tier];
+                        let tierName = document.createElement('div'); tierName.style.fontWeight = 'bold'; tierName.style.fontSize = '14px'; tierName.style.marginTop = '5px'; tierName.style.color = borderColor === '#555' ? '#ccc' : borderColor; tierName.innerText = WEAPON_TIERS[tier];
+                        let stats = document.createElement('div'); stats.style.fontSize = '12px'; stats.style.color = '#aaa'; stats.style.marginTop = '5px'; stats.innerHTML = `Dmg: <b>${UPGRADE_MULT[tier]}x</b><br>Reach: <b>${UPGRADE_SIZE_MULT[tier]}x</b>`;
                         
-                        let stats = document.createElement('div');
-                        stats.style.fontSize = '12px';
-                        stats.style.color = '#aaa';
-                        stats.style.marginTop = '5px';
-                        stats.innerHTML = `Dmg: <b>${UPGRADE_MULT[tier]}x</b><br>Reach: <b>${UPGRADE_SIZE_MULT[tier]}x</b>`;
-                        
-                        tierCard.appendChild(img);
-                        tierCard.appendChild(tierName);
-                        tierCard.appendChild(stats);
-                        evolutionFlex.appendChild(tierCard);
+                        tierCard.appendChild(img); tierCard.appendChild(tierName); tierCard.appendChild(stats); evolutionFlex.appendChild(tierCard);
                     }
-                    
-                    weaponRow.appendChild(evolutionFlex);
-                    container.appendChild(weaponRow);
+                    weaponRow.appendChild(evolutionFlex); container.appendChild(weaponRow);
                 });
                 return;
             }
@@ -1135,8 +978,7 @@
             if (tab === 'cats') {
                 for(let i=1; i<=50; i++) {
                     let stats = evolutions[i-1]; let locked = i > prog.maxCatLevel; 
-                    let wTier = prog.weaponUpgrades[i] || 0;
-                    let hTier = prog.helmetUpgrades[i] || 0;
+                    let wTier = prog.weaponUpgrades[i] || 0; let hTier = prog.helmetUpgrades[i] || 0;
                     let card = document.createElement('div'); card.className = `card ${locked ? 'locked' : ''} ${wTier === 4 && hTier === 5 ? 'upgraded' : ''}`;
                     let img = document.createElement('img'); img.src = getSpriteDataURL('cats', i, wTier, hTier); card.appendChild(img);
                     let archLabel = { fast:'⚡ Fast', heavy:'🔨 Heavy', wide:'🌀 Wide', reach:'➡️ Reach', balanced:'⚔️ Balanced' }[getWeaponArchetype(stats.weaponType)];
@@ -1144,17 +986,8 @@
                     
                     if (!locked) {
                         let wTierName = wTier > 0 ? `✨ ${WEAPON_TIERS[wTier]} ` : ''; 
-                        
                         let weaponImgUrl = getWeaponDataURL(stats.weaponType, wTier);
-                        card.innerHTML += `
-                            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;">
-                                <img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));">
-                                <div style="text-align:left; font-size: 11px; line-height: 1.3;">
-                                    <strong style="color: #fff;">${wTierName}${stats.weaponType.toUpperCase()}</strong><br>
-                                    <span style="color:#f39c12;">${archLabel}</span>
-                                </div>
-                            </div>
-                        `;
+                        card.innerHTML += `<div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;"><img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));"><div style="text-align:left; font-size: 11px; line-height: 1.3;"><strong style="color: #fff;">${wTierName}${stats.weaponType.toUpperCase()}</strong><br><span style="color:#f39c12;">${archLabel}</span></div></div>`;
                         
                         let wBtn = document.createElement('button'); wBtn.className = 'upgrade-btn';
                         if (wTier >= 4) { wBtn.innerText = "MAX WEAPON"; wBtn.disabled = true; } 
@@ -1174,25 +1007,11 @@
                     let card = document.createElement('div'); card.className = `card ${locked ? 'locked' : ''}`;
                     let img = document.createElement('img'); img.src = getSpriteDataURL('dogs', i); card.appendChild(img);
                     let archLabel = { fast:'⚡ Fast', heavy:'🔨 Heavy', wide:'🌀 Wide', reach:'➡️ Reach', balanced:'⚔️ Balanced' }[getWeaponArchetype(stats.weaponType)];
-                    
                     card.innerHTML += `<h3>Lv.${i} ${locked ? '???' : stats.dogName}</h3>`;
-                    
                     if (!locked) {
                         let weaponImgUrl = getWeaponDataURL(stats.weaponType, 0); 
-                        card.innerHTML += `
-                            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;">
-                                <img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0;">
-                                <div style="text-align:left; font-size: 11px; line-height: 1.3;">
-                                    <strong style="color: #fff;">${stats.weaponType.toUpperCase()}</strong><br>
-                                    <span style="color:#f39c12;">${archLabel}</span>
-                                </div>
-                            </div>
-                            <p style="margin-top: 5px;">Defeated: ${kills}</p>
-                        `;
-                    } else {
-                        card.innerHTML += `<p style="margin-top: 5px;">Defeated: 0</p>`;
-                    }
-                    
+                        card.innerHTML += `<div style="display:flex; align-items:center; justify-content:center; gap:8px; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; width: 100%; box-sizing: border-box;"><img src="${weaponImgUrl}" style="width:35px; height:35px; object-fit:contain; margin: 0;"><div style="text-align:left; font-size: 11px; line-height: 1.3;"><strong style="color: #fff;">${stats.weaponType.toUpperCase()}</strong><br><span style="color:#f39c12;">${archLabel}</span></div></div><p style="margin-top: 5px;">Defeated: ${kills}</p>`;
+                    } else { card.innerHTML += `<p style="margin-top: 5px;">Defeated: 0</p>`; }
                     grid.appendChild(card);
                 }
             }
@@ -1220,7 +1039,7 @@
         }
         window.togglePause = togglePause;
 
-        // 11. GAME STATE & MAIN LOGIC
+        // GAME STATE & MAIN LOGIC
         let playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0 };
         let chests = [], droppedGems = [], player, currentZoom = 1;
         let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [];
@@ -1229,13 +1048,10 @@
         const COMBO_WINDOW = 3.0, COMBO_BUFF_THRESHOLD = 5;
         let lastTime = 0; 
         
-        // --- NOVÁ FUNKCE: AI BOTS POLE ---
-        let bots = [];
-
         let tutorialSteps = [
-            { text: "🖱️ Move your mouse/joystick to hunt weaker dogs.", duration: 5 },
-            { text: "⚔️ Left click/touch right side to attack. Find some food!", duration: 5 },
-            { text: "⚡ Space, Right click or Dash Button to dash.", duration: 5 },
+            { text: "🖱️ Move your mouse to hunt weaker dogs.", duration: 5 },
+            { text: "⚔️ Left click to attack. Find some food!", duration: 5 },
+            { text: "⚡ Space or Right click to dash.", duration: 5 },
             { text: "💎 Break chests to get Gems for permanent upgrades.", duration: 6 }
         ];
         let tutorialIdx = 0, tutorialTimer = 0, tutorialActive = false;
@@ -1247,41 +1063,19 @@
             tutorialTimer = tutorialSteps[tutorialIdx].duration;
         }
 
-        // --- NOVÁ FUNKCE: SPAWN BOTA ---
-        function spawnBot() {
-            let pLvl = player ? player.level : 1;
-            let blvl = Math.max(1, Math.floor(Math.random() * pLvl));
-            let stats = evolutions[blvl - 1];
-            let ex = Math.random() * WORLD_SIZE;
-            let ey = Math.random() * WORLD_SIZE;
-            
-            let arch = getWeaponArchetype(stats.weaponType); 
-            let archStats = ARCH_STATS[arch];
-            
-            bots.push({
-                x: ex, y: ey, level: blvl, name: "Ally_" + Math.floor(Math.random()*999),
-                size: stats.baseSize, speed: stats.speed * 0.9, weaponLength: stats.weaponLength * archStats.reachMult,
-                angle: 0, attackTimer: 0, attackCooldown: 0.7 * archStats.cdMult, hasAttacked: false, attackProgress: 0,
-                hp: stats.maxHp, maxHp: stats.maxHp, damage: stats.playerDamage * archStats.dmgMult,
-                color: stats.catColor, accent: stats.accent, pattern: stats.pattern,
-                weaponType: stats.weaponType, knockbackVx: 0, knockbackVy: 0, archetype: arch,
-                isBot: true, flashTimer: 0, stateTimer: 0
-            });
-        }
-
         function startGame() {
             initAudio(); document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
             currentZoom = 1; 
             let pMaxHpBase = evolutions[0].maxHp;
             let pHpMult = HELMET_HP_MULT[prog.helmetUpgrades[1] || 0];
-            player = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: pMaxHpBase * pHpMult, maxHp: pMaxHpBase * pHpMult, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0, flashTimer: 0 };
+            player = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: pMaxHpBase * pHpMult, maxHp: pMaxHpBase * pHpMult, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
             playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0 }; combo = 0; comboTimer = 0;
             
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
             
-            foods = []; enemies = []; decorations = []; chests = []; droppedGems = []; bots = []; hitStop = 0; bossSpawnTimer = 180; 
-            mouseX = width/2; mouseY = height/2; isMouseDown = false; dashRequested = false; joyActive = false;
+            foods = []; enemies = []; decorations = []; chests = []; droppedGems = []; hitStop = 0; bossSpawnTimer = 180; 
+            mouseX = width/2; mouseY = height/2; isMouseDown = false; dashRequested = false;
             
             for(let i=0; i<DECORATION_COUNT; i++) {
                 let r = Math.random(); let type = r > 0.5 ? 'grass' : (r > 0.2 ? 'rock' : 'flower');
@@ -1290,7 +1084,6 @@
             for(let i=0; i<CHEST_COUNT; i++) spawnChest(true);
             for(let i=0; i<FOOD_COUNT; i++) spawnFood();
             for(let i=0; i<ENEMY_COUNT; i++) spawnEnemy(true);
-            for(let i=0; i<5; i++) spawnBot(); // Start with 5 bots
             
             document.getElementById('tutorial').style.display = 'none';
             tutorialActive = false;
@@ -1320,12 +1113,14 @@
             let bossHp = Math.floor(8000 * Math.pow(1.25, player.level)) * variant.hpMult;
             let bossDmg = Math.floor(40 * Math.pow(1.28, player.level)) * variant.dmgMult; 
             
-            enemies.push({ x: ex, y: ey, level: bossLvl, name: variant.name, size: stats.baseSize * variant.sizeMult, speed: pStats.speed * 0.7 * variant.speedMult, weaponLength: stats.weaponLength * 1.2, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.4 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#ffffff', pattern: 'god', weaponType: variant.weapon, hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), flashTimer: 0 });
+            enemies.push({ x: ex, y: ey, level: bossLvl, name: variant.name, size: stats.baseSize * variant.sizeMult, speed: pStats.speed * 0.7 * variant.speedMult, weaponLength: stats.weaponLength * 1.2, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.4 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#ffffff', pattern: 'god', weaponType: variant.weapon, hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon) });
             playSound('boss'); let alert = document.getElementById('boss-alert'); alert.innerText = variant.alert; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 3500);
         }
 
-        // OPRAVA: dropGems memory leak (life z 25 na 10 sekund)
-        function dropGems(x, y, count, type = 'normal') { for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 600, vy: (Math.random() - 0.5) * 600, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff' }); }
+        function dropGems(x, y, count, type = 'normal') { 
+            // FIX: Životnost snížena na 10 sekund kvůli výkonu a memory leaku
+            for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 600, vy: (Math.random() - 0.5) * 600, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff' }); 
+        }
         
         function spawnFood() { 
             let rand = Math.random(); let type = rand > 0.9 ? 'milk' : rand > 0.75 ? 'mouse' : rand > 0.6 ? 'fish' : 'dot'; 
@@ -1344,14 +1139,7 @@
             else { let cameraDiag = Math.sqrt(width * width + height * height) / (2 * currentZoom); let attempts = 0; do { let angle = Math.random() * Math.PI * 2; let dist = cameraDiag + 600 + Math.random() * 800; ex = Math.max(stats.baseSize, Math.min(WORLD_SIZE - stats.baseSize, player.x + Math.cos(angle) * dist)); ey = Math.max(stats.baseSize, Math.min(WORLD_SIZE - stats.baseSize, player.y + Math.sin(angle) * dist)); attempts++; } while (Math.hypot(ex - player.x, ey - player.y) < cameraDiag + 200 && attempts < 15); }
             
             let arch = getWeaponArchetype(stats.weaponType); let archStats = ARCH_STATS[arch];
-            
-            // --- NOVÁ FUNKCE: MINI-BOSS (ELITE) ŠANCE ---
-            let isElite = Math.random() < 0.10 && enemyLevel >= 3;
-            let hpMult = isElite ? 3 : 1;
-            let dmgMult = isElite ? 1.5 : 1;
-            let sizeMult = isElite ? 1.2 : 1;
-
-            enemies.push({ x: ex, y: ey, level: enemyLevel, name: isElite ? `🔥 Elite ${stats.dogName}` : stats.dogName, size: stats.baseSize * sizeMult, speed: stats.speed * 0.82, weaponLength: stats.weaponLength * archStats.reachMult, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 0.83 * archStats.cdMult, hasAttacked: false, state: 'wander', stateTimer: 0, color: stats.dogColor, accent: stats.accent, pattern: stats.pattern, weaponType: stats.weaponType, hp: stats.maxHp * hpMult, maxHp: stats.maxHp * hpMult, damage: stats.enemyDamage * archStats.dmgMult * dmgMult, isBoss: false, isElite: isElite, knockbackVx: 0, knockbackVy: 0, archetype: arch, flashTimer: 0 });
+            enemies.push({ x: ex, y: ey, level: enemyLevel, name: stats.dogName, size: stats.baseSize, speed: stats.speed * 0.82, weaponLength: stats.weaponLength * archStats.reachMult, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 0.83 * archStats.cdMult, hasAttacked: false, state: 'wander', stateTimer: 0, color: stats.dogColor, accent: stats.accent, pattern: stats.pattern, weaponType: stats.weaponType, hp: stats.maxHp, maxHp: stats.maxHp, damage: stats.enemyDamage * archStats.dmgMult, isBoss: false, knockbackVx: 0, knockbackVy: 0, archetype: arch });
         }
 
         function triggerLevelUpEffect(name) { playSound('meow'); let el = document.getElementById('level-up-text'); el.innerText = `LEVEL UP!\n${name}`; el.style.opacity = 1; el.style.transform = "translate(-50%, -60%) scale(1.2)"; setTimeout(() => { el.style.opacity = 0; el.style.transform = "translate(-50%, -50%) scale(1)"; }, 2000); }
@@ -1393,22 +1181,23 @@
             let el = document.getElementById('combo-popup'); el.innerText = text; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 1000);
         }
 
+        let frameCounter = 0; // Použito pro optimalizaci grid rebuild
+
         function gameLoop(currentTime) {
-            if (gameState === 'paused' || gameState === 'menu' || gameState === 'death_menu' || gameState === 'game_over') { 
-                requestAnimationFrame(gameLoop); return; 
-            }
-            
-            // OPRAVA: Try/Catch blok pro ochranu hlavní smyčky před pádem
             try {
+                if (gameState === 'paused' || gameState === 'menu' || gameState === 'death_menu' || gameState === 'game_over') { 
+                    requestAnimationFrame(gameLoop); return; 
+                }
+                
                 let dt = (currentTime - lastTime) / 1000;
                 if (dt > 0.1) dt = 0.1; 
                 if (isNaN(dt) || dt < 0) dt = 0;
                 lastTime = currentTime;
+                frameCounter++;
 
                 let stats = evolutions[Math.min(player.level - 1, 49)]; let pSize = stats.baseSize;
                 let targetZoom = 1 / (1 + (player.level - 1) * 0.035); currentZoom += (targetZoom - currentZoom) * (dt * 3);
                 
-                // Updates running even in hitstop
                 for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx * dt; particles[i].y += particles[i].vy * dt; particles[i].life -= dt; if (particles[i].life <= 0) { releaseParticle(particles[i]); particles.splice(i, 1); } }
                 for (let i = damageNumbers.length - 1; i >= 0; i--) { damageNumbers[i].y += damageNumbers[i].vy * dt; damageNumbers[i].vy += 800 * dt; damageNumbers[i].life -= dt; if (damageNumbers[i].life <= 0) { releaseDmgNumber(damageNumbers[i]); damageNumbers.splice(i, 1); } }
                 for (let i = droppedGems.length - 1; i >= 0; i--) { 
@@ -1420,15 +1209,12 @@
                 }
                 
                 if (tutorialActive) { tutorialTimer -= dt; if (tutorialTimer <= 0) { tutorialIdx++; showTutorial(); } }
-                if (combo > 0) { comboTimer -= dt; if (comboTimer <= 0) { combo = Math.floor(combo / 2); updateUI(); } } // OPRAVA: Combo padá na půlku, ne na nulu
-                if (player.flashTimer > 0) player.flashTimer -= dt;
+                if (combo > 0) { comboTimer -= dt; if (comboTimer <= 0) { combo = 0; updateUI(); } }
 
-                // Hitstop pause
-            if (hitStop > 0) { hitStop -= dt; draw(stats); requestAnimationFrame(gameLoop); return; }
+                if (hitStop > 0) { hitStop -= dt; draw(stats); requestAnimationFrame(gameLoop); return; }
 
-            // Spatials & Combat - Now including BOTS
-            let allEntities = [...enemies, ...bots];
-            rebuildGrid(allEntities);
+                // OPTIMALIZACE: Grid se aktualizuje jen každý druhý frame
+                if (frameCounter % 2 === 0) rebuildGrid(enemies);
                 
                 if (player.dashTimer > 0) player.dashTimer -= dt;
                 if (player.dashActive > 0) player.dashActive -= dt;
@@ -1455,8 +1241,7 @@
                 
                 if (dashRequested && player.dashTimer <= 0) {
                     player.dashActive = 0.18; player.dashTimer = 3.0; playSound('dash');
-                    if (joyActive) { player.dashForceX = joyDx; player.dashForceY = joyDy; }
-                    else if (distToMouse <= pSize * 0.5) { player.dashForceX = Math.cos(player.angle); player.dashForceY = Math.sin(player.angle); }
+                    if (distToMouse <= pSize * 0.5) { player.dashForceX = Math.cos(player.angle); player.dashForceY = Math.sin(player.angle); }
                     else { player.dashForceX = dx/distToMouse; player.dashForceY = dy/distToMouse; }
                 }
                 dashRequested = false;
@@ -1465,12 +1250,6 @@
                     pCurrentSpeed *= 3.5; 
                     player.x += player.dashForceX * pCurrentSpeed * dt; player.y += player.dashForceY * pCurrentSpeed * dt;
                     if(Math.random() > 0.5) { let p = getParticle(); p.x=player.x; p.y=player.y; p.vx=0; p.vy=0; p.color='rgba(0,212,255,0.4)'; p.size=8; p.life=0.5; particles.push(p); } 
-                }
-                // --- ÚPRAVA PRO MOBILY: Priorita Joysticku ---
-                else if (joyActive) {
-                    player.angle = Math.atan2(joyDy, joyDx);
-                    player.x += joyDx * pCurrentSpeed * dt;
-                    player.y += joyDy * pCurrentSpeed * dt;
                 }
                 else if (distToMouse > pSize * 0.5) { 
                     player.angle = Math.atan2(dy, dx); 
@@ -1485,7 +1264,6 @@
                 for (let i = chests.length - 1; i >= 0; i--) { if (Math.hypot(player.x - chests[i].x, player.y - chests[i].y) > 2500) chests.splice(i, 1); }
                 while (enemies.length < ENEMY_COUNT) spawnEnemy(); while (chests.length < CHEST_COUNT) spawnChest();
                 
-                // Food collision
                 for (let i = foods.length - 1; i >= 0; i--) { 
                     let f = foods[i]; if (Math.abs(player.x - f.x) > 200 || Math.abs(player.y - f.y) > 200) continue;
                     if (Math.hypot(player.x - f.x, player.y - f.y) < pSize + f.size + 15) { 
@@ -1501,80 +1279,13 @@
                         spawnFood(); updateLevel(); 
                     } 
                 }
-
-                // --- NOVÁ FUNKCE: LOGIKA AI BOTŮ ---
-                for (let i = bots.length - 1; i >= 0; i--) {
-                    let b = bots[i];
-                    if (b.hp <= 0) { bots.splice(i, 1); spawnBot(); continue; }
-                    if (b.flashTimer > 0) b.flashTimer -= dt;
-
-                    let target = null; let minDist = 2000;
-                    for (let e of enemies) {
-                        let d = Math.hypot(b.x - e.x, b.y - e.y);
-                        if (d < minDist) { minDist = d; target = e; }
-                    }
-
-                    if (target) {
-                        b.angle = Math.atan2(target.y - b.y, target.x - b.x);
-                        let bCurrentSpeed = b.attackTimer > 0 ? b.speed * 0.5 : b.speed;
-                        if (minDist > b.size + target.size + 20) {
-                            b.x += Math.cos(b.angle) * bCurrentSpeed * dt;
-                            b.y += Math.sin(b.angle) * bCurrentSpeed * dt;
-                        }
-
-                        if (b.attackTimer > 0) {
-                            b.attackTimer -= dt;
-                            b.attackProgress = 1 - (b.attackTimer / b.attackCooldown);
-                        } else if (minDist < b.weaponLength + target.size * 1.6) {
-                            b.attackTimer = b.attackCooldown; b.hasAttacked = false; playSound('swing');
-                        } else {
-                            b.attackProgress = 0; b.hasAttacked = false;
-                        }
-
-                        // Bot udělí DMG nepříteli
-                        if (b.attackTimer > 0 && b.attackProgress >= 0.25 && !b.hasAttacked) {
-                            b.hasAttacked = true;
-                            let aToT = Math.atan2(target.y - b.y, target.x - b.x), aDiff = Math.abs(((aToT - b.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                            if (minDist < b.weaponLength + target.size + b.size && (aDiff < Math.PI / 1.5 || minDist < (b.size + target.size) * 1.5)) {
-                                target.hp -= b.damage;
-                                target.flashTimer = 0.1; // White flash
-                                let d = getDmgNumber(); d.x=target.x; d.y=target.y-target.size; d.val=Math.round(b.damage); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                                for(let p=0; p<5; p++) { let pt = getParticle(); pt.x=target.x; pt.y=target.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); }
-                                if (target.hp <= 0) {
-                                    if (target.isBoss) { dropGems(target.x, target.y, 50, 'boss'); bossSpawnTimer = 90; } // OPRAVA: Reset timeru po zabití
-                                    else if (target.isElite) dropGems(target.x, target.y, 10, 'boss');
-                                    else dropGems(target.x, target.y, 1);
-                                }
-                            }
-                        }
-                    } else {
-                        b.attackProgress = 0;
-                        b.x += Math.cos(b.angle) * b.speed * 0.5 * dt;
-                        b.y += Math.sin(b.angle) * b.speed * 0.5 * dt;
-                        if (Math.random() < 0.05) b.angle += (Math.random() - 0.5);
-                    }
-
-                    // Kolize botů s ostatními objekty přes Grid
-                    let nearE = queryGrid(b.x, b.y, b.size * 3);
-                    for (let o of nearE) {
-                        if (b === o) continue;
-                        let odx = b.x - o.x, ody = b.y - o.y; let odist = Math.hypot(odx, ody); let md = (b.size + o.size) * 0.8;
-                        if (odist > 0 && odist < md) { let overlap = md - odist; b.x += (odx / odist) * overlap * 0.5; b.y += (ody / odist) * overlap * 0.5; }
-                    }
-
-                    b.x += b.knockbackVx * dt; b.y += b.knockbackVy * dt;
-                    b.knockbackVx *= Math.pow(0.001, dt); b.knockbackVy *= Math.pow(0.001, dt);
-                    b.x = Math.max(b.size, Math.min(WORLD_SIZE - b.size, b.x)); b.y = Math.max(b.size, Math.min(WORLD_SIZE - b.size, b.y));
-                }
-                // --- KONEC BOTS LOGIKY ---
-
+                
                 let pTier = (prog.weaponUpgrades[player.level] || 0);
                 let pReachMult = UPGRADE_SIZE_MULT[pTier] * archStats.reachMult; 
                 let comboDmgMult = 1 + Math.min(0.3, combo * 0.03); 
                 let pDmgMult = UPGRADE_MULT[pTier] * archStats.dmgMult * comboDmgMult;
                 let pAttackReach = (pSize * 1.5) + (stats.weaponLength * pReachMult);
                 
-                // Player DMG
                 if (pDealDamage) {
                     let chestHit = false;
                     for (let i = chests.length - 1; i >= 0; i--) {
@@ -1594,16 +1305,7 @@
 
                 for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i]; if (e.hp <= 0) continue;
-                    if (e.flashTimer > 0) e.flashTimer -= dt;
-
-                    // --- ÚPRAVA: NEPŘÍTEL SI VYBÍRÁ CÍL MEZI HRÁČEM A AI BOTY ---
-                    let target = player;
-                    let distToTarget = Math.hypot(player.x - e.x, player.y - e.y);
-                    for (let b of bots) {
-                        let d = Math.hypot(b.x - e.x, b.y - e.y);
-                        if (d < distToTarget) { distToTarget = d; target = b; }
-                    }
-                    let distToP = distToTarget; 
+                    let distToP = Math.hypot(player.x - e.x, player.y - e.y);
                     
                     let nearEnemies = queryGrid(e.x, e.y, e.size * 3);
                     for (let o of nearEnemies) {
@@ -1611,24 +1313,26 @@
                         let odx = e.x - o.x, ody = e.y - o.y; let odist = Math.hypot(odx, ody); let minDist = (e.size + o.size) * 0.8;
                         if (odist > 0 && odist < minDist) { let overlap = minDist - odist; e.x += (odx / odist) * overlap * 0.5; e.y += (ody / odist) * overlap * 0.5; }
                     }
-                    
+                    let pMinDist = (e.size + pSize) * 0.8;
+                    if (distToP > 0 && distToP < pMinDist) { let overlap = pMinDist - distToP; e.x += ((e.x - player.x) / distToP) * overlap * 0.5; e.y += ((e.y - player.y) / distToP) * overlap * 0.5; }
+
                     e.stateTimer -= dt; 
                     if (e.stateTimer <= 0 && !e.isBoss) { 
                         e.stateTimer = 0.7 + Math.random() * 1.3; 
                         if (distToP < 1200) { 
-                            if (e.level >= (target.level || player.level) - 2) { e.state = 'chase'; } 
+                            if (e.level >= player.level - 2) { e.state = 'chase'; } 
                             else {
                                 let packMembers = queryGrid(e.x, e.y, 350); 
                                 let sumLevels = 0; let hasLeader = false;
-                                for (let mate of packMembers) { if (mate.isBot) continue; if (Math.hypot(mate.x - e.x, mate.y - e.y) <= 350) { sumLevels += mate.level; if (mate.isBoss || mate.level >= player.level - 2) { hasLeader = true; } } }
+                                for (let mate of packMembers) { if (Math.hypot(mate.x - e.x, mate.y - e.y) <= 350) { sumLevels += mate.level; if (mate.isBoss || mate.level >= player.level - 2) { hasLeader = true; } } }
                                 if (hasLeader || sumLevels >= player.level) { e.state = 'chase'; } else { e.state = 'flee'; }
                             }
                         } else { e.state = 'wander'; }
                     }
                     
-                    if (e.attackTimer > 0) e.angle = Math.atan2(target.y - e.y, target.x - e.x); 
-                    else if (e.state === 'chase') e.angle = Math.atan2(target.y - e.y, target.x - e.x); 
-                    else if (e.state === 'flee') e.angle = Math.atan2(e.y - target.y, e.x - target.x); 
+                    if (e.attackTimer > 0) e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
+                    else if (e.state === 'chase') e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
+                    else if (e.state === 'flee') e.angle = Math.atan2(e.y - player.y, e.x - player.x); 
                     else if (Math.random() < 0.05) e.angle += (Math.random() - 0.5);
                     
                     let eSpeed = e.attackTimer > 0 ? e.speed * 0.5 : e.speed;
@@ -1638,28 +1342,27 @@
                     if (e.x < e.size || e.x > WORLD_SIZE - e.size || e.y < e.size || e.y > WORLD_SIZE - e.size) { e.x = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.x)); e.y = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.y)); e.state = 'wander'; e.angle = Math.atan2(WORLD_SIZE/2 - e.y, WORLD_SIZE/2 - e.x); e.stateTimer = 1.0; }
                     
                     if (e.attackTimer > 0) e.attackTimer -= dt; 
-                    else if (distToP < e.weaponLength + target.size * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; playSound('swing'); }
+                    else if (distToP < e.weaponLength + pSize * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; playSound('swing'); }
                     
                     if (pDealDamage) {
-                        let dRealToP = Math.hypot(player.x - e.x, player.y - e.y); // Poškození bere vzdálenost přímo od hráče (Fix už byl aplikován dříve)
-                        if (dRealToP > pAttackReach + e.size) continue; 
+                        if (distToP > pAttackReach + e.size) continue; 
                         let aToE = Math.atan2(e.y - player.y, e.x - player.x), aDiff = Math.abs(((aToE - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                        if (aDiff < Math.PI / 1.5 || dRealToP < (pSize + e.size) * 1.5) { 
+                        
+                        // FIX KRITICKÉHO BUGU: distToC nahrazeno distToP
+                        if (aDiff < Math.PI / 1.5 || distToP < (pSize + e.size) * 1.5) { 
                             let dmg = stats.playerDamage * pDmgMult; e.hp -= dmg; hitStop = 0.05; playSound('hit');
-                            e.flashTimer = 0.1; // --- WHITE FLASH ---
                             if (archStats.knockback > 0) { let ang = Math.atan2(e.y - player.y, e.x - player.x); e.knockbackVx = Math.cos(ang) * archStats.knockback; e.knockbackVy = Math.sin(ang) * archStats.knockback; }
                             let d = getDmgNumber(); d.x=e.x; d.y=e.y-e.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
                             for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : '#ff2a2a'; particles.push(pt); } 
                             
                             if (e.hp <= 0) { 
-                                player.xp += e.isBoss ? 5000 : (e.isElite ? Math.floor(100 * Math.pow(1.28, e.level - 1)) : Math.floor(25 * Math.pow(1.28, e.level - 1))); playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
+                                player.xp += e.isBoss ? 5000 : Math.floor(25 * Math.pow(1.28, e.level - 1)); playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
                                 combo++; comboTimer = COMBO_WINDOW; if(combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if(combo > prog.bestCombo) prog.bestCombo = combo;
                                 questProgress('combo', combo); questProgress('kills', 1);
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
                                 if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
                                 
-                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = 90; } // OPRAVA: Reset timeru bosse
-                                else if (e.isElite) dropGems(e.x, e.y, 12, 'boss'); // Elite drop
+                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); } 
                                 else if (e.level >= player.level + 1) dropGems(e.x, e.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(e.x, e.y, 1); 
                                 enemies.splice(i, 1); continue; 
                             } 
@@ -1670,24 +1373,15 @@
                         let eProgress = 1 - (e.attackTimer / e.attackCooldown);
                         if (eProgress >= 0.4 && eProgress <= 0.65) {
                             e.hasAttacked = true;
-                            let aToT = Math.atan2(target.y - e.y, target.x - e.x), aDiff = Math.abs(((aToT - e.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                            if (distToP < (e.size * 1.5) + e.weaponLength + target.size && (aDiff < Math.PI / 1.7 || distToP < (e.size + target.size) * 1.3)) { 
-                                if (target === player) {
-                                    if (player.invuln <= 0) { 
-                                        player.hp -= e.damage; updateUI(); hitStop = 0.08; playSound('hit'); 
-                                        if (combo > 0) { combo = Math.floor(combo / 2); updateUI(); } // OPRAVA: Combo half-damage
-                                        player.flashTimer = 0.1; // --- WHITE FLASH PRO HRÁČE ---
-                                        let ang = Math.atan2(player.y - e.y, player.x - e.x); let kb = e.isBoss ? 350 : 180; player.knockbackVx = Math.cos(ang) * kb; player.knockbackVy = Math.sin(ang) * kb;
-                                        let d = getDmgNumber(); d.x=player.x; d.y=player.y-pSize; d.val=Math.round(e.damage); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                                        for(let p=0; p<12; p++) { let pt = getParticle(); pt.x=player.x; pt.y=player.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
-                                        if (player.hp <= 0) showDeathScreen(); 
-                                    } 
-                                } else {
-                                    target.hp -= e.damage;
-                                    target.flashTimer = 0.1;
-                                    let ang = Math.atan2(target.y - e.y, target.x - e.x); let kb = e.isBoss ? 350 : 180; target.knockbackVx = Math.cos(ang) * kb; target.knockbackVy = Math.sin(ang) * kb;
-                                    let d = getDmgNumber(); d.x=target.x; d.y=target.y-target.size; d.val=Math.round(e.damage); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                                }
+                            let aToP = Math.atan2(player.y - e.y, player.x - e.x), aDiff = Math.abs(((aToP - e.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
+                            if (distToP < (e.size * 1.5) + e.weaponLength + pSize && (aDiff < Math.PI / 1.7 || distToP < (e.size + pSize) * 1.3)) { 
+                                if (player.invuln <= 0) { 
+                                    player.hp -= e.damage; updateUI(); hitStop = 0.08; playSound('hit'); if (combo > 0) { combo = 0; updateUI(); }
+                                    let ang = Math.atan2(player.y - e.y, player.x - e.x); let kb = e.isBoss ? 350 : 180; player.knockbackVx = Math.cos(ang) * kb; player.knockbackVy = Math.sin(ang) * kb;
+                                    let d = getDmgNumber(); d.x=player.x; d.y=player.y-pSize; d.val=Math.round(e.damage); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
+                                    for(let p=0; p<12; p++) { let pt = getParticle(); pt.x=player.x; pt.y=player.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
+                                    if (player.hp <= 0) showDeathScreen(); 
+                                } 
                             }
                         }
                     }
@@ -1696,7 +1390,8 @@
                 if (pDealDamage) player.hasAttacked = true;
                 draw(stats); 
             } catch (error) {
-                console.error("GameLoop crash prevented:", error);
+                console.error("[CatWars] GAME LOOP CRASHED:", error);
+                // Nezastavujeme loop, aby se případná jednorázová chyba neprojevila jako úplné zamrznutí
             }
             requestAnimationFrame(gameLoop);
         }
@@ -1718,31 +1413,13 @@
             let bobT = Date.now() / 300; 
             foods.forEach(f => { if (f.x < camL - 100 || f.x > camR + 100 || f.y < camT - 100 || f.y > camB + 100) return; ctx.save(); ctx.translate(f.x, f.y + Math.sin(bobT + f.bobOffset)*5); if (f.type === 'dot') { ctx.fillStyle = f.color; ctx.beginPath(); ctx.arc(0, 0, f.size, 0, Math.PI * 2); ctx.fill(); } else { let scale = f.size / 14; ctx.scale(scale, scale); if (f.type === 'fish') { ctx.fillStyle = '#00bcd4'; ctx.beginPath(); ctx.ellipse(0, 0, 14, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-18, -6); ctx.lineTo(-18, 6); ctx.fill(); ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(8, -2, 1.5, 0, Math.PI*2); ctx.fill(); } else if (f.type === 'mouse') { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 4, 12, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#ffb6c1'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-8,0); ctx.quadraticCurveTo(-15, 8, -20, 2); ctx.stroke(); ctx.fillStyle = '#888888'; ctx.beginPath(); ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(6, -5, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(6, 5, 4, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#ffb6c1'; ctx.beginPath(); ctx.arc(6, -5, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(6, 5, 2, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(8, -2.5, 1.5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, 2.5, 1.5, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#ffb6c1'; ctx.beginPath(); ctx.arc(11, 0, 1.5, 0, Math.PI*2); ctx.fill(); } else if (f.type === 'milk') { ctx.fillStyle = '#eeeeee'; ctx.fillRect(-11, -12, 22, 24); ctx.fillStyle = '#3498db'; ctx.fillRect(-11, 0, 22, 12); ctx.fillStyle = '#ffffff'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'center'; ctx.fillText('MILK', 0, 9); } } ctx.restore(); });
             
-            // --- NOVÁ FUNKCE: DRAW BOTS ---
-            bots.forEach(b => {
-                if (b.x < camL - b.size * 3 || b.x > camR + b.size * 3 || b.y < camT - b.size * 3 || b.y > camB + b.size * 3) return;
-                ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.angle);
-                drawEntity(ctx, true, b.size, b.color, b.accent, b.pattern, b.attackProgress, b.weaponType, b.level, 0, b.flashTimer > 0);
-                ctx.restore();
-                ctx.fillStyle = "white"; ctx.font = "bold 13px Arial"; ctx.textAlign = "center"; ctx.fillText(b.name, b.x, b.y - b.size - 25); 
-                ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(b.x - b.size, b.y - b.size - 15, b.size * 2, 6); 
-                ctx.fillStyle = "#2ecc71"; ctx.fillRect(b.x - b.size, b.y - b.size - 15, (b.size * 2) * Math.max(0, b.hp / b.maxHp), 6); 
-            });
-
             let bossAlive = null;
             enemies.forEach(e => { 
                 if (e.isBoss) bossAlive = e;
                 if (e.x < camL - e.size * 3 || e.x > camR + e.size * 3 || e.y < camT - e.size * 3 || e.y > camB + e.size * 3) return; 
-                
-                // --- NOVÁ FUNKCE: ELITE AURA ---
-                if (e.isElite) {
-                    ctx.save(); ctx.translate(e.x, e.y); ctx.scale(1 + Math.sin(Date.now()/150)*0.1, 1 + Math.sin(Date.now()/150)*0.1);
-                    ctx.beginPath(); ctx.arc(0, 0, e.size * 1.5, 0, Math.PI*2); ctx.fillStyle = 'rgba(231, 76, 60, 0.3)'; ctx.fill(); ctx.restore();
-                }
-
                 ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle); if (e.isBoss) { ctx.shadowColor = e.color; ctx.shadowBlur = 30; } 
                 let eProgress = e.attackTimer > 0 ? 1 - (e.attackTimer / e.attackCooldown) : 0;
-                drawEntity(ctx, false, e.size, e.color, e.accent, e.pattern, eProgress, e.weaponType, e.level, 0, e.flashTimer > 0); ctx.restore(); 
+                drawEntity(ctx, false, e.size, e.color, e.accent, e.pattern, eProgress, e.weaponType, e.level); ctx.restore(); 
                 ctx.fillStyle = "white"; ctx.font = e.isBoss ? "bold 24px Arial" : "bold 15px Arial"; ctx.textAlign = "center"; ctx.fillText(e.name, e.x, e.y - e.size - 35); 
                 ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(e.x - e.size, e.y - e.size - 25, e.size * 2, e.isBoss ? 15 : 9); 
                 ctx.fillStyle = e.isBoss ? e.color : "#ff4444"; ctx.fillRect(e.x - e.size, e.y - e.size - 25, (e.size * 2) * Math.max(0, e.hp / e.maxHp), e.isBoss ? 15 : 9); 
@@ -1750,7 +1427,7 @@
             
             ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); if (player.invuln > 0 && Math.floor(Date.now() / 150) % 2 === 0) ctx.globalAlpha = 0.5; if (combo >= COMBO_BUFF_THRESHOLD){ ctx.shadowColor = '#f1c40f'; ctx.shadowBlur = 25; }
             let pHTier = prog.helmetUpgrades[player.level] || 0;
-            drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier, player.flashTimer > 0); ctx.restore();
+            drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier); ctx.restore();
             
             particles.forEach(p => { if (p.x < camL || p.x > camR || p.y < camT || p.y > camB) return; ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
             damageNumbers.forEach(n => { if (n.x < camL || n.x > camR || n.y < camT || n.y > camB) return; ctx.globalAlpha = Math.max(0, n.life); ctx.fillStyle = n.color; ctx.strokeStyle = '#000000'; ctx.lineWidth = 3.5; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.strokeText(n.val, n.x, n.y); ctx.fillText(n.val, n.x, n.y); });
@@ -1770,15 +1447,12 @@
                     mmCtx.fillStyle = e.color; mmCtx.beginPath(); mmCtx.arc(e.x*scale, e.y*scale, 5, 0, Math.PI*2); mmCtx.fill(); mmCtx.strokeStyle='#fff'; mmCtx.stroke(); 
                 } else { 
                     if (e.level >= player.level) {
-                        mmCtx.fillStyle = '#e74c3c'; 
-                        mmCtx.fillRect(e.x*scale - 2, e.y*scale - 2, 4, 4); // Větší červené tečky
+                        mmCtx.fillStyle = '#e74c3c'; mmCtx.fillRect(e.x*scale - 2, e.y*scale - 2, 4, 4); 
                     } else {
-                        mmCtx.fillStyle = '#7f8c8d'; 
-                        mmCtx.fillRect(e.x*scale - 1.5, e.y*scale - 1.5, 3, 3); // Větší šedé tečky
+                        mmCtx.fillStyle = '#7f8c8d'; mmCtx.fillRect(e.x*scale - 1.5, e.y*scale - 1.5, 3, 3); 
                     }
                 }
             }
-            mmCtx.fillStyle = '#3498db'; for (let b of bots) mmCtx.fillRect(b.x*scale - 1.5, b.y*scale - 1.5, 3, 3); // Modré tečky pro boty
             mmCtx.fillStyle = '#2ecc71'; mmCtx.beginPath(); mmCtx.arc(player.x*scale, player.y*scale, 3, 0, Math.PI*2); mmCtx.fill();
             let camW = (width/currentZoom)*scale, camH = (height/currentZoom)*scale; mmCtx.strokeStyle = 'rgba(255,255,255,0.4)'; mmCtx.strokeRect(player.x*scale - camW/2, player.y*scale - camH/2, camW, camH);
         }
@@ -1795,7 +1469,8 @@
         }
 
         function showDeathScreen() { 
-            gameState = 'death_menu'; document.body.classList.remove('low-hp'); currentReviveCost = player.level * 10 + 20; 
+            gameState = 'death_menu'; document.body.classList.remove('low-hp'); 
+            currentReviveCost = player.level * 10 + 20; 
             
             let stats = evolutions[Math.min(player.level - 1, 49)];
             document.getElementById('ds-final-level').innerText = player.level;
@@ -1806,16 +1481,16 @@
             
             document.getElementById('ds-current-gems').innerText = prog.gems + playerRunData.gems; 
             
+            // FIX: Zobrazení chybějících gemů u revive tlačítka
             let gemBtn = document.getElementById('btn-revive-gem'); 
-            let totalGems = prog.gems + playerRunData.gems;
-            // OPRAVA: Ukázání chybějících gemů
-            if (totalGems < currentReviveCost) { 
-                let missing = currentReviveCost - totalGems;
-                gemBtn.innerText = `💎 Need ${missing} more gems`;
+            let missingGems = currentReviveCost - (prog.gems + playerRunData.gems);
+            
+            if (missingGems > 0) { 
                 gemBtn.disabled = true; 
+                gemBtn.innerHTML = `💎 Chybí ${missingGems} gemů`;
             } else { 
-                gemBtn.innerText = `💎 Revive (Cost: ${currentReviveCost})`;
                 gemBtn.disabled = false; 
+                gemBtn.innerHTML = `💎 Revive (Cost: ${currentReviveCost})`;
             } 
             
             document.getElementById('dash-container').style.display = 'none'; document.getElementById('minimap').style.display = 'none'; 
@@ -1832,25 +1507,43 @@
                 }
             }, 1500);
         }
-        
-        // OPRAVA: Vyčištění partiklů po revive
+
         function executeRevive() { 
+            // FIX: Pročištění vizuálů po smrti
+            particles.length = 0;
+            damageNumbers.length = 0;
+            
             let stats = evolutions[Math.min(player.level - 1, 49)]; 
-            player.hp = player.maxHp; player.invuln = 3.0; 
+            player.hp = player.maxHp; 
+            player.invuln = 3.0; 
             enemies = enemies.filter(e => e.isBoss || Math.hypot(e.x - player.x, e.y - player.y) > 1200); 
-            particles.length = 0; damageNumbers.length = 0;
-            document.getElementById('death-screen').style.display = 'none'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('minimap').style.display = 'block'; document.getElementById('pause-btn').style.display = 'flex'; lastTime = performance.now(); gameState = 'playing'; updateUI(); 
+            
+            document.getElementById('death-screen').style.display = 'none'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('minimap').style.display = 'block'; document.getElementById('pause-btn').style.display = 'flex'; 
+            lastTime = performance.now(); 
+            gameState = 'playing'; 
+            updateUI(); 
         }
-        
-        function reviveWithGems() { let need = currentReviveCost; if (playerRunData.gems >= need) { playerRunData.gems -= need; } else { let fromMeta = need - playerRunData.gems; playerRunData.gems = 0; prog.gems -= fromMeta; saveProgress(); } playSound('gem'); executeRevive(); } window.reviveWithGems = reviveWithGems;
-        function reviveWithAd() { let adBtn = document.getElementById('btn-revive-ad'); let originalText = adBtn.innerHTML; adBtn.innerHTML = "⏳ Playing Ad..."; adBtn.disabled = true; setTimeout(() => { adBtn.innerHTML = originalText; adBtn.disabled = false; playSound('meow'); executeRevive(); }, 2000); } window.reviveWithAd = reviveWithAd;
-        
-        // OPRAVA: Vynucené force save při návratu do menu
+
+        function reviveWithGems() { 
+            let need = currentReviveCost; 
+            if (playerRunData.gems >= need) { playerRunData.gems -= need; } 
+            else { let fromMeta = need - playerRunData.gems; playerRunData.gems = 0; prog.gems -= fromMeta; saveProgress(); } 
+            playSound('gem'); executeRevive(); 
+        } window.reviveWithGems = reviveWithGems;
+
+        function reviveWithAd() { 
+            let adBtn = document.getElementById('btn-revive-ad'); let originalText = adBtn.innerHTML; 
+            adBtn.innerHTML = "⏳ Playing Ad..."; adBtn.disabled = true; 
+            setTimeout(() => { adBtn.innerHTML = originalText; adBtn.disabled = false; playSound('meow'); executeRevive(); }, 2000); 
+        } window.reviveWithAd = reviveWithAd;
+
         async function giveUp() { 
             document.getElementById('death-screen').style.display = 'none'; 
             document.getElementById('game-ui').style.display = 'none'; 
             prog.gems += playerRunData.gems; 
             if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; 
+            
+            // FIX: Čekání na finální save po smrti před návratem do menu
             await forceSaveNow(); 
             goToMenu(); 
         } window.giveUp = giveUp;
@@ -1858,16 +1551,34 @@
         window.startApp = function() { requestAnimationFrame(gameLoop); };
     </script>
 
-    <!-- FIREBASE MODULE -->
+    <!-- ================================================================================================= -->
+    <!-- ================================= MODULE: FIREBASE / AUTH ======================================= -->
+    <!-- ================================================================================================= -->
     <script type="module">
+        let loadProgress = 0;
+        const loadBar = document.getElementById('loading-bar-fill');
+        const loadText = document.getElementById('loading-status-text');
+        
+        let loadInterval = setInterval(() => {
+            if (loadProgress < 85) {
+                loadProgress += Math.random() * 15;
+                if(loadBar) loadBar.style.width = Math.min(loadProgress, 85) + '%';
+            }
+        }, 300);
+
+        function completeLoading() {
+            clearInterval(loadInterval);
+            if(loadBar) loadBar.style.width = '100%';
+            if(loadText) loadText.innerText = "Welcome!";
+        }
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         console.log("[CatWars] Initializing Firebase...");
         let isCanvasEnv = typeof __firebase_config !== 'undefined';
         
-        // YOUR REAL FIREBASE CONFIG
         let firebaseConfig = isCanvasEnv ? JSON.parse(__firebase_config) : { 
             apiKey: "AIzaSyA6EOidw5V5q45xINGnDbh1Szoho5_Ksd0", 
             authDomain: "catwars-63a0c.firebaseapp.com", 
@@ -1882,15 +1593,17 @@
         try { 
             app = initializeApp(firebaseConfig); 
             auth = getAuth(app); 
-            // OPRAVA: Auto detect long polling
-            db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); 
+            db = initializeFirestore(app, { experimentalForceLongPolling: true }); 
             console.log("[CatWars] Firebase initialized successfully.");
         } catch (error) { console.error("[CatWars] Firebase init failed:", error); }
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'catwars-default';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'catwars-prod-v1'; // FIX: Pevný název pro konzistenci mimo sandbox
 
-        // OPRAVA: Bezpečnější email filter
-        function getFakeEmail() { const nick = document.getElementById('login-nick').value.trim(); if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } return `${nick.replace(/[^a-zA-Z0-9_.-]/g, '')}@catwars.local`; }
+        function getFakeEmail() { 
+            const nick = document.getElementById('login-nick').value.trim(); 
+            if (!nick) { document.getElementById('login-error').innerText = "Please enter a nickname."; return null; } 
+            return `${nick.replace(/\s+/g, '_').toLowerCase()}@catwars.local`; // FIX: Ponechání speciálních znaků, nahrazení mezer pro lepší bezpečnost
+        }
         function getPass() { const pass = document.getElementById('login-pass').value; if (!pass || pass.length < 6) { document.getElementById('login-error').innerText = "Password must be at least 6 characters."; return null; } return pass; }
 
         function checkValidKey() {
@@ -1903,22 +1616,17 @@
 
         window.loginAsGuest = () => {
             if (!checkValidKey()) return;
-            console.time("[CatWars] Auth took");
             document.getElementById('login-error').innerHTML = "⏳ Connecting as Guest...";
-            signInAnonymously(auth).then(()=> console.timeEnd("[CatWars] Auth took")).catch(e => { document.getElementById('login-error').innerText = "Error (" + e.code + ")"; console.timeEnd("[CatWars] Auth took"); });
+            signInAnonymously(auth).catch(e => { document.getElementById('login-error').innerText = "Error (" + e.code + ")"; });
         };
         
         window.loginWithGoogle = () => { 
             if (!checkValidKey()) return;
-            console.time("[CatWars] Auth took");
             document.getElementById('login-error').innerHTML = "⏳ Waiting for Google... (check popups)";
             const provider = new GoogleAuthProvider(); 
             signInWithPopup(auth, provider).then(() => {
-                console.timeEnd("[CatWars] Auth took");
                 document.getElementById('login-error').innerText = "Success! Loading data...";
             }).catch(e => { 
-                console.error("[CatWars] Google Auth Error:", e);
-                console.timeEnd("[CatWars] Auth took");
                 if (e.code === 'auth/unauthorized-domain') {
                     document.getElementById('login-error').innerHTML = "<b>DOMAIN ERROR:</b> Add this URL to Firebase Authorized Domains.";
                 } else {
@@ -1931,11 +1639,10 @@
             if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
-                console.time("[CatWars] Auth took");
                 document.getElementById('login-error').innerHTML = "⏳ Verifying password... (please wait)";
                 signInWithEmailAndPassword(auth, email, pass)
-                    .then(() => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = "Success! Loading data..."; })
-                    .catch(e => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = "Wrong nickname or password."; }); 
+                    .then(() => { document.getElementById('login-error').innerText = "Success! Loading data..."; })
+                    .catch(e => { document.getElementById('login-error').innerText = "Wrong nickname or password."; }); 
             }
         };
         
@@ -1943,37 +1650,52 @@
             if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
             if (email && pass) {
-                console.time("[CatWars] Auth took");
                 document.getElementById('login-error').innerHTML = "⏳ Creating account... (please wait)";
                 createUserWithEmailAndPassword(auth, email, pass)
-                    .then(() => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = "Account created! Loading..."; })
-                    .catch(e => { console.timeEnd("[CatWars] Auth took"); document.getElementById('login-error').innerText = (e.code === 'auth/email-already-in-use' ? "Nickname already in use." : "Error: " + e.message); }); 
+                    .then(() => { document.getElementById('login-error').innerText = "Account created! Loading..."; })
+                    .catch(e => { document.getElementById('login-error').innerText = (e.code === 'auth/email-already-in-use' ? "Nickname already in use." : "Error: " + e.message); }); 
             }
         };
         
         window.logout = () => { if (auth && auth.currentUser) signOut(auth); else { document.getElementById('main-menu').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; } };
 
+        window.loadCloudProgress = async (uid) => {
+            let local = localStorage.getItem('catwars_save_' + uid);
+            let localProg = local ? { ...defaultProg, ...JSON.parse(local) } : null;
+            let cloudLoaded = false;
+
+            if (window.fetchFromFirestore) {
+                 let cloudData = await window.fetchFromFirestore(uid);
+                 if (cloudData) {
+                     prog = { ...defaultProg, ...cloudData };
+                     cloudLoaded = true;
+                     console.log("[CatWars] Game data SUCCESSFULLY loaded from Firebase!");
+                 }
+            }
+            
+            if (!cloudLoaded) {
+                 prog = localProg ? localProg : { ...defaultProg };
+            }
+            
+            if(!prog.dogKills) prog.dogKills = {};
+            if(!prog.weaponUpgrades) prog.weaponUpgrades = {};
+            if(!prog.helmetUpgrades) prog.helmetUpgrades = {}; 
+            if(!prog.quests) prog.quests = [];
+            
+            rollDailyQuestsIfNeeded();
+            updateMenuStats();
+        };
+
         window.fetchFromFirestore = async (uid) => {
             if (!db) return null;
             try {
-                console.log(`[CatWars] Downloading data for UID: ${uid}`);
-                console.time("[CatWars] Firestore Download took");
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
-                
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout (5s) - Firebase not responding")), 5000));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000));
                 const snap = await Promise.race([getDoc(docRef), timeoutPromise]);
-                
-                console.timeEnd("[CatWars] Firestore Download took");
-                
-                if (snap.exists()) {
-                    console.log("[CatWars] Data found on server.");
-                    return snap.data();
-                }
-                console.log("[CatWars] No server data found (new account).");
+                if (snap.exists()) return snap.data();
                 return null;
             } catch(e) { 
-                console.timeEnd("[CatWars] Firestore Download took");
-                console.error("[CatWars] Error downloading data:", e); 
+                console.error("[CatWars] ERROR fetching from Firestore:", e); 
                 return null; 
             }
         };
@@ -1982,13 +1704,13 @@
             if (!auth || !auth.currentUser || !db) return;
             try {
                 const uid = auth.currentUser.uid;
-                console.time("[CatWars] Firestore Save took");
-                
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
-                await setDoc(docRef, progressData, { merge: true });
+                const dataToSave = JSON.parse(JSON.stringify(progressData));
                 
-                // OPRAVA: Filtrujeme anonymní uživatele z leaderboardu a ukládáme jen pokud má level 5+
-                if (!auth.currentUser.isAnonymous && progressData.maxCatLevel >= 5) {
+                await setDoc(docRef, dataToSave, { merge: true });
+                
+                // Zápis do Leaderboardu (ignorujeme guest účty s levelem pod 5 pro čistotu databáze)
+                if (!auth.currentUser.isAnonymous || progressData.maxCatLevel >= 5) {
                     let nick = document.getElementById('login-nick').value || 'Hero';
                     if (auth.currentUser.email) nick = auth.currentUser.email.split('@')[0];
                     if (auth.currentUser.isAnonymous) nick = 'Guest_' + uid.substring(0,4);
@@ -2002,28 +1724,27 @@
                         lastActive: new Date().toISOString()
                     }, { merge: true });
                 }
-                
-                console.timeEnd("[CatWars] Firestore Save took");
-            } catch (error) { console.error("[CatWars] Firestore save error:", error); }
+            } catch (error) { 
+                console.error("[CatWars] CRITICAL ERROR saving to Firestore:", error); 
+            }
         };
 
         window.fetchLeaderboard = async () => {
             if (!db) return [];
             try {
-                console.time("[CatWars] Leaderboard Download took");
+                // POZNÁMKA: Ponecháno načtení všech a lokální seřazení, aby se zabránilo chybám chybějících indexů (Firebase the "Requires an Index" error)
                 const querySnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
                 let players = [];
                 querySnapshot.forEach((doc) => { players.push(doc.data()); });
                 
                 players.sort((a, b) => b.maxLevel - a.maxLevel || b.kills - a.kills);
-                console.timeEnd("[CatWars] Leaderboard Download took");
                 return players.slice(0, 50);
             } catch (error) { console.error("[CatWars] Leaderboard fetch error:", error); return []; }
         };
 
-        // OPRAVA: Ochrana proti souběžnému volání auth callbacků
         const initAuth = async () => {
-            if (!auth || auth.currentUser) return;
+            if (!auth) return;
+            if (auth.currentUser) return; // FIX: Zabránění double-auth eventu
             try { 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
                     await signInWithCustomToken(auth, __initial_auth_token); 
@@ -2043,7 +1764,7 @@
             let authResolved = false;
             setTimeout(() => {
                 if (!authResolved) {
-                    console.warn("[CatWars] Forced login screen after 15s. Firebase might be lagging.");
+                    completeLoading();
                     document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('login-screen').style.display = 'flex';
                 }
@@ -2051,14 +1772,13 @@
 
             onAuthStateChanged(auth, async (user) => {
                 authResolved = true;
+                completeLoading();
                 const loadingScreen = document.getElementById('loading-screen'); if (loadingScreen) loadingScreen.style.display = 'none';
                 
                 if (user) {
                     window.currentUserUid = user.uid;
-                    console.log(`[CatWars] User logged in, UID: ${user.uid}`);
-                    
                     const statusText = document.getElementById('auth-status-text');
-                    statusText.innerText = "Syncing cloud data... (Might take a while)";
+                    statusText.innerText = "Syncing cloud data...";
                     
                     await window.loadCloudProgress(user.uid);
 
