@@ -115,7 +115,7 @@
         
         .card { background: #34495e; border: 2px solid #555; border-radius: 12px; padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: center; color: white; transition: transform 0.2s; position: relative;}
         .card:hover { transform: scale(1.02); }
-        .card img { width: 110px; height: 110px; object-fit: contain; margin-bottom: 10px; }
+        .card img { width: 140px; height: 140px; object-fit: contain; margin-bottom: 10px; }
         .card h3 { margin: 0 0 5px 0; font-size: 18px; }
         .card p { margin: 0; font-size: 14px; color: #aaa; }
         .card.locked { background: var(--panel-bg); border-color: var(--panel-light); }
@@ -181,6 +181,21 @@
             border-radius: 12px; outline: none; box-shadow: inset 0 0 10px #000; transition: 0.2s;
         }
         .nickname-input:focus { border-color: var(--primary-hover); box-shadow: 0 0 20px var(--primary); }
+
+        /* NOVE CSS PRO VYBER MODU */
+        .modes-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; margin-bottom: 15px;
+        }
+        .mode-card {
+            background: rgba(0,0,0,0.4); border: 3px solid #444; border-radius: 12px; padding: 15px 5px;
+            cursor: pointer; transition: all 0.2s; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .mode-card:hover:not(.locked) { border-color: var(--primary-hover); background: rgba(243, 156, 18, 0.1); transform: translateY(-2px); }
+        .mode-card.active { border-color: var(--primary); background: rgba(243, 156, 18, 0.2); box-shadow: 0 0 15px rgba(243, 156, 18, 0.4); }
+        .mode-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .mode-icon { font-size: 32px; margin-bottom: 5px; filter: drop-shadow(2px 2px 2px #000); }
+        .mode-name { font-size: 14px; font-weight: bold; color: white; text-align: center; }
+        .mode-badge { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; font-size: 10px; padding: 3px 6px; border-radius: 8px; font-weight: bold; border: 2px solid #111; letter-spacing: 0.5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -265,38 +280,55 @@
                 <div class="game-art-banner" style="width: 100%; min-height: 140px; margin-bottom: 10px;">
                     <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
                 </div>
-                <p style="margin-top: 0; margin-bottom: 10px; color: #aaa; font-size: 14px;">Version 4.4.0: Bosses & PC Edition</p>
                 
-                <div style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
-                    <img id="mm-cat-preview" src="" style="width: 130px; height: 130px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); margin-bottom: 5px;">
-                    <div id="mm-cat-name" style="font-weight: bold; color: var(--primary); font-size: 18px; margin-top: 5px;">Lv.1 Kitten</div>
-                    <input type="text" id="player-nickname" class="nickname-input" placeholder="Enter your name..." autocomplete="off" maxlength="15">
+                <input type="text" id="player-nickname" class="nickname-input" placeholder="Enter your name..." autocomplete="off" maxlength="15" style="margin: 0 0 15px 0; width: 100%; max-width: 400px; box-sizing: border-box;">
+                
+                <!-- VÝBĚR MÓDU -->
+                <div class="modes-grid">
+                    <div class="mode-card active" id="mode-solo" onclick="selectMode('solo')">
+                        <div class="mode-icon">🗡️</div>
+                        <div class="mode-name">Solo Survival</div>
+                    </div>
+                    <div class="mode-card" id="mode-hardcore" onclick="selectMode('hardcore')">
+                        <div class="mode-icon">💀</div>
+                        <div class="mode-name">Hardcore</div>
+                    </div>
+                    <div class="mode-card locked" id="mode-team" onclick="selectMode('team')">
+                        <div class="mode-icon">🔵</div>
+                        <div class="mode-name">Cats vs Dogs</div>
+                        <div class="mode-badge">AI Soon</div>
+                    </div>
+                    <div class="mode-card locked" id="mode-ffa" onclick="selectMode('ffa')">
+                        <div class="mode-icon">🔴</div>
+                        <div class="mode-name">Deathmatch</div>
+                        <div class="mode-badge">AI Soon</div>
+                    </div>
                 </div>
                 
-                <button class="btn-main" onclick="startGame()" style="font-size: 32px; padding: 20px 40px; width: 100%; max-width: 400px; margin-top: auto; background: var(--success); color: #111; box-shadow: 0 6px 0 #27ae60;">▶️ PLAY GAME</button>
+                <button class="btn-main" id="btn-start-game" onclick="startGame()" style="font-size: 32px; padding: 20px 40px; width: 100%; max-width: 400px; margin-top: auto; background: var(--success); color: #111; box-shadow: 0 6px 0 #27ae60;">▶️ PLAY SOLO</button>
             </div>
 
             <!-- RIGHT COLUMN: Upgrades -->
             <div class="menu-col side">
-                <!-- ZVĚTŠENÁ A BUCLATÁ TLAČÍTKA S HERNÍ GRAFIKOU (Emoji odstraněny) -->
+                <!-- ZVĚTŠENÁ A BUCLATÁ TLAČÍTKA S HERNÍ GRAFIKOU -->
                 <div style="display: flex; flex-direction: column; gap: 18px; flex-grow: 1; justify-content: flex-start; margin-top: 0;">
                     <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 8px 0 #2980b9; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <img id="btn-icon-cats" src="" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
+                        <img id="btn-icon-cats" src="" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
                         <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">UPGRADES</span>
                     </button>
                     
                     <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 8px 0 #8e44ad; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <img id="btn-icon-dogs" src="" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
+                        <img id="btn-icon-dogs" src="" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
                         <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">BESTIARY</span>
                     </button>
                     
                     <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 8px 0 #d68910; color: #111; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <img id="btn-icon-armory" src="" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
+                        <img id="btn-icon-armory" src="" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
                         <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">WEAPONS</span>
                     </button>
                     
                     <button class="btn-main" onclick="openEncyclopedia('quests')" style="background: #e74c3c; box-shadow: 0 8px 0 #c0392b; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <span style="font-size: 45px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">💎</span>
+                        <span style="font-size: 55px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">💎</span>
                         <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">QUESTS</span>
                     </button>
                 </div>
@@ -619,7 +651,6 @@
             document.getElementById('mm-gems').innerText = prog.gems;
             document.getElementById('enc-gems').innerText = prog.gems;
             
-            // Logika pro nové menu (Náhled postavy a vyplnění jména)
             if(document.getElementById('player-nickname')) {
                 document.getElementById('player-nickname').value = prog.nickname || '';
             }
@@ -637,23 +668,41 @@
                 document.getElementById('global-xp-text').innerText = prog.globalLevel >= 50 ? "MAX RANK REACHED" : `${prog.globalXp || 0} / ${rankInfo.nextXp} XP`;
             }
 
-            if(document.getElementById('mm-cat-preview') && typeof getSpriteDataURL === 'function') {
+            // Nastavení ikon pro tlačítka na pravé straně menu (původní náhled byl odstraněn)
+            if(typeof getSpriteDataURL === 'function' && document.getElementById('btn-icon-cats')) {
                 try {
                     let wTier = prog.weaponUpgrades[prog.maxCatLevel] || 0;
                     let hTier = prog.helmetUpgrades[prog.maxCatLevel] || 0;
-                    document.getElementById('mm-cat-preview').src = getSpriteDataURL('cats', prog.maxCatLevel, wTier, hTier);
-                    let stats = evolutions[Math.min(prog.maxCatLevel - 1, 49)];
-                    document.getElementById('mm-cat-name').innerText = `Lv.${prog.maxCatLevel} ${stats.catName}`;
-                    
-                    // Nastavení herní grafiky pro tlačítka v menu
-                    if(document.getElementById('btn-icon-cats')) {
-                        document.getElementById('btn-icon-cats').src = getSpriteDataURL('cats', prog.maxCatLevel, wTier, hTier);
-                        document.getElementById('btn-icon-dogs').src = getSpriteDataURL('dogs', prog.maxCatLevel);
-                        document.getElementById('btn-icon-armory').src = getWeaponDataURL('longsword', 3);
-                    }
-                } catch(e) { console.log('Waiting for engine init...'); }
+                    document.getElementById('btn-icon-cats').src = getSpriteDataURL('cats', prog.maxCatLevel, wTier, hTier);
+                    document.getElementById('btn-icon-dogs').src = getSpriteDataURL('dogs', prog.maxCatLevel);
+                    document.getElementById('btn-icon-armory').src = getWeaponDataURL('longsword', 3);
+                } catch(e) {}
             }
         }
+
+        // LOGIKA PRO VÝBĚR MÓDU
+        let selectedGameMode = 'solo';
+        function selectMode(mode) {
+            if (mode === 'team' || mode === 'ffa') return; // Zatím uzamčeno
+            
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('mode-' + mode).classList.add('active');
+            selectedGameMode = mode;
+            
+            let startBtn = document.getElementById('btn-start-game');
+            if (mode === 'solo') {
+                startBtn.innerHTML = '▶️ PLAY SOLO';
+                startBtn.style.background = 'var(--success)';
+                startBtn.style.boxShadow = '0 6px 0 #27ae60';
+                startBtn.style.color = '#111';
+            } else if (mode === 'hardcore') {
+                startBtn.innerHTML = '💀 PLAY HARDCORE';
+                startBtn.style.background = '#e74c3c';
+                startBtn.style.boxShadow = '0 6px 0 #c0392b';
+                startBtn.style.color = 'white';
+            }
+        }
+        window.selectMode = selectMode;
 
         function watchAdForGems() {
             let btn = document.getElementById('btn-ad-gems');
@@ -974,13 +1023,15 @@
             let key = `${level}_${weaponTier}_${helmetTier}`;
             if (spritesCache[type][key]) return spritesCache[type][key];
             
-            // Zvětšené plátno pro zbraně
-            let tempC = document.createElement('canvas'); tempC.width = 280; tempC.height = 280;
-            let tCtx = tempC.getContext('2d'); tCtx.translate(140, 100); 
+            // OPRAVA: Plátno vycentrováno, aby nevznikalo tolik "prázdnoty" kolem
+            let tempC = document.createElement('canvas'); tempC.width = 240; tempC.height = 240;
+            let tCtx = tempC.getContext('2d'); tCtx.translate(120, 120); 
             
             let stats = evolutions[Math.min(level - 1, 49)];
             let isCat = type === 'cats'; let cColor = isCat ? stats.catColor : stats.dogColor;
-            let visSize = 22 + Math.min(level, 50) * 0.35; // Mírně zmenšený model pro náhledy, aby nevytekl obří meč
+            
+            // OPRAVA: Vizuální model uvnitř paměti se fyzicky kreslí o 70 % větší!
+            let visSize = (22 + Math.min(level, 50) * 0.35) * 1.7; 
             
             // Otočení o 90 stupňů (Math.PI / 2), aby zvíře koukalo dopředu (na nás)
             tCtx.rotate(Math.PI / 2); 
@@ -996,9 +1047,12 @@
             if (weaponCache[key]) return weaponCache[key];
             let tempC = document.createElement('canvas'); tempC.width = 180; tempC.height = 180;
             let tCtx = tempC.getContext('2d'); 
-            tCtx.translate(60, 140); 
+            tCtx.translate(90, 130); // OPRAVA: Lepší vycentrování
             tCtx.rotate(-Math.PI / 4);
-            let size = 30; 
+            
+            // OPRAVA: Zbraň se uvnitř Canvasu nakreslí o 50 % větší
+            let size = 45; 
+            
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let sizeMult = UPGRADE_SIZE_MULT[upgradeTier];
             let wLen = (size * 2.5) * archStats.reachMult * sizeMult; 
@@ -1111,10 +1165,10 @@
                     for(let tier = 0; tier <= 4; tier++) {
                         let tierCard = document.createElement('div');
                         tierCard.style.background = '#1a252f'; let borderColor = UPGRADE_COLORS[tier] || '#555';
-                        tierCard.style.border = `2px solid ${borderColor}`; tierCard.style.borderRadius = '8px'; tierCard.style.padding = '10px'; tierCard.style.minWidth = '110px'; tierCard.style.textAlign = 'center'; tierCard.style.flex = '1';
+                        tierCard.style.border = `2px solid ${borderColor}`; tierCard.style.borderRadius = '8px'; tierCard.style.padding = '10px'; tierCard.style.minWidth = '130px'; tierCard.style.textAlign = 'center'; tierCard.style.flex = '1';
                         if(tier >= 3) tierCard.style.boxShadow = `inset 0 0 15px ${borderColor}40`;
                         
-                        let img = document.createElement('img'); img.src = getWeaponDataURL(w, tier); img.style.width = '70px'; img.style.height = '70px'; img.style.objectFit = 'contain';
+                        let img = document.createElement('img'); img.src = getWeaponDataURL(w, tier); img.style.width = '90px'; img.style.height = '90px'; img.style.objectFit = 'contain';
                         if(tier > 0) img.style.filter = `drop-shadow(0px 0px 5px ${borderColor})`;
                         
                         let tierName = document.createElement('div'); tierName.style.fontWeight = 'bold'; tierName.style.fontSize = '14px'; tierName.style.marginTop = '5px'; tierName.style.color = borderColor === '#555' ? '#ccc' : borderColor; tierName.innerText = WEAPON_TIERS[tier];
@@ -1140,7 +1194,7 @@
                         let wTierName = wTier > 0 ? `✨ ${WEAPON_TIERS[wTier]} ` : ''; 
                         
                         let cardContent = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ${stats.catName}</h3>`;
-                        cardContent += `<img src="${getSpriteDataURL('cats', i, wTier, hTier)}" style="width:140px; height:140px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
+                        cardContent += `<img src="${getSpriteDataURL('cats', i, wTier, hTier)}" style="width:150px; height:150px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
                         cardContent += `<div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px; line-height: 1.3;">
                                             <strong style="color: #fff; font-size: 13px;">${wTierName}${stats.weaponType.toUpperCase()}</strong><br>
                                             <span style="color:#f39c12; font-size: 11px;">${archLabel}</span>
@@ -1172,7 +1226,7 @@
                         card.appendChild(hBtn);
                     } else { 
                         card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
-                        card.innerHTML += `<img src="${getSpriteDataURL('cats', i, 0, 0)}" style="width:140px; height:140px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
+                        card.innerHTML += `<img src="${getSpriteDataURL('cats', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
                         card.innerHTML += `<p style="margin-top:10px;">Reach Lv. ${i}</p>`; 
                     }
                     grid.appendChild(card);
@@ -1185,7 +1239,7 @@
                     
                     if (!locked) {
                         let cardContent = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ${stats.dogName}</h3>`;
-                        cardContent += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:140px; height:140px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
+                        cardContent += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
                         cardContent += `<div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px; line-height: 1.3;">
                                             <strong style="color: #fff; font-size: 13px;">${stats.weaponType.toUpperCase()}</strong><br>
                                             <span style="color:#f39c12; font-size: 11px;">${archLabel}</span>
@@ -1194,7 +1248,7 @@
                         card.innerHTML = cardContent;
                     } else { 
                         card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
-                        card.innerHTML += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:140px; height:140px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
+                        card.innerHTML += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
                         card.innerHTML += `<p style="margin-top: 10px;">Defeated: 0</p>`; 
                     }
                     grid.appendChild(card);
@@ -1230,6 +1284,7 @@
         let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [];
         let gameState = 'menu', hitStop = 0, bossSpawnTimer = 0, miniBossSpawnTimer = 0, currentReviveCost = 0;
         let combo = 0, comboTimer = 0;
+        let isHardcoreMode = false; // Příznak módu
         const COMBO_WINDOW = 3.0, COMBO_BUFF_THRESHOLD = 5;
         let lastTime = 0; 
         
@@ -1255,10 +1310,16 @@
             prog.nickname = document.getElementById('player-nickname').value.trim() || 'Hero';
             saveProgress();
 
+            isHardcoreMode = (selectedGameMode === 'hardcore');
+
             currentZoom = 1; 
             let pMaxHpBase = evolutions[0].maxHp;
             let pHpMult = HELMET_HP_MULT[prog.helmetUpgrades[1] || 0];
-            player = { name: prog.nickname, x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: pMaxHpBase * pHpMult, maxHp: pMaxHpBase * pHpMult, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
+            
+            // Hardcore mód přepisuje HP
+            let finalMaxHp = isHardcoreMode ? 1 : pMaxHpBase * pHpMult;
+
+            player = { name: prog.nickname, x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: finalMaxHp, maxHp: finalMaxHp, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
             playerRunData = { kills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 }; combo = 0; comboTimer = 0;
             
             for(let p of particles) releaseParticle(p); particles = [];
@@ -1451,7 +1512,12 @@
                     let g = droppedGems[i]; g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= Math.pow(0.05, dt); g.vy *= Math.pow(0.05, dt); g.life -= dt; 
                     let gDist = Math.hypot(player.x - g.x, player.y - g.y); 
                     if (gDist < 250) { g.x += (player.x - g.x) * Math.min(1, dt*8); g.y += (player.y - g.y) * Math.min(1, dt*8); } 
-                    if (gDist < pSize + 20) { droppedGems.splice(i, 1); let val = g.size > 15 ? 10 : 1; playerRunData.gems += val; playerRunData.totalRunGems += val; playSound('gem'); updateUI(); } 
+                    if (gDist < pSize + 20) { 
+                        droppedGems.splice(i, 1); 
+                        let val = g.size > 15 ? 10 : 1; 
+                        if (isHardcoreMode) val *= 3; // Hardcore mód dává 3x více gemů
+                        playerRunData.gems += val; playerRunData.totalRunGems += val; playSound('gem'); updateUI(); 
+                    } 
                     else if (g.life <= 0) droppedGems.splice(i, 1); 
                 }
                 
