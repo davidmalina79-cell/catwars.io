@@ -938,7 +938,7 @@
             // 1. INDIVIDUÁLNÍ DÉLKY ZBRANÍ
             if (w.includes('dagger')) len *= 0.75;
             else if (w === 'shortsword') len *= 0.9;
-            else if (w === 'longsword') len *= 1.35;
+            else if (w === 'longsword' || w === 'dragonblade' || w === 'void blade') len *= 1.35;
             else if (w === 'broadsword') len *= 1.15;
             else if (w.includes('godslayer') || w.includes('infinity')) len *= 1.6;
             else if (w.includes('naginata')) len *= 1.8; 
@@ -1244,6 +1244,97 @@
 
                 ctx.fillStyle = '#222'; ctx.fillRect(len*0.3, -wid*0.1, len*0.4, wid*0.2);
             }
+            else if (w === 'dragonblade') {
+                // DRAGONBLADE: Jednostranně zubaté ostří (na spodní straně)
+                drawHandle(len*0.3, wid*1.2);
+                // Dračí agresivní záštita
+                ctx.fillStyle = metalGrad;
+                ctx.beginPath(); ctx.moveTo(len*0.15, -wid*2.2); ctx.lineTo(len*0.35, -wid*1.2); ctx.lineTo(len*0.25, 0); ctx.lineTo(len*0.35, wid*1.2); ctx.lineTo(len*0.15, wid*2.2); ctx.lineTo(len*0.1, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                let bStart = len*0.25;
+                let bEnd = len;
+
+                // Horní strana (Rovná, hladká)
+                ctx.fillStyle = bc.light;
+                ctx.beginPath();
+                ctx.moveTo(bStart, 0);
+                ctx.lineTo(bStart, -wid*0.8);
+                ctx.lineTo(bEnd - len*0.15, -wid*0.6);
+                ctx.lineTo(bEnd, 0); // Špička
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // Spodní strana (Zubaté dračí zuby)
+                ctx.fillStyle = bc.dark;
+                ctx.beginPath();
+                ctx.moveTo(bStart, 0);
+                ctx.lineTo(bEnd, 0);
+                let numTeeth = 5;
+                let toothLen = (bEnd - bStart) / numTeeth;
+                for(let i=0; i<numTeeth; i++) {
+                    let tx = bEnd - i*toothLen;
+                    let nx = bEnd - (i+1)*toothLen;
+                    ctx.lineTo(tx - toothLen*0.2, wid*1.2); // Hrot zubu
+                    ctx.lineTo(nx + toothLen*0.2, wid*0.4); // Prohlubeň zubu
+                }
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // Krevní žlab
+                ctx.fillStyle = '#444';
+                ctx.beginPath(); ctx.moveTo(bStart, -wid*0.1); ctx.lineTo(bEnd - len*0.2, -wid*0.05); ctx.lineTo(bEnd - len*0.2, wid*0.05); ctx.lineTo(bStart, wid*0.1); ctx.closePath(); ctx.fill();
+            }
+            else if (w === 'void blade') {
+                // VOID BLADE: Oboustranně zubaté (pilovité) ostří s temným jádrem
+                drawHandle(len*0.3, wid*1.2);
+                // Temná trnitá záštita
+                ctx.fillStyle = '#222';
+                ctx.beginPath(); ctx.moveTo(len*0.1, -wid*2.5); ctx.lineTo(len*0.35, -wid*0.5); ctx.lineTo(len*0.35, wid*0.5); ctx.lineTo(len*0.1, wid*2.5); ctx.lineTo(len*0.2, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                let bStart = len*0.25;
+                let bEnd = len;
+                let numTeeth = 6;
+                let toothLen = (bEnd - bStart) / numTeeth;
+
+                // Horní strana (Zuby nahoru)
+                ctx.fillStyle = bc.light;
+                ctx.beginPath();
+                ctx.moveTo(bStart, 0);
+                for(let i=0; i<numTeeth; i++) {
+                    let tx = bStart + i*toothLen;
+                    let nx = bStart + (i+1)*toothLen;
+                    ctx.lineTo(tx + toothLen*0.4, -wid*0.3); // Prohlubeň
+                    ctx.lineTo(nx, -wid*1.1); // Hrot zubu
+                }
+                ctx.lineTo(bEnd, 0); // Špička
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // Spodní strana (Zuby dolů)
+                ctx.fillStyle = bc.dark;
+                ctx.beginPath();
+                ctx.moveTo(bStart, 0);
+                ctx.lineTo(bEnd, 0);
+                // Spodní zuby kreslíme pozpátku (od špičky k záštitě), aby navazovaly na čáru uprostřed
+                for(let i=0; i<numTeeth; i++) {
+                    let tx = bEnd - i*toothLen;
+                    let nx = bEnd - (i+1)*toothLen;
+                    ctx.lineTo(tx - toothLen*0.4, wid*0.3); // Prohlubeň
+                    ctx.lineTo(nx, wid*1.1); // Hrot zubu
+                }
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // Void Core (Temné magické jádro čepele)
+                ctx.fillStyle = isUpgraded ? '#9900ff' : '#1a1a1a';
+                ctx.beginPath();
+                ctx.moveTo(bStart, 0);
+                ctx.lineTo(bEnd - len*0.15, -wid*0.15);
+                ctx.lineTo(bEnd, 0);
+                ctx.lineTo(bEnd - len*0.15, wid*0.15);
+                ctx.closePath();
+                ctx.fill();
+            }
             else if (w.includes('sword') || w.includes('dagger') || w.includes('blade') || w.includes('twin')) {
                 let isTwin = w.includes('twin');
                 let isDagger = w.includes('dagger');
@@ -1324,7 +1415,26 @@
         }
 
         function drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier = 0) {
-            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size * 0.1); ctx.stroke(); ctx.fillStyle = accent;
+            ctx.save();
+            
+            // 3D OBJEM: Použití radiálního gradientu pro celou hlavu
+            let grad = ctx.createRadialGradient(size*0.2, -size*0.2, size*0.1, 0, 0, size);
+            grad.addColorStop(0, shade(color, 25));
+            grad.addColorStop(0.6, color);
+            grad.addColorStop(1, shade(color, -35));
+            ctx.fillStyle = grad;
+
+            // Vykreslení hlavy
+            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); 
+            ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size * 0.1); ctx.stroke(); 
+
+            // RIM LIGHTING: Bílý odlesk z prostředí na horní/levé části hlavy
+            ctx.save();
+            ctx.beginPath(); ctx.arc(0, 0, size*0.85, Math.PI*1.1, Math.PI*1.4);
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = size*0.15; ctx.lineCap = 'round'; ctx.stroke();
+            ctx.restore();
+
+            ctx.fillStyle = accent;
             
             if (pattern === 'stripes') { ctx.fillRect(-size*0.6, -size*0.1, size*0.4, size*0.2); ctx.fillRect(-size*0.5, -size*0.4, size*0.3, size*0.15); ctx.fillRect(-size*0.5, size*0.25, size*0.3, size*0.15); } 
             else if (pattern === 'spots') { ctx.beginPath(); ctx.arc(-size*0.3, -size*0.4, size*0.18, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.5, size*0.3, size*0.22, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-size*0.1, size*0.5, size*0.15, 0, Math.PI*2); ctx.fill(); } 
@@ -1332,14 +1442,20 @@
             else if (pattern === 'mask') { ctx.fillStyle = '#111111'; ctx.fillRect(0, -size*0.8, size*0.45, size*1.6); } 
             else if (pattern === 'cyber') { ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.2); ctx.lineTo(size*0.2, -size*0.2); ctx.lineTo(size*0.5, -size*0.5); ctx.stroke(); } 
             else if (pattern === 'halo' || pattern === 'god') { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = size * 0.18; ctx.beginPath(); ctx.ellipse(-size*0.4, 0, size*0.5, size*1.3, 0, 0, Math.PI*2); ctx.stroke(); } 
-            else if (pattern === 'hat') { ctx.beginPath(); ctx.moveTo(0, -size*0.4); ctx.lineTo(-size*1.6, 0); ctx.lineTo(0, size*0.4); ctx.fill(); ctx.stroke(); } 
-            else if (pattern === 'demon' || pattern === 'horns') { ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.moveTo(-size*0.2, -size*0.6); ctx.lineTo(size*0.2, -size*1.3); ctx.lineTo(size*0.1, -size*0.5); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.2, size*0.6); ctx.lineTo(size*0.2, size*1.3); ctx.lineTo(size*0.1, size*0.5); ctx.fill(); ctx.stroke(); } 
+            else if (pattern === 'hat') { 
+                ctx.lineWidth = size*0.1; ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.65); ctx.lineTo(-size*0.75, size*0.65); ctx.stroke(); 
+                ctx.lineWidth = Math.max(2, size*0.05); ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.35); ctx.lineTo(-size*1.8, 0); ctx.lineTo(-size*0.75, size*0.35); ctx.closePath(); ctx.fill(); ctx.stroke(); 
+            } 
+            else if (pattern === 'demon' || pattern === 'horns') { ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.moveTo(-size*0.6, -size*0.2); ctx.lineTo(-size*1.4, -size*0.4); ctx.lineTo(-size*0.5, -size*0.5); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.6, size*0.2); ctx.lineTo(-size*1.4, size*0.4); ctx.lineTo(-size*0.5, size*0.5); ctx.fill(); ctx.stroke(); } 
             else if (pattern === 'fluffy') { ctx.fillStyle = '#ffffff'; for (let i = 0; i < 8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.arc(Math.cos(a)*size*0.9, Math.sin(a)*size*0.9, size*0.25, 0, Math.PI*2); ctx.fill(); } }
             
             ctx.fillStyle = color;
             if (isCat) { 
+                // Uši
                 ctx.beginPath(); ctx.moveTo(-size*0.8, -size*0.25); ctx.lineTo(-size*1.2, -size*0.85); ctx.lineTo(-size*0.3, -size*0.65); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size*0.8, size*0.25); ctx.lineTo(-size*1.2, size*0.85); ctx.lineTo(-size*0.3, size*0.65); ctx.fill(); ctx.stroke(); 
                 ctx.fillStyle = '#ff9999'; ctx.beginPath(); ctx.moveTo(-size*0.75, -size*0.35); ctx.lineTo(-size*1.05, -size*0.75); ctx.lineTo(-size*0.45, -size*0.6); ctx.fill(); ctx.beginPath(); ctx.moveTo(-size*0.75, size*0.35); ctx.lineTo(-size*1.05, size*0.75); ctx.lineTo(-size*0.45, size*0.6); ctx.fill(); 
+                
+                // Ústa a Nos
                 ctx.strokeStyle = '#222222'; ctx.lineWidth = Math.max(1, size * 0.04); ctx.beginPath(); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*1.0, -size*0.85); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.8, -size*0.95); ctx.moveTo(size*0.8, -size*0.15); ctx.lineTo(size*0.6, -size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*1.0, size*0.85); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.8, size*0.95); ctx.moveTo(size*0.8, size*0.15); ctx.lineTo(size*0.6, size*0.85); ctx.stroke();
                 ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(size*0.8, 0, size*0.1, 0, Math.PI*2); ctx.fill();
             } else { 
@@ -1361,27 +1477,72 @@
             }
 
             let eyeColor = '#ffffff'; let glowColor = null;
-            if (isCat) {
-                if (level >= 45) { eyeColor = '#ffd700'; glowColor = '#ffaa00'; } 
-                else if (level >= 30) { eyeColor = '#00ffff'; glowColor = '#0088ff'; } 
-                if (level === 40) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } 
-            } else {
-                if (level >= 25) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } 
-            }
+            if (level >= 45) { eyeColor = '#ffd700'; glowColor = '#ffaa00'; } else if (level >= 30) { eyeColor = '#00ffff'; glowColor = '#0088ff'; } if (level === 40) { eyeColor = '#ff3333'; glowColor = '#ff0000'; } 
             
             ctx.fillStyle = eyeColor;
             if (glowColor) { ctx.shadowColor = glowColor; ctx.shadowBlur = 15; }
+            
+            // Základ očí
             ctx.beginPath(); ctx.arc(size*0.2, -size*0.4, size*0.22, 0, Math.PI*2); ctx.fill(); 
             ctx.beginPath(); ctx.arc(size*0.2, size*0.4, size*0.22, 0, Math.PI*2); ctx.fill();
-            if (level < 25) { 
-                ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(size*0.3, -size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.3, size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); 
-                ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(size*0.32, -size*0.43, size*0.04, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(size*0.32, size*0.37, size*0.04, 0, Math.PI*2); ctx.fill(); 
-            } 
+            
+            // Zorničky a odlesk aplikované pro VŠECHNY levely
+            ctx.fillStyle = 'black'; 
+            ctx.beginPath(); ctx.arc(size*0.3, -size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(size*0.3, size*0.4, size*0.12, 0, Math.PI*2); ctx.fill(); 
+            
+            ctx.fillStyle = 'white'; 
+            ctx.beginPath(); ctx.arc(size*0.32, -size*0.43, size*0.04, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(size*0.32, size*0.37, size*0.04, 0, Math.PI*2); ctx.fill(); 
+            
             ctx.shadowBlur = 0;
+            ctx.restore();
         }
 
         function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0, wTierOverride = -1) {
-            ctx.save(); drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier);
+            ctx.save(); 
+            
+            // NOVÉ: Epické aury a efekty pozadí pro high-level kočky (42-50)
+            if (level >= 42 && isCat) {
+                ctx.save();
+                if (level === 42) { // Phantom
+                    ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15; ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+                    ctx.beginPath(); ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2); ctx.fill();
+                } else if (level === 43) { // Void
+                    ctx.shadowColor = '#8e44ad'; ctx.shadowBlur = 20; ctx.fillStyle = '#111';
+                    for(let i=0; i<8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a-0.15)*size*1.6, Math.sin(a-0.15)*size*1.6); ctx.lineTo(Math.cos(a+0.15)*size*1.6, Math.sin(a+0.15)*size*1.6); ctx.fill(); }
+                } else if (level === 44) { // Alien
+                    ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 3; ctx.shadowColor = '#00ff00'; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.ellipse(0, 0, size * 1.8, size * 0.7, Math.PI/4, 0, Math.PI * 2); ctx.stroke();
+                    ctx.beginPath(); ctx.ellipse(0, 0, size * 1.8, size * 0.7, -Math.PI/4, 0, Math.PI * 2); ctx.stroke();
+                } else if (level === 45) { // Nebula
+                    let nGrad = ctx.createRadialGradient(0,0,size*0.5, 0,0,size*1.8);
+                    nGrad.addColorStop(0, 'rgba(155, 89, 182, 0.8)'); nGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0,0,size*1.8,0,Math.PI*2); ctx.fill();
+                } else if (level === 46) { // Galaxy
+                    ctx.strokeStyle = 'rgba(58, 90, 154, 0.6)'; ctx.lineWidth = size*0.4; ctx.lineCap = 'round';
+                    for(let i=0; i<3; i++) { ctx.beginPath(); ctx.arc(0,0, size*1.3, i*(Math.PI*2/3), i*(Math.PI*2/3) + Math.PI*0.8); ctx.stroke(); }
+                    ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 5;
+                    for(let i=0; i<6; i++) { ctx.beginPath(); ctx.arc(Math.cos(i)*size*1.5, Math.sin(i)*size*1.5, 2, 0, Math.PI*2); ctx.fill(); }
+                } else if (level === 47) { // Astral
+                    ctx.fillStyle = '#fff'; ctx.shadowColor = '#8e44ad'; ctx.shadowBlur = 15;
+                    for(let i=0; i<5; i++) { let a = i * (Math.PI*2/5) - Math.PI/2; let x = Math.cos(a)*size*1.5, y = Math.sin(a)*size*1.5; ctx.beginPath(); ctx.moveTo(x, y-6); ctx.lineTo(x+2, y-2); ctx.lineTo(x+6, y); ctx.lineTo(x+2, y+2); ctx.lineTo(x, y+6); ctx.lineTo(x-2, y+2); ctx.lineTo(x-6, y); ctx.lineTo(x-2, y-2); ctx.fill(); }
+                } else if (level === 48) { // Universe
+                    ctx.strokeStyle = '#2a4a3a'; ctx.lineWidth = size*0.25; ctx.lineCap='round'; ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = 10;
+                    for(let i=0; i<8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(Math.cos(a+0.5)*size*1.5, Math.sin(a+0.5)*size*1.5, Math.cos(a)*size*2, Math.sin(a)*size*2); ctx.stroke(); }
+                } else if (level === 49) { // Cosmic
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)'; ctx.lineWidth = 2;
+                    for(let i=1; i<=3; i++) { ctx.beginPath(); ctx.arc(0,0, size + i*size*0.35, 0, Math.PI*2); ctx.stroke(); }
+                    ctx.fillStyle = '#fff'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 12;
+                    for(let i=0; i<8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.arc(Math.cos(a)*size*1.8, Math.sin(a)*size*1.8, 2, 0, Math.PI*2); ctx.fill(); }
+                } else if (level === 50) { // God Cat
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)'; ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 20;
+                    for(let i=0; i<12; i++) { let a = (i/12)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a-0.1)*size*2.2, Math.sin(a-0.1)*size*2.2); ctx.lineTo(Math.cos(a+0.1)*size*2.2, Math.sin(a+0.1)*size*2.2); ctx.fill(); }
+                }
+                ctx.restore();
+            }
+
+            drawFace(ctx, size, color, accent, pattern, isCat, level, helmetTier);
             let currentTier = wTierOverride !== -1 ? wTierOverride : (isCat ? (prog.weaponUpgrades[level] || 0) : 0); 
             let sizeMult = isCat ? UPGRADE_SIZE_MULT[currentTier] : 1.0;
             
@@ -1390,14 +1551,39 @@
             let wWid = Math.max(6, size * 0.22) * sizeMult; 
             
             let pawColor = shade(color, -10);
-            ctx.fillStyle = pawColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.1); ctx.beginPath(); ctx.ellipse(0, -size*1.1, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            
+            // Levá tlapka (odpočívá pod ramenem se stínem)
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowOffsetY = 4; ctx.shadowOffsetX = -2; ctx.shadowBlur = 5;
+            ctx.fillStyle = pawColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.1); 
+            ctx.beginPath(); ctx.ellipse(size*0.4, -size*1.1, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(size*0.55, -size*1.2); ctx.lineTo(size*0.65, -size*1.2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(size*0.6, -size*1.0); ctx.lineTo(size*0.7, -size*1.0); ctx.stroke();
+            ctx.restore();
+
+            // Transformace pro zbraň a pravou tlapku
             ctx.save(); let swingAng = Math.PI / 4, armExtend = size * 1.1; 
             if (attackProgress > 0) { 
                 if (attackProgress < 0.2) swingAng = Math.PI/3 + attackProgress*0.2; 
                 else if (attackProgress < 0.4) swingAng = Math.PI*0.4 - ((attackProgress-0.2)/0.2)*Math.PI; 
                 else swingAng = -Math.PI*0.6 + ((attackProgress-0.4)/0.6)*Math.PI*0.6; 
             } 
-            ctx.rotate(swingAng); ctx.translate(armExtend, 0); ctx.save(); ctx.rotate(Math.PI/8); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; drawWeaponShape(ctx, wLen, wWid, weaponType, color, currentTier); ctx.restore(); ctx.fillStyle = pawColor; ctx.beginPath(); ctx.ellipse(0, 0, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore(); ctx.restore();
+            ctx.rotate(swingAng); ctx.translate(armExtend, 0); 
+            ctx.save(); ctx.rotate(Math.PI/8); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; 
+            drawWeaponShape(ctx, wLen, wWid, weaponType, color, currentTier); 
+            ctx.restore(); 
+            
+            // Pravá tlapka (drží zbraň uprostřed transformace)
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowOffsetY = 4; ctx.shadowOffsetX = -2; ctx.shadowBlur = 5;
+            ctx.fillStyle = pawColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.1);
+            ctx.beginPath(); ctx.ellipse(0, 0, size*0.28, size*0.38, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(size*0.15, -size*0.1); ctx.lineTo(size*0.25, -size*0.1); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(size*0.2, size*0.1); ctx.lineTo(size*0.3, size*0.1); ctx.stroke();
+            ctx.restore();
+            
+            ctx.restore(); 
+            ctx.restore();
         }
 
         function getSpriteDataURL(type, level, weaponTier = 0, helmetTier = 0) {
@@ -1421,8 +1607,9 @@
             let key = `${weaponType}_${upgradeTier}`;
             if (weaponCache[key]) return weaponCache[key];
             let tempC = document.createElement('canvas'); tempC.width = 180; tempC.height = 180;
-            let tCtx = tempC.getContext('2d'); tCtx.translate(90, 150); tCtx.rotate(-Math.PI / 2);
-            let size = 42; 
+            // POSUNUTO O NĚCO NÍŽ A UPRAVENA VELIKOST PRO DELŠÍ ZBRANĚ
+            let tCtx = tempC.getContext('2d'); tCtx.translate(90, 160); tCtx.rotate(-Math.PI / 2);
+            let size = 30; // Zmenšeno ze 42 na 30, aby se i godslayer vešel do ikonky
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let sizeMult = UPGRADE_SIZE_MULT[upgradeTier];
             let wLen = (size * 2.5) * archStats.reachMult * sizeMult; 
