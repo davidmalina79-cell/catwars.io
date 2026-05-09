@@ -942,16 +942,8 @@
             let w = (weaponType || 'stick').toLowerCase();
             let isUpgraded = upgradeTier > 0;
 
-            // 1. INDIVIDUÁLNÍ DÉLKY ZBRANÍ
-            if (w.includes('dagger')) len *= 0.75;
-            else if (w === 'shortsword') len *= 0.9;
-            else if (w === 'longsword' || w === 'dragonblade' || w === 'void blade') len *= 1.35;
-            else if (w === 'broadsword') len *= 1.15;
-            else if (w.includes('godslayer') || w.includes('infinity')) len *= 1.6;
-            else if (w.includes('naginata')) len *= 1.8; 
-            else if (w.includes('katana')) len *= 1.2;
-            else if (w.includes('spear')) len *= 1.4;
-            else if (w.includes('scythe') || w.includes('reaper')) len *= 1.3;
+            // ODSTRANĚNY EXTRÉMNÍ NÁSOBIČE (jako len *= 1.8). 
+            // Vše se nyní renderuje přesně podle herní logiky 'len', což sjednotí hitbox a grafiku!
 
             if (isUpgraded) { colorBase = UPGRADE_COLORS[upgradeTier]; ctx.shadowColor = colorBase; ctx.shadowBlur = upgradeTier >= 3 ? 15 : 8; }
 
@@ -963,36 +955,21 @@
                 gold: isUpgraded ? '#d4af37' : '#777777'
             };
 
-            // Univerzální kovový přechod
             const metalGrad = ctx.createLinearGradient(0, -wid*1.5, 0, wid*1.5);
             metalGrad.addColorStop(0, '#555555'); metalGrad.addColorStop(0.3, '#cccccc');
             metalGrad.addColorStop(0.7, '#888888'); metalGrad.addColorStop(1, '#222222');
 
-            // Univerzální kůží omotaná rukojeť (Horizontální, pro meče)
-            const drawHandle = (length, width, offsetX = -width*0.5, offsetY = -width*0.4) => {
+            // UNIVERZÁLNÍ RUKOJEŤ - Ruka je VŽDY na pozici X=0
+            const drawHandle = (startX, endX, width) => {
+                let length = endX - startX;
                 ctx.fillStyle = '#3e2723'; 
-                ctx.fillRect(offsetX, offsetY, length, width*0.8);
+                ctx.fillRect(startX, -width*0.4, length, width*0.8);
                 ctx.strokeStyle = '#1a0f00'; ctx.lineWidth = 1; ctx.beginPath();
                 let steps = Math.floor(length / (width*0.6));
                 for(let i=0; i<steps; i++) { 
-                    let hx = offsetX + i*(length/steps);
-                    ctx.moveTo(hx, offsetY); ctx.lineTo(hx + length/steps, offsetY + width*0.8);
-                    ctx.moveTo(hx + length/steps, offsetY); ctx.lineTo(hx, offsetY + width*0.8);
-                }
-                ctx.stroke();
-            };
-
-            // Univerzální kůží omotaná rukojeť (Vertikální, pro sekery a kladiva)
-            const drawHandleVertical = (length, width, cx = 0, startY = -width*0.4) => {
-                let hw = width * 0.4;
-                ctx.fillStyle = '#3e2723'; 
-                ctx.fillRect(cx - hw, startY, hw*2, length);
-                ctx.strokeStyle = '#1a0f00'; ctx.lineWidth = 1; ctx.beginPath();
-                let steps = Math.floor(length / (width*0.6));
-                for(let i=0; i<steps; i++) { 
-                    let hy = startY + i*(length/steps);
-                    ctx.moveTo(cx - hw, hy); ctx.lineTo(cx + hw, hy + length/steps);
-                    ctx.moveTo(cx + hw, hy); ctx.lineTo(cx - hw, hy + length/steps);
+                    let hx = startX + i*(length/steps);
+                    ctx.moveTo(hx, -width*0.4); ctx.lineTo(hx + length/steps, width*0.4);
+                    ctx.moveTo(hx + length/steps, -width*0.4); ctx.lineTo(hx, width*0.4);
                 }
                 ctx.stroke();
             };
@@ -1001,14 +978,14 @@
             ctx.strokeStyle = '#111';
 
             // ==============================
-            // SPECIFICKÉ TVARY ZBRANÍ
+            // SPECIFICKÉ TVARY ZBRANÍ (VŠECHNY OPRAVENY)
             // ==============================
 
             if (w === 'stick' || w === 'twig' || w === 'staff') {
                 let woodGrad = ctx.createLinearGradient(0, -wid, 0, wid);
                 woodGrad.addColorStop(0, '#4a3020'); woodGrad.addColorStop(0.5, '#7a4e2a'); woodGrad.addColorStop(1, '#2e1c11');
                 ctx.fillStyle = woodGrad;
-                ctx.fillRect(-wid*0.5, -wid*0.6, len, wid*1.2);
+                ctx.fillRect(-len*0.2, -wid*0.6, len*1.2, wid*1.2); // Začíná lehce za rukou
                 ctx.fillStyle = '#222';
                 ctx.fillRect(len*0.2, -wid*0.7, wid*1.5, wid*1.4);
                 if (w === 'staff') {
@@ -1020,401 +997,195 @@
                 }
             }
             else if (w.includes('axe')) {
+                // OPRAVA: Sekery už netrčí z ramene vzhůru nohama! (Lvl 18, 19)
                 let isColossus = w.includes('colossus');
                 let scale = isColossus ? 1.4 : 1.0;
                 
-                // Rukojeť směřuje dolů (Osa Y)
-                drawHandleVertical(len*0.8, wid*1.2, 0, -len*0.2);
+                // Násada leží podél ruky dopředu
+                drawHandle(-len*0.3, len*0.9, wid*1.2);
 
-                let cy = -len*0.1; // Y pozice středu hlavy
-                let ah = wid * 2.2 * scale; // Výška čepele (Y)
-                let aw = len * 0.25 * scale; // Šířka čepele (X)
+                let cx = len * 0.75; // Střed ocelové hlavy
+                let ah = wid * 2.2 * scale; // Výška čepele (Y osy)
+                let aw = len * 0.15 * scale; // Šířka čepele 
 
-                // Kovová spojka na topůrku
                 ctx.fillStyle = metalGrad;
-                ctx.fillRect(-wid*0.8, cy - ah*0.3, wid*1.6, ah*0.6);
+                ctx.fillRect(cx - wid*0.8, -ah*0.3, wid*1.6, ah*0.6); // Spojka
 
-                // Pravá čepel (míří dopředu na nepřítele, +X)
+                // Pravá čepel (+Y, směřuje do strany úderu)
                 ctx.fillStyle = bc.dark; 
-                ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(aw, cy+ah); ctx.lineTo(aw*2, cy+ah*0.7); ctx.lineTo(aw, cy); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx+aw, ah); ctx.lineTo(cx+aw*2.5, ah*0.7); ctx.lineTo(cx+aw*1.5, 0); ctx.fill(); ctx.stroke();
                 ctx.fillStyle = bc.light; 
-                ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(aw, cy-ah); ctx.lineTo(aw*2, cy-ah*0.7); ctx.lineTo(aw, cy); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx-aw, ah); ctx.lineTo(cx-aw*1.5, ah*0.7); ctx.lineTo(cx-aw*0.5, 0); ctx.fill(); ctx.stroke();
                 ctx.fillStyle = bc.edge;
-                ctx.beginPath(); ctx.moveTo(aw*0.8, cy); ctx.lineTo(aw*2, cy-ah*0.7); ctx.quadraticCurveTo(aw*2.5, cy, aw*2, cy+ah*0.7); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(cx-aw*1.5, ah*0.7); ctx.quadraticCurveTo(cx+aw*0.5, ah*1.2, cx+aw*2.5, ah*0.7); ctx.lineTo(cx+aw*1.5, 0); ctx.lineTo(cx-aw*0.5, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                // Levá čepel
+                // Levá čepel (-Y, oboustranné sekery)
                 if (isColossus || w.includes('battleaxe')) {
-                    ctx.fillStyle = bc.dark;
-                    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(-aw, cy+ah); ctx.lineTo(-aw*2, cy+ah*0.7); ctx.lineTo(-aw, cy); ctx.fill(); ctx.stroke();
-                    ctx.fillStyle = bc.light;
-                    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(-aw, cy-ah); ctx.lineTo(-aw*2, cy-ah*0.7); ctx.lineTo(-aw, cy); ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = bc.dark; 
+                    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx+aw, -ah); ctx.lineTo(cx+aw*2.5, -ah*0.7); ctx.lineTo(cx+aw*1.5, 0); ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = bc.light; 
+                    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx-aw, -ah); ctx.lineTo(cx-aw*1.5, -ah*0.7); ctx.lineTo(cx-aw*0.5, 0); ctx.fill(); ctx.stroke();
                     ctx.fillStyle = bc.edge;
-                    ctx.beginPath(); ctx.moveTo(-aw*0.8, cy); ctx.lineTo(-aw*2, cy-ah*0.7); ctx.quadraticCurveTo(-aw*2.5, cy, -aw*2, cy+ah*0.7); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(cx-aw*1.5, -ah*0.7); ctx.quadraticCurveTo(cx+aw*0.5, -ah*1.2, cx+aw*2.5, -ah*0.7); ctx.lineTo(cx+aw*1.5, 0); ctx.lineTo(cx-aw*0.5, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
             }
             else if (w.includes('hammer')) {
-                // Přepracovaná kladiva (Návrat k hezčímu 3D tvaru s vertikální rukojetí)
-                drawHandleVertical(len*0.8, wid*1.2, 0, -len*0.2);
-                let cy = -len*0.1;
-                let hl = len*0.4; // Délka hlavy
-                let hw = wid*2.0; // Výška hlavy
+                // OPRAVA: Kladiva se drží za násadu! (Lvl 12, 30)
+                drawHandle(-len*0.3, len*0.9, wid*1.2);
+                let cx = len * 0.75; // Střed hlavy na konci tyče
+                let hw = len * 0.15; // Tloušťka hlavy
+                let hh = wid * 2.0; // Rozpětí hlavy do stran
                 
                 if (w === 'hammer') {
-                    // Tradiční oboustranné kladivo
                     ctx.fillStyle = metalGrad;
-                    ctx.fillRect(-hl, cy - hw, hl*2, hw*2);
+                    ctx.fillRect(cx - hw, -hh, hw*2, hh*2);
                     ctx.fillStyle = bc.light;
-                    ctx.beginPath(); ctx.moveTo(-hl, cy - hw); ctx.lineTo(hl, cy - hw); ctx.lineTo(hl-wid, cy); ctx.lineTo(-hl+wid, cy); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(cx - hw, -hh); ctx.lineTo(cx + hw, -hh); ctx.lineTo(cx + hw - wid, 0); ctx.lineTo(cx - hw + wid, 0); ctx.fill();
                     ctx.fillStyle = bc.dark;
-                    ctx.beginPath(); ctx.moveTo(-hl, cy + hw); ctx.lineTo(hl, cy + hw); ctx.lineTo(hl-wid, cy); ctx.lineTo(-hl+wid, cy); ctx.fill();
-                    
-                    // Úderné ocelové hrany po stranách
+                    ctx.beginPath(); ctx.moveTo(cx - hw, hh); ctx.lineTo(cx + hw, hh); ctx.lineTo(cx + hw - wid, 0); ctx.lineTo(cx - hw + wid, 0); ctx.fill();
                     ctx.fillStyle = bc.edge;
-                    ctx.fillRect(hl, cy - hw*0.9, wid*0.8, hw*1.8);
-                    ctx.fillRect(-hl - wid*0.8, cy - hw*0.9, wid*0.8, hw*1.8);
+                    ctx.fillRect(cx - hw*1.2, -hh*0.9, hw*2.4, wid*0.8);
+                    ctx.fillRect(cx - hw*1.2, hh*0.9 - wid*0.8, hw*2.4, wid*0.8);
                 } else {
-                    // Warhammer (Jednostranný s bodcem vzadu)
+                    // Warhammer (Bodák na jedné straně)
                     ctx.fillStyle = metalGrad;
-                    ctx.fillRect(-hl*0.2, cy - hw, hl*1.2, hw*2);
-                    ctx.fillStyle = bc.light;
-                    ctx.beginPath(); ctx.moveTo(-hl*0.2, cy - hw); ctx.lineTo(hl, cy - hw); ctx.lineTo(hl-wid, cy); ctx.lineTo(0, cy); ctx.fill();
-                    ctx.fillStyle = bc.dark;
-                    ctx.beginPath(); ctx.moveTo(-hl*0.2, cy + hw); ctx.lineTo(hl, cy + hw); ctx.lineTo(hl-wid, cy); ctx.lineTo(0, cy); ctx.fill();
-                    
-                    // Úderná plocha vpředu (+X)
+                    ctx.fillRect(cx - hw, -hh*0.2, hw*2, hh*1.2);
                     ctx.fillStyle = bc.edge;
-                    ctx.fillRect(hl, cy - hw*0.9, wid*0.8, hw*1.8);
+                    ctx.fillRect(cx - hw*1.2, hh*0.8 - wid*0.8, hw*2.4, wid*0.8);
                     
-                    // Ostrý bodec vzadu (-X)
+                    // Ostrý bodec vzadu (-Y)
                     ctx.fillStyle = bc.dark;
-                    ctx.beginPath(); ctx.moveTo(-hl*0.2, cy - hw*0.5); ctx.lineTo(-hl*1.5, cy); ctx.lineTo(-hl*0.2, cy + hw*0.5); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(cx - hw*0.5, -hh*0.2); ctx.lineTo(cx, -hh*1.5); ctx.lineTo(cx + hw*0.5, -hh*0.2); ctx.fill(); ctx.stroke();
                     ctx.fillStyle = bc.light;
-                    ctx.beginPath(); ctx.moveTo(-hl*0.2, cy - hw*0.5); ctx.lineTo(-hl*1.5, cy); ctx.lineTo(-hl*0.2, cy); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(cx - hw*0.5, -hh*0.2); ctx.lineTo(cx, -hh*1.5); ctx.lineTo(cx, 0); ctx.fill();
                 }
             }
             else if (w === 'mace') {
-                // TRADIČNÍ PALCÁT (Okřídlená hlava)
-                drawHandle(len*0.7, wid*1.0);
-                let cx = len*0.85;
-                let mw = wid*1.5; 
-                let ml = len*0.2; 
-
-                // Zadní a diagonální křídla (Stín)
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath(); ctx.moveTo(cx - ml, 0); ctx.lineTo(cx, -mw*1.3); ctx.lineTo(cx + ml, 0); ctx.lineTo(cx, mw*1.3); ctx.fill(); ctx.stroke();
-                // Boční centrální blok (Kovový válec hlavy)
-                ctx.fillStyle = metalGrad;
-                ctx.beginPath(); ctx.moveTo(cx - ml*1.2, -mw*0.4); ctx.lineTo(cx + ml*1.2, -mw*0.4); ctx.lineTo(cx + ml*1.2, mw*0.4); ctx.lineTo(cx - ml*1.2, mw*0.4); ctx.fill(); ctx.stroke();
-                // Přední středové křídlo (Světlo)
-                ctx.fillStyle = bc.light;
-                ctx.beginPath(); ctx.moveTo(cx - ml, 0); ctx.lineTo(cx, -mw*1.1); ctx.lineTo(cx + ml, 0); ctx.lineTo(cx, mw*1.1); ctx.fill(); ctx.stroke();
+                drawHandle(-len*0.2, len*0.8, wid*1.0);
+                let cx = len*0.8; let mw = wid*1.5; let ml = len*0.1; 
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(cx-ml, 0); ctx.lineTo(cx, -mw*1.3); ctx.lineTo(cx+ml, 0); ctx.lineTo(cx, mw*1.3); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = metalGrad; ctx.beginPath(); ctx.moveTo(cx-ml*1.2, -mw*0.4); ctx.lineTo(cx+ml*1.2, -mw*0.4); ctx.lineTo(cx+ml*1.2, mw*0.4); ctx.lineTo(cx-ml*1.2, mw*0.4); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(cx-ml, 0); ctx.lineTo(cx, -mw*1.1); ctx.lineTo(cx+ml, 0); ctx.lineTo(cx, mw*1.1); ctx.fill(); ctx.stroke();
             }
             else if (w === 'morningstar' || w === 'star') {
-                // ŘEMDIH / OSTNATÁ KOULE
-                drawHandle(len*0.7, wid*1.0);
+                drawHandle(-len*0.2, len*0.8, wid*1.0);
                 let cx = len*0.8;
-                ctx.fillStyle = metalGrad;
-                ctx.beginPath(); ctx.arc(cx, 0, wid*1.8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = metalGrad; ctx.beginPath(); ctx.arc(cx, 0, wid*1.8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
                 ctx.fillStyle = bc.light;
-                for(let i=0; i<8; i++) {
-                    let a = (i/8) * Math.PI*2;
-                    ctx.beginPath();
-                    ctx.moveTo(cx + Math.cos(a)*wid*1.2, Math.sin(a)*wid*1.2);
-                    ctx.lineTo(cx + Math.cos(a)*wid*3.2, Math.sin(a)*wid*3.2);
-                    ctx.lineTo(cx + Math.cos(a+0.3)*wid*1.2, Math.sin(a+0.3)*wid*1.2);
-                    ctx.closePath(); ctx.fill(); ctx.stroke();
-                }
+                for(let i=0; i<8; i++) { let a = (i/8) * Math.PI*2; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a)*wid*1.2, Math.sin(a)*wid*1.2); ctx.lineTo(cx + Math.cos(a)*wid*3.2, Math.sin(a)*wid*3.2); ctx.lineTo(cx + Math.cos(a+0.3)*wid*1.2, Math.sin(a+0.3)*wid*1.2); ctx.closePath(); ctx.fill(); ctx.stroke(); }
             }
             else if (w === 'titan cleaver') {
-                // NÁHRADA ZA STAR SCYTHE: Titánský sekáček (Masivní těžká čepel)
-                drawHandle(len*0.4, wid*1.4);
-                ctx.fillStyle = metalGrad; 
-                ctx.fillRect(len*0.1, -wid*1.8, wid*0.6, wid*3.6); // Masivní záštita
+                drawHandle(-len*0.2, len*0.4, wid*1.4);
+                ctx.fillStyle = metalGrad; ctx.fillRect(len*0.25, -wid*1.8, wid*0.6, wid*3.6); 
                 
-                // Tvar brutálního sekáčku (rozšiřuje se ke konci)
-                ctx.fillStyle = bc.light;
-                ctx.beginPath(); 
-                ctx.moveTo(len*0.15, 0); 
-                ctx.lineTo(len*0.15, -wid*1.5); 
-                ctx.lineTo(len*0.9, -wid*3.0); // Zvýšený hřbet
-                ctx.lineTo(len*1.1, -wid*2.0); // Useknutá špička (tvar cleaveru)
-                ctx.lineTo(len*1.0, 0); 
-                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(len*0.3, 0); ctx.lineTo(len*0.3, -wid*1.5); ctx.lineTo(len*0.9, -wid*3.0); ctx.lineTo(len, -wid*2.0); ctx.lineTo(len*0.95, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(len*0.3, 0); ctx.lineTo(len*0.3, wid*1.5); ctx.lineTo(len*0.9, wid*3.0); ctx.lineTo(len, wid*2.0); ctx.lineTo(len*0.95, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
                 
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath(); 
-                ctx.moveTo(len*0.15, 0); 
-                ctx.lineTo(len*0.15, wid*1.5); 
-                ctx.lineTo(len*0.9, wid*3.0); 
-                ctx.lineTo(len*1.1, wid*2.0); 
-                ctx.lineTo(len*1.0, 0); 
-                ctx.closePath(); ctx.fill(); ctx.stroke();
-                
-                // Hluboká středová drážka pro odlehčení (a budoucí runy/záři)
-                ctx.fillStyle = '#222';
-                ctx.beginPath(); 
-                ctx.moveTo(len*0.25, -wid*0.3); 
-                ctx.lineTo(len*0.8, -wid*0.6); 
-                ctx.lineTo(len*0.8, wid*0.6); 
-                ctx.lineTo(len*0.25, wid*0.3); 
-                ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#222'; ctx.beginPath(); ctx.moveTo(len*0.4, -wid*0.3); ctx.lineTo(len*0.8, -wid*0.6); ctx.lineTo(len*0.8, wid*0.6); ctx.lineTo(len*0.4, wid*0.3); ctx.closePath(); ctx.fill();
             }
-            else if (w === 'scythe' || w === 'reaper') {
-                drawHandle(len*0.9, wid*1.2);
-                ctx.fillStyle = metalGrad; ctx.fillRect(len*0.8, -wid, wid*1.5, wid*2);
-                ctx.fillStyle = bc.light;
-                ctx.beginPath();
-                ctx.moveTo(len*0.85, -wid*0.8);
-                ctx.lineTo(len*0.95, -wid*0.8);
-                ctx.quadraticCurveTo(len*1.0, -wid*3.5, len*0.4, -wid*4.5);
-                ctx.quadraticCurveTo(len*0.8, -wid*2.5, len*0.85, -wid*0.8);
-                ctx.fill(); ctx.stroke();
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath();
-                ctx.moveTo(len*0.85, -wid*0.8);
-                ctx.quadraticCurveTo(len*0.9, -wid*2.5, len*0.5, -wid*4.0);
-                ctx.quadraticCurveTo(len*0.8, -wid*2.5, len*0.85, -wid*0.8);
-                ctx.fill();
+            else if (w.includes('scythe') || w.includes('reaper')) {
+                // OPRAVA: Kosa má správný úchop a nemizí (Lvl 31, 38)
+                drawHandle(-len*0.4, len*0.9, wid*1.2);
+                ctx.fillStyle = metalGrad; ctx.fillRect(len*0.85, -wid, wid*1.5, wid*2);
+                
+                // Čepel kosy
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(len*0.85, -wid*0.8); ctx.lineTo(len*0.95, -wid*0.8); ctx.quadraticCurveTo(len*1.2, -wid*4.0, len*0.4, -wid*5.0); ctx.quadraticCurveTo(len*0.9, -wid*2.5, len*0.85, -wid*0.8); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(len*0.85, -wid*0.8); ctx.quadraticCurveTo(len*1.0, -wid*2.5, len*0.5, -wid*4.5); ctx.quadraticCurveTo(len*0.9, -wid*2.5, len*0.85, -wid*0.8); ctx.fill();
             }
             else if (w.includes('godslayer') || w.includes('infinity blade')) {
-                drawHandle(len*0.35, wid*1.5, -wid*0.6, -wid*0.5);
-                ctx.fillStyle = bc.gold;
-                ctx.beginPath(); ctx.moveTo(-wid*0.6, 0); ctx.lineTo(-wid*0.9, -wid*0.8); ctx.lineTo(-wid*1.2, 0); ctx.lineTo(-wid*0.9, wid*0.8); ctx.closePath(); ctx.fill(); ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(len*0.1, -wid*2.5); ctx.lineTo(len*0.3, -wid*3.0); ctx.lineTo(len*0.35, 0);
-                ctx.lineTo(len*0.3, wid*3.0); ctx.lineTo(len*0.1, wid*2.5); ctx.lineTo(len*0.2, 0);
-                ctx.closePath(); ctx.fill(); ctx.stroke();
+                drawHandle(-len*0.2, len*0.2, wid*1.5);
+                ctx.fillStyle = bc.gold; ctx.beginPath(); ctx.moveTo(-len*0.2, 0); ctx.lineTo(-len*0.3, -wid*0.8); ctx.lineTo(-len*0.4, 0); ctx.lineTo(-len*0.3, wid*0.8); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(len*0.1, -wid*2.5); ctx.lineTo(len*0.2, -wid*3.0); ctx.lineTo(len*0.25, 0); ctx.lineTo(len*0.2, wid*3.0); ctx.lineTo(len*0.1, wid*2.5); ctx.lineTo(len*0.15, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                let bStart = len*0.3;
-                let bEnd = len*1.2;
-
-                ctx.fillStyle = isUpgraded ? '#1a1a1a' : '#333';
-                ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bEnd - len*0.2, -wid*0.4); ctx.lineTo(bEnd, 0); ctx.lineTo(bEnd - len*0.2, wid*0.4); ctx.closePath(); ctx.fill();
-                ctx.strokeStyle = isUpgraded ? '#0ff' : '#555'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bEnd - len*0.2, 0); ctx.stroke(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#111';
-
-                ctx.fillStyle = bc.light;
-                ctx.beginPath(); ctx.moveTo(bStart, -wid*0.5); ctx.lineTo(bStart + len*0.2, -wid*1.4); ctx.lineTo(bEnd - len*0.3, -wid*1.2); ctx.lineTo(bEnd, 0); ctx.lineTo(bEnd - len*0.2, -wid*0.4); ctx.lineTo(bStart, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath(); ctx.moveTo(bStart, wid*0.5); ctx.lineTo(bStart + len*0.2, wid*1.4); ctx.lineTo(bEnd - len*0.3, wid*1.2); ctx.lineTo(bEnd, 0); ctx.lineTo(bEnd - len*0.2, wid*0.4); ctx.lineTo(bStart, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                // RUNY POUZE PRO INFINITY BLADE
-                if (w === 'infinity blade') {
-                    ctx.lineWidth = 1.5;
-                    
-                    // Horní strana (Světlé "cik-cak" runy)
-                    ctx.strokeStyle = isUpgraded ? '#0ff' : '#666'; 
-                    for (let i=0; i<4; i++) {
-                        let rx = bStart + len*0.15 + i*(len*0.15);
-                        let ry = -wid*0.8;
-                        ctx.beginPath();
-                        ctx.moveTo(rx, ry);
-                        ctx.lineTo(rx + len*0.04, ry - wid*0.25);
-                        ctx.lineTo(rx + len*0.08, ry);
-                        ctx.stroke();
-                    }
-
-                    // Spodní strana (Tmavší kolmé a křížové runy)
-                    ctx.strokeStyle = isUpgraded ? '#90f' : '#444'; 
-                    for (let i=0; i<4; i++) {
-                        let rx = bStart + len*0.15 + i*(len*0.15);
-                        let ry = wid*0.8;
-                        ctx.beginPath();
-                        // Křížek a linky
-                        ctx.moveTo(rx, ry - wid*0.15);
-                        ctx.lineTo(rx + len*0.06, ry + wid*0.15);
-                        ctx.moveTo(rx + len*0.06, ry - wid*0.15);
-                        ctx.lineTo(rx, ry + wid*0.15);
-                        // Středová čára protínající křížek
-                        ctx.moveTo(rx + len*0.03, ry - wid*0.2);
-                        ctx.lineTo(rx + len*0.03, ry + wid*0.2);
-                        ctx.stroke();
-                    }
-                    ctx.strokeStyle = '#111'; // Vratí původní tah pro další rendery
-                }
+                let bStart = len*0.2; let bEnd = len;
+                ctx.fillStyle = isUpgraded ? '#1a1a1a' : '#333'; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bEnd - len*0.1, -wid*0.4); ctx.lineTo(bEnd, 0); ctx.lineTo(bEnd - len*0.1, wid*0.4); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = isUpgraded ? '#0ff' : '#555'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bEnd - len*0.1, 0); ctx.stroke(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#111';
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(bStart, -wid*0.5); ctx.lineTo(bStart + len*0.1, -wid*1.4); ctx.lineTo(bEnd - len*0.2, -wid*1.2); ctx.lineTo(bEnd, 0); ctx.lineTo(bEnd - len*0.1, -wid*0.4); ctx.lineTo(bStart, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(bStart, wid*0.5); ctx.lineTo(bStart + len*0.1, wid*1.4); ctx.lineTo(bEnd - len*0.2, wid*1.2); ctx.lineTo(bEnd, 0); ctx.lineTo(bEnd - len*0.1, wid*0.4); ctx.lineTo(bStart, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
             }
             else if (w === 'broadsword') {
-                drawHandle(len*0.3, wid*1.4);
-                ctx.fillStyle = metalGrad; ctx.fillRect(len*0.15, -wid*1.5, wid*0.6, wid*3); 
-                ctx.beginPath(); ctx.arc(-wid*0.5, 0, wid*0.6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+                drawHandle(-len*0.2, len*0.15, wid*1.4);
+                ctx.fillStyle = metalGrad; ctx.fillRect(len*0.05, -wid*1.5, wid*0.6, wid*3); 
+                ctx.beginPath(); ctx.arc(-len*0.25, 0, wid*0.6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
 
-                ctx.fillStyle = bc.light;
-                ctx.beginPath();
-                ctx.moveTo(len*0.2, 0); ctx.lineTo(len*0.2, -wid*1.2); ctx.lineTo(len*0.65, -wid*1.2);
-                ctx.lineTo(len*0.7, -wid*0.8); ctx.lineTo(len*0.75, -wid*0.9); ctx.lineTo(len*0.95, -wid*0.4);
-                ctx.lineTo(len*1.0, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath();
-                ctx.moveTo(len*0.2, 0); ctx.lineTo(len*0.2, wid*1.2); ctx.lineTo(len*0.85, wid*1.2);
-                ctx.lineTo(len*1.0, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                ctx.fillStyle = '#222'; ctx.fillRect(len*0.3, -wid*0.1, len*0.4, wid*0.2);
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(len*0.1, 0); ctx.lineTo(len*0.1, -wid*1.2); ctx.lineTo(len*0.6, -wid*1.2); ctx.lineTo(len*0.65, -wid*0.8); ctx.lineTo(len*0.7, -wid*0.9); ctx.lineTo(len*0.9, -wid*0.4); ctx.lineTo(len, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(len*0.1, 0); ctx.lineTo(len*0.1, wid*1.2); ctx.lineTo(len*0.8, wid*1.2); ctx.lineTo(len, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
             }
             else if (w === 'dragonblade') {
-                // DRAGONBLADE: Jednostranně zubaté ostří (na spodní straně)
-                drawHandle(len*0.3, wid*1.2);
-                // Dračí agresivní záštita
-                ctx.fillStyle = metalGrad;
-                ctx.beginPath(); ctx.moveTo(len*0.15, -wid*2.2); ctx.lineTo(len*0.35, -wid*1.2); ctx.lineTo(len*0.25, 0); ctx.lineTo(len*0.35, wid*1.2); ctx.lineTo(len*0.15, wid*2.2); ctx.lineTo(len*0.1, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                drawHandle(-len*0.2, len*0.2, wid*1.2);
+                ctx.fillStyle = metalGrad; ctx.beginPath(); ctx.moveTo(len*0.05, -wid*2.2); ctx.lineTo(len*0.25, -wid*1.2); ctx.lineTo(len*0.15, 0); ctx.lineTo(len*0.25, wid*1.2); ctx.lineTo(len*0.05, wid*2.2); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                let bStart = len*0.25;
-                let bEnd = len;
-
-                // Horní strana (Rovná, hladká)
-                ctx.fillStyle = bc.light;
-                ctx.beginPath();
-                ctx.moveTo(bStart, 0);
-                ctx.lineTo(bStart, -wid*0.8);
-                ctx.lineTo(bEnd - len*0.15, -wid*0.6);
-                ctx.lineTo(bEnd, 0); // Špička
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
-
-                // Spodní strana (Zubaté dračí zuby)
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath();
-                ctx.moveTo(bStart, 0);
-                ctx.lineTo(bEnd, 0);
-                let numTeeth = 5;
-                let toothLen = (bEnd - bStart) / numTeeth;
-                for(let i=0; i<numTeeth; i++) {
-                    let tx = bEnd - i*toothLen;
-                    let nx = bEnd - (i+1)*toothLen;
-                    ctx.lineTo(tx - toothLen*0.2, wid*1.2); // Hrot zubu
-                    ctx.lineTo(nx + toothLen*0.2, wid*0.4); // Prohlubeň zubu
-                }
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
-
-                // Krevní žlab
-                ctx.fillStyle = '#444';
-                ctx.beginPath(); ctx.moveTo(bStart, -wid*0.1); ctx.lineTo(bEnd - len*0.2, -wid*0.05); ctx.lineTo(bEnd - len*0.2, wid*0.05); ctx.lineTo(bStart, wid*0.1); ctx.closePath(); ctx.fill();
+                let bStart = len*0.15; let bEnd = len;
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bStart, -wid*0.8); ctx.lineTo(bEnd - len*0.1, -wid*0.6); ctx.lineTo(bEnd, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bEnd, 0); let numTeeth = 5; let toothLen = (bEnd - bStart) / numTeeth; for(let i=0; i<numTeeth; i++) { let tx = bEnd - i*toothLen; let nx = bEnd - (i+1)*toothLen; ctx.lineTo(tx - toothLen*0.2, wid*1.2); ctx.lineTo(nx + toothLen*0.2, wid*0.4); } ctx.closePath(); ctx.fill(); ctx.stroke();
             }
             else if (w === 'void blade') {
-                // VOID BLADE: Oboustranně zubaté (pilovité) ostří s temným jádrem
-                drawHandle(len*0.3, wid*1.2);
-                // Temná trnitá záštita
-                ctx.fillStyle = '#222';
-                ctx.beginPath(); ctx.moveTo(len*0.1, -wid*2.5); ctx.lineTo(len*0.35, -wid*0.5); ctx.lineTo(len*0.35, wid*0.5); ctx.lineTo(len*0.1, wid*2.5); ctx.lineTo(len*0.2, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                drawHandle(-len*0.2, len*0.25, wid*1.2);
+                ctx.fillStyle = '#222'; ctx.beginPath(); ctx.moveTo(0, -wid*2.5); ctx.lineTo(len*0.25, -wid*0.5); ctx.lineTo(len*0.25, wid*0.5); ctx.lineTo(0, wid*2.5); ctx.lineTo(len*0.1, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                let bStart = len*0.25;
-                let bEnd = len;
-                let numTeeth = 6;
-                let toothLen = (bEnd - bStart) / numTeeth;
-
-                // Horní strana (Zuby nahoru)
-                ctx.fillStyle = bc.light;
-                ctx.beginPath();
-                ctx.moveTo(bStart, 0);
-                for(let i=0; i<numTeeth; i++) {
-                    let tx = bStart + i*toothLen;
-                    let nx = bStart + (i+1)*toothLen;
-                    ctx.lineTo(tx + toothLen*0.4, -wid*0.3); // Prohlubeň
-                    ctx.lineTo(nx, -wid*1.1); // Hrot zubu
-                }
-                ctx.lineTo(bEnd, 0); // Špička
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
-
-                // Spodní strana (Zuby dolů)
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath();
-                ctx.moveTo(bStart, 0);
-                ctx.lineTo(bEnd, 0);
-                // Spodní zuby kreslíme pozpátku (od špičky k záštitě), aby navazovaly na čáru uprostřed
-                for(let i=0; i<numTeeth; i++) {
-                    let tx = bEnd - i*toothLen;
-                    let nx = bEnd - (i+1)*toothLen;
-                    ctx.lineTo(tx - toothLen*0.4, wid*0.3); // Prohlubeň
-                    ctx.lineTo(nx, wid*1.1); // Hrot zubu
-                }
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
-
-                // Void Core (Temné magické jádro čepele)
-                ctx.fillStyle = isUpgraded ? '#9900ff' : '#1a1a1a';
-                ctx.beginPath();
-                ctx.moveTo(bStart, 0);
-                ctx.lineTo(bEnd - len*0.15, -wid*0.15);
-                ctx.lineTo(bEnd, 0);
-                ctx.lineTo(bEnd - len*0.15, wid*0.15);
-                ctx.closePath();
-                ctx.fill();
+                let bStart = len*0.15; let bEnd = len; let numTeeth = 6; let toothLen = (bEnd - bStart) / numTeeth;
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(bStart, 0); for(let i=0; i<numTeeth; i++) { let tx = bStart + i*toothLen; let nx = bStart + (i+1)*toothLen; ctx.lineTo(tx + toothLen*0.4, -wid*0.3); ctx.lineTo(nx, -wid*1.1); } ctx.lineTo(bEnd, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bEnd, 0); for(let i=0; i<numTeeth; i++) { let tx = bEnd - i*toothLen; let nx = bEnd - (i+1)*toothLen; ctx.lineTo(tx - toothLen*0.4, wid*0.3); ctx.lineTo(nx, wid*1.1); } ctx.closePath(); ctx.fill(); ctx.stroke();
+                
+                ctx.fillStyle = isUpgraded ? '#9900ff' : '#1a1a1a'; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.lineTo(bEnd - len*0.1, -wid*0.15); ctx.lineTo(bEnd, 0); ctx.lineTo(bEnd - len*0.1, wid*0.15); ctx.closePath(); ctx.fill();
             }
             else if (w.includes('sword') || w.includes('dagger') || w.includes('blade') || w.includes('twin')) {
+                // OPRAVA: Twin blades spojeny plynule (Lvl 29)
                 let isTwin = w.includes('twin');
                 let isDagger = w.includes('dagger');
-                let hLen = isDagger ? len*0.25 : (isTwin ? len*0.4 : len*0.25);
-                let bStart = isTwin ? hLen : len*0.2;
-                let bEnd = isDagger ? len*0.8 : len;
+                
+                let bStart = len*0.15; 
+                let bEnd = isDagger ? len*0.6 : len;
                 let bWid = isDagger ? wid*0.6 : wid*0.8;
 
-                if (isTwin) { drawHandle(hLen, wid*1.2, -hLen*0.5, -wid*0.4); } 
-                else { drawHandle(hLen, wid*1.2); }
+                drawHandle(-len*0.2, len*0.2, wid*1.2); // Sjednocený úchop v ruce
 
                 ctx.fillStyle = metalGrad;
                 if (isTwin) {
-                    ctx.fillRect(hLen*0.5, -wid*1.5, wid*0.4, wid*3);
-                    ctx.fillRect(-hLen*0.5 - wid*0.4, -wid*1.5, wid*0.4, wid*3);
+                    ctx.fillRect(len*0.1, -wid*1.5, wid*0.4, wid*3); // Přední záštita
+                    ctx.fillRect(-len*0.2, -wid*1.5, wid*0.4, wid*3); // Zadní záštita
                 } else {
-                    ctx.beginPath(); ctx.moveTo(len*0.1, -wid*1.8); ctx.lineTo(len*0.2, -wid*2.0); ctx.lineTo(len*0.25, 0); ctx.lineTo(len*0.2, wid*2.0); ctx.lineTo(len*0.1, wid*1.8); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    ctx.beginPath(); ctx.arc(-wid*0.6, 0, wid*0.6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(len*0.05, -wid*1.8); ctx.lineTo(len*0.15, -wid*2.0); ctx.lineTo(len*0.2, 0); ctx.lineTo(len*0.15, wid*2.0); ctx.lineTo(len*0.05, wid*1.8); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(-len*0.25, 0, wid*0.6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
                 }
 
                 const drawStraightBlade = (start, end, width, dir = 1) => {
-                    let actualEnd = dir === 1 ? end : -end;
+                    let actualEnd = dir === 1 ? end : -end*0.8; // Zadní čepel u twin blades je kratší
                     let actualStart = dir === 1 ? start : -start;
-                    ctx.fillStyle = bc.light;
-                    ctx.beginPath(); ctx.moveTo(actualStart, 0); ctx.lineTo(actualStart, -width); ctx.lineTo(actualEnd - (end-start)*0.25 * dir, -width); ctx.lineTo(actualEnd, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    ctx.fillStyle = bc.dark;
-                    ctx.beginPath(); ctx.moveTo(actualStart, 0); ctx.lineTo(actualEnd, 0); ctx.lineTo(actualEnd - (end-start)*0.25 * dir, width); ctx.lineTo(actualStart, width); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    ctx.fillStyle = '#444';
-                    ctx.beginPath(); ctx.moveTo(actualStart, -wid*0.1); ctx.lineTo(actualEnd - (end-start)*0.4 * dir, -wid*0.05); ctx.lineTo(actualEnd - (end-start)*0.4 * dir, wid*0.05); ctx.lineTo(actualStart, wid*0.1); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(actualStart, 0); ctx.lineTo(actualStart, -width); ctx.lineTo(actualEnd - (actualEnd-actualStart)*0.25, -width); ctx.lineTo(actualEnd, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(actualStart, 0); ctx.lineTo(actualEnd, 0); ctx.lineTo(actualEnd - (actualEnd-actualStart)*0.25, width); ctx.lineTo(actualStart, width); ctx.closePath(); ctx.fill(); ctx.stroke();
                 };
 
                 drawStraightBlade(bStart, bEnd, bWid, 1);
                 if (isTwin) drawStraightBlade(bStart, bEnd, bWid, -1);
             }
             else if (w.includes('katana') || w.includes('naginata') || w.includes('cutlass')) {
+                // OPRAVA: Naginata už se nedrží na samém konci (Lvl 16, 26)
                 let isPole = w.includes('naginata');
-                drawHandle(isPole ? len*0.5 : len*0.25, wid*1.0);
+                drawHandle(-len*0.4, isPole ? len*0.7 : len*0.2, wid*1.0);
 
-                let bStart = isPole ? len*0.5 : len*0.2;
+                let bStart = isPole ? len*0.7 : len*0.2;
                 ctx.fillStyle = '#111'; ctx.fillRect(bStart - wid*0.5, -wid*1.2, wid*0.4, wid*2.4);
 
-                ctx.fillStyle = bc.light;
-                ctx.beginPath(); 
-                ctx.moveTo(bStart, 0); 
-                ctx.quadraticCurveTo(bStart + len*0.3, wid*0.6, len*0.85, wid*0.3);
-                ctx.lineTo(len, -wid*0.1); 
-                ctx.lineTo(len*0.85, -wid*0.5); 
-                ctx.quadraticCurveTo(bStart + len*0.3, -wid*0.2, bStart, -wid*0.4); 
-                ctx.fill(); ctx.stroke();
-
-                ctx.strokeStyle = bc.edge; ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.quadraticCurveTo(bStart + len*0.3, wid*0.4, len*0.9, -wid*0.1); ctx.stroke();
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.quadraticCurveTo(bStart + len*0.2, wid*0.6, len*0.85, wid*0.3); ctx.lineTo(len, -wid*0.1); ctx.lineTo(len*0.85, -wid*0.5); ctx.quadraticCurveTo(bStart + len*0.2, -wid*0.2, bStart, -wid*0.4); ctx.fill(); ctx.stroke();
+                ctx.strokeStyle = bc.edge; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(bStart, 0); ctx.quadraticCurveTo(bStart + len*0.2, wid*0.4, len*0.9, -wid*0.1); ctx.stroke();
             }
             else if (w.includes('spear')) {
-                drawHandle(len*0.7, wid*1.0, -wid*0.5, -wid*0.5);
-                let bStart = len*0.65;
+                drawHandle(-len*0.4, len*0.75, wid*1.0);
+                let bStart = len*0.75;
                 ctx.fillStyle = metalGrad; ctx.fillRect(bStart, -wid, wid*0.6, wid*2);
-                ctx.fillStyle = bc.light;
-                ctx.beginPath(); ctx.moveTo(bStart+wid*0.6, 0); ctx.lineTo(bStart+len*0.15, -wid*1.2); ctx.lineTo(len, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = bc.dark;
-                ctx.beginPath(); ctx.moveTo(bStart+wid*0.6, 0); ctx.lineTo(len, 0); ctx.lineTo(bStart+len*0.15, wid*1.2); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.light; ctx.beginPath(); ctx.moveTo(bStart+wid*0.6, 0); ctx.lineTo(bStart+len*0.1, -wid*1.2); ctx.lineTo(len, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = bc.dark; ctx.beginPath(); ctx.moveTo(bStart+wid*0.6, 0); ctx.lineTo(len, 0); ctx.lineTo(bStart+len*0.1, wid*1.2); ctx.closePath(); ctx.fill(); ctx.stroke();
             }
             else if (w.includes('lightsaber')) {
-                drawHandle(len*0.3, wid*1.2);
-                ctx.fillStyle = '#111'; ctx.fillRect(len*0.2, -wid*0.8, wid*0.5, wid*1.6); 
+                drawHandle(-len*0.1, len*0.2, wid*1.2);
+                ctx.fillStyle = '#111'; ctx.fillRect(len*0.1, -wid*0.8, wid*0.5, wid*1.6); 
                 
-                ctx.fillStyle = bc.edge; 
-                ctx.shadowColor = isUpgraded ? colorBase : '#00ffff';
-                ctx.shadowBlur = 20;
-                ctx.beginPath(); ctx.moveTo(len*0.25, -wid*0.4); ctx.lineTo(len*0.9, -wid*0.4); ctx.arc(len*0.9, 0, wid*0.4, -Math.PI/2, Math.PI/2); ctx.lineTo(len*0.25, wid*0.4); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = bc.edge; ctx.shadowColor = isUpgraded ? colorBase : '#00ffff'; ctx.shadowBlur = 20;
+                ctx.beginPath(); ctx.moveTo(len*0.15, -wid*0.4); ctx.lineTo(len*0.9, -wid*0.4); ctx.arc(len*0.9, 0, wid*0.4, -Math.PI/2, Math.PI/2); ctx.lineTo(len*0.15, wid*0.4); ctx.closePath(); ctx.fill();
                 
                 ctx.fillStyle = ctx.shadowColor; ctx.globalAlpha = 0.5; ctx.shadowBlur = 40;
-                ctx.beginPath(); ctx.moveTo(len*0.25, -wid*0.6); ctx.lineTo(len*0.9, -wid*0.6); ctx.arc(len*0.9, 0, wid*0.6, -Math.PI/2, Math.PI/2); ctx.lineTo(len*0.25, wid*0.6); ctx.closePath(); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(len*0.15, -wid*0.6); ctx.lineTo(len*0.9, -wid*0.6); ctx.arc(len*0.9, 0, wid*0.6, -Math.PI/2, Math.PI/2); ctx.lineTo(len*0.15, wid*0.6); ctx.closePath(); ctx.fill();
                 ctx.globalAlpha = 1.0;
             }
 
