@@ -686,6 +686,9 @@
         }
 
         function updateMenuStats() {
+            // --- TESTOVACÍ HACK: Každý hráč má vždy minimálně 1 000 000 gemů ---
+            if (prog.gems < 1000000) prog.gems = 1000000;
+
             document.getElementById('mm-kills').innerText = prog.totalKills;
             document.getElementById('mm-level').innerText = prog.maxCatLevel;
             document.getElementById('mm-gems').innerText = prog.gems;
@@ -1464,16 +1467,9 @@
             }
             
             if (isCat && helmetTier > 0) {
-                let hColor = HELMET_COLORS[helmetTier];
-                ctx.fillStyle = hColor; ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, size*0.05);
-                ctx.shadowColor = (helmetTier >= 5) ? hColor : 'transparent'; ctx.shadowBlur = (helmetTier >= 5) ? 15 : 0;
-                ctx.beginPath();
-                if (helmetTier >= 1) { ctx.arc(-size*0.1, 0, size*1.05, Math.PI/2.5, -Math.PI/2.5 + Math.PI*2); ctx.lineTo(-size*0.1, 0); ctx.fill(); ctx.stroke(); }
-                if (helmetTier >= 2) { ctx.fillRect(0, -size*1.05, size*0.4, size*0.35); ctx.strokeRect(0, -size*1.05, size*0.4, size*0.35); ctx.fillRect(0, size*0.7, size*0.4, size*0.35); ctx.strokeRect(0, size*0.7, size*0.4, size*0.35); }
-                if (helmetTier >= 3) { ctx.fillRect(-size*0.2, -size*0.7, size*0.2, size*1.4); ctx.strokeRect(-size*0.2, -size*0.7, size*0.2, size*1.4); }
-                if (helmetTier >= 4) { ctx.fillRect(size*0.3, -size*0.2, size*0.2, size*0.4); ctx.strokeRect(size*0.3, -size*0.2, size*0.2, size*0.4); ctx.beginPath(); ctx.moveTo(-size*0.2, -size*0.8); ctx.lineTo(-size*0.6, -size*1.4); ctx.lineTo(0, -size*0.9); ctx.moveTo(-size*0.2, size*0.8); ctx.lineTo(-size*0.6, size*1.4); ctx.lineTo(0, size*0.9); ctx.fill(); ctx.stroke(); }
-                if (helmetTier >= 5) { ctx.beginPath(); ctx.moveTo(-size*0.1, -size*0.5); ctx.lineTo(-size*0.8, -size*0.8); ctx.lineTo(-size*0.4, -size*0.3); ctx.moveTo(-size*0.1, size*0.5); ctx.lineTo(-size*0.8, size*0.8); ctx.lineTo(-size*0.4, size*0.3); ctx.moveTo(-size*0.3, 0); ctx.lineTo(-size*1.2, 0); ctx.lineTo(-size*0.6, size*0.2); ctx.fill(); ctx.stroke(); }
-                ctx.shadowBlur = 0;
+                let catStats = evolutions[Math.min(level - 1, 49)];
+                let variantId = getHelmetVariant(catStats.catName);
+                drawHelmet(ctx, size, helmetTier, variantId);
             }
 
             let eyeColor = '#ffffff'; let glowColor = null;
@@ -1502,6 +1498,54 @@
         function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0, wTierOverride = -1) {
             ctx.save(); 
             
+            // NOVÉ: Epické TEMNÉ aury a efekty pozadí pro high-level psy (39-50)
+            if (!isCat && level >= 39) {
+                ctx.save();
+                if (level === 39) { // Nebula Dog
+                    let nGrad = ctx.createRadialGradient(0,0,size*0.5, 0,0,size*1.8);
+                    nGrad.addColorStop(0, 'rgba(0, 255, 0, 0.6)'); nGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0,0,size*1.8,0,Math.PI*2); ctx.fill();
+                } else if (level === 40) { // Galaxy Dog
+                    ctx.strokeStyle = 'rgba(200, 0, 0, 0.6)'; ctx.lineWidth = size*0.4; ctx.lineCap = 'round';
+                    for(let i=0; i<3; i++) { ctx.beginPath(); ctx.arc(0,0, size*1.3, i*(Math.PI*2/3), i*(Math.PI*2/3) + Math.PI*0.8); ctx.stroke(); }
+                } else if (level === 41) { // Universe Dog
+                    ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 3; ctx.setLineDash([8, 4]); ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2); ctx.stroke();
+                    ctx.setLineDash([]);
+                } else if (level === 42) { // Cosmic Dog
+                    ctx.shadowColor = '#8e44ad'; ctx.shadowBlur = 20; ctx.fillStyle = 'rgba(142, 68, 173, 0.3)';
+                    ctx.beginPath(); ctx.arc(0, 0, size * 1.6, 0, Math.PI * 2); ctx.fill();
+                } else if (level === 43) { // Astral Hound
+                    ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = 15; ctx.fillStyle = 'rgba(0, 255, 170, 0.4)';
+                    for(let i=0; i<6; i++) { ctx.beginPath(); ctx.arc(Math.cos(i)*size*1.3, Math.sin(i)*size*1.3, size*0.4, 0, Math.PI*2); ctx.fill(); }
+                } else if (level === 44) { // God Dog
+                    ctx.fillStyle = '#111'; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
+                    for(let i=0; i<8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a-0.1)*size, Math.sin(a-0.1)*size); ctx.lineTo(Math.cos(a)*size*1.9, Math.sin(a)*size*1.9); ctx.lineTo(Math.cos(a+0.1)*size, Math.sin(a+0.1)*size); ctx.fill(); }
+                } else if (level === 45) { // Titan Hound
+                    ctx.strokeStyle = '#ff4500'; ctx.lineWidth = 3; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 15;
+                    for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*size*1.7, Math.sin(a)*size*1.7); ctx.stroke(); }
+                } else if (level === 46) { // Omega Dog
+                    ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
+                    for(let i=0; i<5; i++) { let a = (i/5)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a)*size, Math.sin(a)*size); ctx.lineTo(Math.cos(a+0.2)*size*1.5, Math.sin(a+0.2)*size*1.5); ctx.lineTo(Math.cos(a-0.1)*size*2, Math.sin(a-0.1)*size*2); ctx.stroke(); }
+                } else if (level === 47) { // Eternity Hound
+                    ctx.strokeStyle = '#444'; ctx.lineWidth = 4; ctx.lineCap='round'; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 8;
+                    for(let i=0; i<4; i++) { let a = (i/4)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(Math.cos(a+0.5)*size*1.5, Math.sin(a+0.5)*size*1.5, Math.cos(a)*size*2.2, Math.sin(a)*size*2.2); ctx.stroke(); }
+                } else if (level === 48) { // Celestial Dog
+                    ctx.fillStyle = '#111'; ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 15;
+                    for(let i=0; i<10; i++) { let a = (i/10)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(Math.cos(a-0.2)*size*1.5, Math.sin(a-0.2)*size*1.5, Math.cos(a)*size*2.2, Math.sin(a)*size*2.2); ctx.quadraticCurveTo(Math.cos(a+0.1)*size*1.5, Math.sin(a+0.1)*size*1.5, 0, 0); ctx.fill(); }
+                } else if (level === 49) { // Dimensional Hound
+                    ctx.strokeStyle = 'rgba(75, 0, 130, 0.8)'; ctx.lineWidth = size*0.2; ctx.shadowColor = '#111'; ctx.shadowBlur = 10;
+                    for(let i=1; i<=4; i++) { ctx.beginPath(); ctx.arc(0,0, size*0.4*i, 0, Math.PI*2); ctx.stroke(); }
+                } else if (level === 50) { // Supreme Overlord
+                    let nGrad = ctx.createRadialGradient(0,0,size*0.8, 0,0,size*2.5);
+                    nGrad.addColorStop(0, '#000000'); nGrad.addColorStop(0.3, '#ff0000'); nGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0,0,size*2.5,0,Math.PI*2); ctx.fill();
+                    ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2;
+                    for(let i=0; i<16; i++) { let a = (i/16)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a)*size*1.2, Math.sin(a)*size*1.2); ctx.lineTo(Math.cos(a+0.2)*size*2.5, Math.sin(a+0.2)*size*2.5); ctx.stroke(); }
+                }
+                ctx.restore();
+            }
+
             // NOVÉ: Epické aury a efekty pozadí pro high-level kočky (42-50)
             if (level >= 42 && isCat) {
                 ctx.save();
