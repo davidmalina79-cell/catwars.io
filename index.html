@@ -320,6 +320,11 @@
                         <label class="mod-label"><input type="checkbox" id="mod-doubleboss" onchange="calcModMultiplier()"> 👹 Double Bosses <span class="mod-bonus">+100%</span></label>
                         <label class="mod-label"><input type="checkbox" id="mod-fast" onchange="calcModMultiplier()"> ⚡ Rabid Dogs (Fast) <span class="mod-bonus">+50%</span></label>
                         <label class="mod-label"><input type="checkbox" id="mod-nodash" onchange="calcModMultiplier()"> 🐢 No Dash <span class="mod-bonus">+50%</span></label>
+                        
+                        <label class="mod-label" style="border-top: 2px solid #444; padding-top: 10px; margin-top: 5px; justify-content: center;">
+                            <input type="checkbox" id="mod-comp-hardcore" onchange="toggleCompetitiveHardcore()">
+                            <span style="color: #f1c40f; font-weight: 900; text-shadow: 1px 1px 2px #000; font-size: 15px;">🏆 COMPETITIVE HARDCORE</span>
+                        </label>
                     </div>
                     <div style="margin-top: 10px; font-weight: bold; color: #f1c40f; text-align: center; border-top: 1px solid #444; padding-top: 10px;">
                         Gem Multiplier: <span id="mod-total-mult" style="font-size: 20px;">1.0</span>x
@@ -401,6 +406,7 @@
             <div class="stat-box" id="ui-team-kills-box" style="display:none; color: #3498db; border-color: #3498db;">👥 <span id="ui-team-kills">0</span></div>
             <div class="stat-box gem-text">💎 <span id="ui-gems">0</span></div>
             <div class="stat-box combo-text" id="combo-box">🔥 <span id="ui-combo">0</span>x</div>
+            <div class="stat-box" style="color: #e74c3c; border-color: #e74c3c; box-shadow: 0 0 10px rgba(231, 76, 60, 0.4);">⏱️ <span id="ui-timer">00:00</span></div>
         </div>
         
         <div class="top-bar">
@@ -444,11 +450,12 @@
 
     <!-- DEATH SCREEN -->
     <div id="death-screen" class="overlay" style="display: none; background: rgba(0, 0, 0, 0.85); z-index: 150;">
-        <div class="panel" style="border-color: var(--danger); max-width: 450px;">
-            <h1 style="color: var(--danger); margin-bottom: 10px; font-size: 45px;">WASTED</h1>
-            <p style="font-size: 18px; color: #ddd; margin-bottom: 15px;">A dog ended your meow-journey.</p>
+        <div class="panel" id="ds-panel" style="border-color: var(--danger); max-width: 450px;">
+            <h1 id="ds-title" style="color: var(--danger); margin-bottom: 10px; font-size: 45px;">WASTED</h1>
+            <p id="ds-subtitle" style="font-size: 18px; color: #ddd; margin-bottom: 15px;">A dog ended your meow-journey.</p>
 
             <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <p id="ds-time-text" style="font-size: 24px; font-weight: 900; color: #e74c3c; margin: 0 0 10px 0; text-shadow: 1px 1px 2px #000; display: none;">Time: <span id="ds-final-time">00:00</span></p>
                 <p style="font-size: 20px; margin: 5px 0;">Level <strong id="ds-final-level"></strong> (<strong id="ds-final-name"></strong>)</p>
                 <p style="font-size: 16px; color: #aaa; margin: 5px 0;">Kills: <span id="ds-final-kills">0</span> | Best Combo: <span id="ds-final-combo">0</span>x</p>
                 <p class="gem-text" style="font-size: 20px; font-weight: bold; margin: 10px 0;">💎 Gems found: <span id="ds-final-gems">0</span></p>
@@ -634,7 +641,7 @@
     <!-- ================================================================================================= -->
     <script>
         // GLOBAL SCOPE DECLARATIONS (FIX PRO OFFLINE GUEST CHYBU)
-        var defaultProg = { nickname: '', globalLevel: 1, globalXp: 0, maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [] };
+        var defaultProg = { nickname: '', globalLevel: 1, globalXp: 0, maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [], bestTimes: { solo: null, hardcore: null } };
         var prog = { ...defaultProg };
         var currentGemMultiplier = 1.0; 
         var activeMods = { doubleDmg: false, noHeal: false, doubleBoss: false, fast: false, noDash: false };
@@ -742,6 +749,17 @@
             return mult;
         }
         window.calcModMultiplier = calcModMultiplier;
+
+        function toggleCompetitiveHardcore() {
+            let isChecked = document.getElementById('mod-comp-hardcore').checked;
+            document.getElementById('mod-double-dmg').checked = isChecked;
+            document.getElementById('mod-noheal').checked = isChecked;
+            document.getElementById('mod-doubleboss').checked = isChecked;
+            document.getElementById('mod-fast').checked = isChecked;
+            document.getElementById('mod-nodash').checked = isChecked;
+            calcModMultiplier();
+        }
+        window.toggleCompetitiveHardcore = toggleCompetitiveHardcore;
 
         let selectedGameMode = 'solo';
         function selectMode(mode) {
@@ -1755,7 +1773,7 @@
         let foods = [], enemies = [], particles = [], decorations = [], damageNumbers = [], aiCats = [];
         let gameState = 'menu', hitStop = 0, bossSpawnTimer = 0, miniBossSpawnTimer = 0, currentReviveCost = 0;
         let combo = 0, comboTimer = 0;
-        let isHardcoreMode = false; 
+        let isHardcoreMode = false, gameStartTime = 0, finalBossSpawned = false, gameWon = false;
         const COMBO_WINDOW = 3.0, COMBO_BUFF_THRESHOLD = 5;
         let lastTime = 0; 
         
@@ -1815,6 +1833,7 @@
 
             player = { name: prog.nickname, x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: finalMaxHp, maxHp: finalMaxHp, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
             playerRunData = { kills: 0, teamKills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 }; combo = 0; comboTimer = 0;
+            gameStartTime = performance.now(); finalBossSpawned = false; gameWon = false;
             
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
@@ -1914,6 +1933,60 @@
             enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#111111', pattern: 'demon', weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), playerDamaged: false, invuln: 0 });
             
             let alert = document.getElementById('boss-alert'); alert.innerText = '⚠️ MINI-BOSS SPAWNED!'; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 2500);
+        }
+
+        function spawnFinalBoss() {
+            finalBossSpawned = true;
+            let ex = WORLD_SIZE / 2; let ey = WORLD_SIZE / 2; 
+            
+            let stats = evolutions[49]; // God Cat variant pre Overlorda
+            let bossLvl = 60;
+            let bossHp = 200000 * (activeMods.doubleDmg ? 1.5 : 1.0); // Absolutní monstrum
+            let bossDmg = 350 * (activeMods.doubleDmg ? 2 : 1);
+            
+            enemies.push({ 
+                x: ex, y: ey, level: bossLvl, name: 'SUPREME OVERLORD', size: stats.baseSize * 2.5, 
+                speed: 380, weaponLength: stats.weaponLength * 1.5, angle: 0, attackTimer: 0, 
+                attackCooldown: 1.0, hasAttacked: false, state: 'chase', stateTimer: 9999, 
+                color: '#111111', accent: '#ff0000', pattern: 'god', weaponType: 'infinity blade', 
+                hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, isFinalBoss: true, 
+                knockbackVx: 0, knockbackVy: 0, archetype: 'heavy', ability: 'stomp', 
+                specialTimer: 4.0, specialPhase: 0, playerDamaged: false 
+            });
+            
+            playSound('boss');
+            let alert = document.getElementById('boss-alert'); 
+            alert.innerHTML = '🔥 THE END HAS COME! 🔥<br>DEFEAT SUPREME OVERLORD!'; 
+            alert.style.display = 'block'; alert.style.background = 'rgba(0,0,0,0.9)'; 
+            alert.style.color = '#ff0000'; alert.style.border = '4px solid #ff0000';
+            setTimeout(() => { alert.style.display = 'none'; alert.style.background = 'rgba(231, 76, 60, 0.9)'; alert.style.color = 'white'; alert.style.border = '4px solid #fff'; }, 5000);
+        }
+
+        function triggerWin() {
+            if (gameWon) return;
+            gameWon = true;
+            gameState = 'game_over';
+            
+            let timeElapsedMs = performance.now() - gameStartTime;
+            let minutes = Math.floor(timeElapsedMs / 60000);
+            let seconds = Math.floor((timeElapsedMs % 60000) / 1000);
+            let timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            let isCompHardcore = selectedGameMode === 'hardcore' && 
+                activeMods.doubleDmg && activeMods.noHeal && activeMods.doubleBoss && activeMods.fast && activeMods.noDash;
+
+            if (!prog.bestTimes) prog.bestTimes = { solo: null, hardcore: null };
+            
+            if (isCompHardcore) {
+                if (!prog.bestTimes.hardcore || timeElapsedMs < prog.bestTimes.hardcore) prog.bestTimes.hardcore = timeElapsedMs;
+            } else if (selectedGameMode === 'solo') {
+                if (!prog.bestTimes.solo || timeElapsedMs < prog.bestTimes.solo) prog.bestTimes.solo = timeElapsedMs;
+            }
+            
+            // Masivní exploze a ohňostroje
+            for(let p=0; p<150; p++) { let pt = getParticle(); pt.x=player.x+(Math.random()-0.5)*1000; pt.y=player.y+(Math.random()-0.5)*1000; pt.vx=(Math.random()-0.5)*1500; pt.vy=(Math.random()-0.5)*1500; pt.life=2.0; pt.color=['#f1c40f','#e74c3c','#3498db','#2ecc71'][Math.floor(Math.random()*4)]; pt.size = 15; particles.push(pt); }
+            
+            setTimeout(() => showDeathScreen(true, timeStr, isCompHardcore), 2000);
         }
 
         function dropGems(x, y, count, type = 'normal') { 
@@ -2063,6 +2136,11 @@
                 if (tutorialActive) { tutorialTimer -= dt; if (tutorialTimer <= 0) { tutorialIdx++; showTutorial(); } }
                 if (combo > 0) { comboTimer -= dt; if (comboTimer <= 0) { combo = 0; updateUI(); } }
 
+                let elapsedMs = currentTime - gameStartTime;
+                let uiM = Math.floor(elapsedMs / 60000);
+                let uiS = Math.floor((elapsedMs % 60000) / 1000);
+                document.getElementById('ui-timer').innerText = `${uiM}:${uiS.toString().padStart(2, '0')}`;
+
                 if (hitStop > 0) { hitStop -= dt; draw(stats); requestAnimationFrame(gameLoop); return; }
 
                 if (frameCounter % 2 === 0) rebuildGrids();
@@ -2192,6 +2270,7 @@
                                 
                                 if (targetDog.hp <= 0) {
                                     playerRunData.teamKills++; updateUI();
+                                    if (targetDog.isFinalBoss) triggerWin();
                                     
                                     if (targetDog.playerDamaged) {
                                         prog.totalKills++; 
@@ -2289,6 +2368,16 @@
                 player.knockbackVx *= Math.pow(0.001, dt); player.knockbackVy *= Math.pow(0.001, dt);
                 player.x = Math.max(pSize, Math.min(WORLD_SIZE - pSize, player.x)); player.y = Math.max(pSize, Math.min(WORLD_SIZE - pSize, player.y));
                 
+                if (!finalBossSpawned) {
+                    let highestLevel = player.level;
+                    if (selectedGameMode === 'team') {
+                        for (let c of aiCats) if (c.level > highestLevel) highestLevel = c.level;
+                    }
+                    if (highestLevel >= 50) {
+                        spawnFinalBoss();
+                    }
+                }
+
                 bossSpawnTimer -= dt; 
                 if(bossSpawnTimer <= 0) { 
                     if (!enemies.some(e=>e.isBoss)) {
@@ -2460,6 +2549,8 @@
                                 questProgress('combo', combo); questProgress('kills', 1);
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
                                 if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
+                                
+                                if (e.isFinalBoss) triggerWin();
                                 
                                 if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = BOSS_RESPAWN_AFTER_KILL; playerRunData.bossKills++; } 
                                 else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss'); playerRunData.bossKills++; }
@@ -2633,10 +2724,45 @@
             arrow.style.left = (tx - 20) + 'px'; arrow.style.top = (ty - 20) + 'px'; arrow.style.transform = `rotate(${angle + Math.PI/2}rad)`;
         }
 
-                function showDeathScreen() { 
+        function showDeathScreen(isVictory = false, timeStr = "", isCompHardcore = false) { 
             gameState = 'death_menu'; document.body.classList.remove('low-hp'); 
             currentReviveCost = player.level * 10 + 20; 
             
+            let panel = document.getElementById('ds-panel');
+            let title = document.getElementById('ds-title');
+            let subtitle = document.getElementById('ds-subtitle');
+            let timeEl = document.getElementById('ds-time-text');
+            let reviveGemBtn = document.getElementById('btn-revive-gem');
+            let reviveAdBtn = document.getElementById('btn-revive-ad');
+            
+            if (isVictory) {
+                panel.style.borderColor = '#f1c40f';
+                panel.style.boxShadow = '0 0 50px rgba(241, 196, 15, 0.5)';
+                title.innerText = "VICTORY!";
+                title.style.color = '#f1c40f';
+                title.style.textShadow = '0 0 20px #f39c12';
+                subtitle.innerText = isCompHardcore ? "🏆 YOU BEAT COMPETITIVE HARDCORE!" : "You defeated the Supreme Overlord!";
+                subtitle.style.color = '#f1c40f';
+                subtitle.style.fontWeight = 'bold';
+                timeEl.style.display = 'block';
+                document.getElementById('ds-final-time').innerText = timeStr;
+                reviveGemBtn.style.display = 'none';
+                reviveAdBtn.style.display = 'none';
+                playerRunData.totalRunGems += 5000; // Bonus za výhru
+            } else {
+                panel.style.borderColor = 'var(--danger)';
+                panel.style.boxShadow = '0 0 50px rgba(0,0,0,0.8)';
+                title.innerText = "WASTED";
+                title.style.color = 'var(--danger)';
+                title.style.textShadow = 'none';
+                subtitle.innerText = "A dog ended your meow-journey.";
+                subtitle.style.color = '#ddd';
+                subtitle.style.fontWeight = 'normal';
+                timeEl.style.display = 'none';
+                reviveGemBtn.style.display = 'block';
+                reviveAdBtn.style.display = 'block';
+            }
+
             let gainedXp = (player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500);
             document.getElementById('ds-final-gems').innerText = `${playerRunData.totalRunGems} (XP: +${gainedXp})`; 
             
