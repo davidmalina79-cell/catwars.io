@@ -202,10 +202,6 @@
         .mod-label:hover { background: rgba(255,255,255,0.1); }
         .mod-label input { transform: scale(1.2); cursor: pointer; accent-color: var(--danger); }
         .mod-bonus { color: #2ecc71; font-weight: bold; margin-left: auto; font-size: 12px; }
-
-        /* KILL FEED ANIMACE */
-        @keyframes fadeOutKillFeed { 0%, 75% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(-20px); } }
-        .kill-feed-item { animation: fadeOutKillFeed 4s forwards; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 6px; border-left: 3px solid; }
     </style>
 </head>
 <body>
@@ -282,7 +278,7 @@
                 
                 <h2 style="color: var(--primary); border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: auto;">🏆 Global</h2>
                 <button class="btn-main" onclick="window.openLeaderboard()" style="background: #e67e22; box-shadow: 0 6px 0 #d35400; width: 100%; font-size: 18px; padding: 15px; margin-top: 0;">🏆 Leaderboard</button>
-                <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 6px 0 #8e44ad; width: 100%; font-size: 18px; padding: 15px; margin-top: 15px; line-height: 1.2;">📺 Watch Ad<br><span style="font-size: 14px;">(+500 💎)</span></button>
+                <button class="btn-main" id="btn-ad-gems" onclick="window.watchAdForGems()" style="background: #9b59b6; box-shadow: 0 6px 0 #8e44ad; width: 100%; font-size: 18px; padding: 15px; margin-top: 15px; line-height: 1.2;">📺 Daily Bonus<br><span style="font-size: 14px;">(+500 💎)</span></button>
             </div>
 
             <!-- CENTER COLUMN: Play Area -->
@@ -423,9 +419,6 @@
                 Move: Mouse | Attack: Left Click | Dash: Space / Right Click | Pause: ESC
             </div>
         </div>
-        
-        <!-- KILL FEED PRO MULTIPLAYER -->
-        <div id="kill-feed" style="position: absolute; bottom: 100px; left: 20px; display: flex; flex-direction: column-reverse; gap: 5px; z-index: 45; pointer-events: none; text-shadow: 1px 1px 2px #000; font-weight: bold; font-size: 14px; width: 300px;"></div>
     </div>
     
     <canvas id="minimap" width="160" height="160"></canvas>
@@ -482,6 +475,10 @@
     <!-- ================================= MODULE: DATA & CONSTANTS ====================================== -->
     <!-- ================================================================================================= -->
     <script>
+        const INITIAL_BOSS_DELAY = 60;
+        const BOSS_RESPAWN_AFTER_KILL = 90;
+        const BOSS_TIMEOUT = 120;
+
         const CHEST_TYPES = { 
             wood: { hp: 500, gems: [3, 6], color: '#6b4423', metal: '#7f8c8d', weight: 0.70, size: 130 }, 
             iron: { hp: 1500, gems: [10, 18], color: '#7f8c8d', metal: '#bdc3c7', weight: 0.20, size: 130 }, 
@@ -618,9 +615,16 @@
         let availableBotNames = [...BOT_NAMES];
         
         function getBotName() {
-            if (availableBotNames.length === 0) availableBotNames = [...BOT_NAMES];
+            if (availableBotNames.length === 0) {
+                let suffix = Math.floor(Math.random() * 100);
+                availableBotNames = BOT_NAMES.map(n => n + "_" + suffix);
+            }
             let idx = Math.floor(Math.random() * availableBotNames.length);
             return availableBotNames.splice(idx, 1)[0];
+        }
+
+        function escapeHtml(s) { 
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
         }
 
     </script>
@@ -634,6 +638,7 @@
         var prog = { ...defaultProg };
         var currentGemMultiplier = 1.0; 
         var activeMods = { doubleDmg: false, noHeal: false, doubleBoss: false, fast: false, noDash: false };
+        const DEV_MODE = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         
         window.currentUserUid = null;
 
@@ -671,6 +676,12 @@
             updateMenuStats(); 
         }
 
+        let saveTimeout = null;
+        function debouncedForceSaveNow() {
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => { forceSaveNow(); }, 4000);
+        }
+
         async function forceSaveNow() {
             if (window.currentUserUid) {
                 localStorage.setItem('catwars_save_' + window.currentUserUid, JSON.stringify(prog)); 
@@ -686,8 +697,7 @@
         }
 
         function updateMenuStats() {
-            // --- TESTOVACÍ HACK: Každý hráč má vždy minimálně 1 000 000 gemů ---
-            if (prog.gems < 1000000) prog.gems = 1000000;
+            if (DEV_MODE && prog.gems < 1000000) prog.gems = 1000000;
 
             document.getElementById('mm-kills').innerText = prog.totalKills;
             document.getElementById('mm-level').innerText = prog.maxCatLevel;
@@ -769,11 +779,11 @@
         function watchAdForGems() {
             let btn = document.getElementById('btn-ad-gems');
             let originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ Playing Ad...";
+            btn.innerHTML = "⏳ Claiming...";
             btn.disabled = true;
             setTimeout(() => {
                 prog.gems += 500;
-                forceSaveNow(); 
+                debouncedForceSaveNow(); 
                 playSound('gem');
                 updateMenuStats();
                 btn.innerHTML = originalText;
@@ -783,7 +793,7 @@
         window.watchAdForGems = watchAdForGems;
 
         function rollDailyQuestsIfNeeded() {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = new Date().toLocaleDateString('sv-SE');
             if (prog.questDate !== today || !prog.quests || !prog.quests.length) {
                 prog.questDate = today;
                 const shuffled = [...QUEST_POOL].sort(() => Math.random() - 0.5);
@@ -810,8 +820,8 @@
             const q = prog.quests.find(x => x.id === id);
             if (!q || q.claimed || q.progress < q.goal) return;
             q.claimed = true;
-            prog.gems += q.reward;
-            forceSaveNow(); 
+            prog.gems += Math.floor(q.reward * currentGemMultiplier);
+            debouncedForceSaveNow(); 
             playSound('gem');
             switchTab('quests');
         }
@@ -865,16 +875,22 @@
         window.addEventListener('keyup', (e) => { if(e.code === 'Space') isRightMouseDown = false; });
 
         window.addEventListener('touchstart', (e) => { 
+            if (e.touches.length > 1) return;
             if (e.target.closest('button, [role="button"], .overlay, input')) return; 
             if(e.target.id !== 'dash-container') { 
                 e.preventDefault(); mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; isMouseDown = true; initAudio(); 
             } 
         }, {passive: false});
         window.addEventListener('touchmove', (e) => { 
+            if (e.touches.length > 1) return;
             if (e.target.closest('button, [role="button"], .overlay, input')) return;
             e.preventDefault(); mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; 
         }, {passive: false});
         window.addEventListener('touchend', (e) => { if(e.touches.length === 0) isMouseDown = false; }, {passive: false});
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && gameState === 'playing') togglePause();
+        });
 
         function triggerDash(e) {
             e.stopPropagation(); e.preventDefault(); initAudio();
@@ -916,18 +932,6 @@
                 }
             }
             return result;
-        }
-
-        function pushKillFeed(html) {
-            if(selectedGameMode !== 'team') return;
-            let container = document.getElementById('kill-feed');
-            let el = document.createElement('div');
-            el.className = 'kill-feed-item';
-            el.style.borderColor = html.includes('💀') ? '#e74c3c' : '#3498db';
-            el.innerHTML = html;
-            container.prepend(el);
-            setTimeout(() => { if(el.parentElement) el.remove(); }, 4000);
-            if(container.children.length > 5) container.lastChild.remove();
         }
 
         // DRAWING
@@ -1743,12 +1747,12 @@
         function getWeaponDataURL(weaponType, upgradeTier = 0) {
             let key = `${weaponType}_${upgradeTier}`;
             if (weaponCache[key]) return weaponCache[key];
-            let tempC = document.createElement('canvas'); tempC.width = 180; tempC.height = 180;
-            // POSUNUTO O NĚCO NÍŽ A UPRAVENA VELIKOST PRO DELŠÍ ZBRANĚ
+            
+            let tempC = document.createElement('canvas'); tempC.width = 240; tempC.height = 240;
             let tCtx = tempC.getContext('2d'); tCtx.translate(90, 160); tCtx.rotate(-Math.PI / 2);
             let size = 30; // Zmenšeno ze 42 na 30, aby se i godslayer vešel do ikonky
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
-            let sizeMult = UPGRADE_SIZE_MULT[upgradeTier];
+            let sizeMult = UPGRADE_SIZE_MULT[upgradeTier] || 1.0;
             let wLen = (size * 2.5) * archStats.reachMult * sizeMult; 
             let wWid = Math.max(6, size * 0.22) * sizeMult;
             drawWeaponShape(tCtx, wLen, wWid, weaponType, '#ffffff', upgradeTier);
@@ -1767,7 +1771,7 @@
                     let gRank = getGlobalRankInfo(p.globalLevel || 1);
                     html += `<tr>
                         <td style="color:var(--primary);font-weight:bold;">#${i+1}</td>
-                        <td>${p.nickname || 'Unknown'}</td>
+                        <td>${escapeHtml(p.nickname || 'Unknown')}</td>
                         <td style="color:${gRank.color};font-weight:bold;text-shadow:1px 1px 2px #000;">Lv.${p.globalLevel || 1} ${gRank.stars}</td>
                         <td>${p.kills}</td>
                     </tr>`;
@@ -1788,7 +1792,6 @@
             document.getElementById('minimap').style.display = 'none'; document.getElementById('boss-arrow').style.display = 'none';
             document.getElementById('pause-btn').style.display = 'none'; document.getElementById('tutorial').style.display = 'none';
             document.getElementById('pause-overlay').style.display = 'none'; 
-            document.getElementById('kill-feed').innerHTML = ''; 
             document.getElementById('main-menu').style.display = 'flex'; document.body.classList.remove('low-hp'); 
             gameState = 'menu'; updateMenuStats(); 
         }
@@ -1801,10 +1804,8 @@
 
         function switchTab(tab) {
             document.querySelectorAll('.enc-tab').forEach(b => b.classList.remove('active'));
-            if (tab === 'cats') document.querySelectorAll('.enc-tab')[0].classList.add('active');
-            if (tab === 'dogs') document.querySelectorAll('.enc-tab')[1].classList.add('active');
-            if (tab === 'armory') document.querySelectorAll('.enc-tab')[2].classList.add('active');
-            if (tab === 'quests') document.querySelectorAll('.enc-tab')[3].classList.add('active');
+            let targetTab = document.querySelector(`.enc-tab[onclick*="('${tab}')"]`);
+            if (targetTab) targetTab.classList.add('active');
             
             let content = document.getElementById('enc-content');
             
@@ -2042,10 +2043,10 @@
             
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
-            document.getElementById('kill-feed').innerHTML = ''; 
             
-            foods = []; enemies = []; decorations = []; chests = []; droppedGems = []; aiCats = []; hitStop = 0; bossSpawnTimer = 60; miniBossSpawnTimer = 30; 
+            foods = []; enemies = []; decorations = []; chests = []; droppedGems = []; aiCats = []; hitStop = 0; bossSpawnTimer = INITIAL_BOSS_DELAY; miniBossSpawnTimer = 30; 
             mouseX = width/2; mouseY = height/2; isMouseDown = false; dashRequested = false;
+            availableBotNames = [...BOT_NAMES];
             
             for(let i=0; i<DECORATION_COUNT; i++) {
                 let r = Math.random(); let type = r > 0.5 ? 'grass' : (r > 0.2 ? 'rock' : 'flower');
@@ -2099,7 +2100,7 @@
                 size: cStats.baseSize, speed: cStats.speed, angle: Math.random() * Math.PI * 2, 
                 attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, attackProgress: 0,
                 knockbackVx: 0, knockbackVy: 0, state: 'wander', wTier: wTier, hTier: hTier, xp: 0,
-                invuln: 0, personality: pType
+                invuln: 0, personality: pType, searchOffset: Math.floor(Math.random() * 4)
             });
         }
 
@@ -2135,7 +2136,7 @@
             let eSpeed = pStats.speed * 0.85 * variant.speedMult;
             if (activeMods.fast) eSpeed *= 1.5;
 
-            enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#111111', pattern: 'demon', weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), playerDamaged: false });
+            enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#111111', pattern: 'demon', weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), playerDamaged: false, invuln: 0 });
             
             let alert = document.getElementById('boss-alert'); alert.innerText = '⚠️ MINI-BOSS SPAWNED!'; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 2500);
         }
@@ -2171,7 +2172,7 @@
             let eSpeed = stats.speed * 0.82;
             if (activeMods.fast) eSpeed *= 1.5; 
 
-            enemies.push({ x: ex, y: ey, level: enemyLevel, name: stats.dogName, size: stats.baseSize, speed: eSpeed, weaponLength: stats.weaponLength * archStats.reachMult, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 0.83 * archStats.cdMult, hasAttacked: false, state: 'wander', stateTimer: 0, color: stats.dogColor, accent: stats.accent, pattern: stats.pattern, weaponType: stats.weaponType, hp: stats.maxHp, maxHp: stats.maxHp, damage: stats.enemyDamage * archStats.dmgMult, isBoss: false, isMiniBoss: false, knockbackVx: 0, knockbackVy: 0, archetype: arch, playerDamaged: false });
+            enemies.push({ x: ex, y: ey, level: enemyLevel, name: stats.dogName, size: stats.baseSize, speed: eSpeed, weaponLength: stats.weaponLength * archStats.reachMult, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 0.83 * archStats.cdMult, hasAttacked: false, state: 'wander', stateTimer: 0, color: stats.dogColor, accent: stats.accent, pattern: stats.pattern, weaponType: stats.weaponType, hp: stats.maxHp, maxHp: stats.maxHp, damage: stats.enemyDamage * archStats.dmgMult, isBoss: false, isMiniBoss: false, knockbackVx: 0, knockbackVy: 0, archetype: arch, playerDamaged: false, invuln: 0 });
         }
 
         function triggerLevelUpEffect(name) { playSound('meow'); let el = document.getElementById('level-up-text'); el.innerText = `LEVEL UP!\n${name}`; el.style.opacity = 1; el.style.transform = "translate(-50%, -60%) scale(1.2)"; setTimeout(() => { el.style.opacity = 0; el.style.transform = "translate(-50%, -50%) scale(1)"; }, 2000); }
@@ -2262,6 +2263,13 @@
                 currentZoom += (targetZoom - currentZoom) * (dt * 3);
                 let viewRadius = (Math.max(width, height) / currentZoom) * 0.6;
                 
+                for (let i = decorations.length - 1; i >= 0; i--) {
+                    if (decorations[i].life !== undefined) {
+                        decorations[i].life -= dt;
+                        if (decorations[i].life <= 0) decorations.splice(i, 1);
+                    }
+                }
+
                 for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx * dt; particles[i].y += particles[i].vy * dt; particles[i].life -= dt; if (particles[i].life <= 0) { releaseParticle(particles[i]); particles.splice(i, 1); } }
                 for (let i = damageNumbers.length - 1; i >= 0; i--) { damageNumbers[i].y += damageNumbers[i].vy * dt; damageNumbers[i].vy += 800 * dt; damageNumbers[i].life -= dt; if (damageNumbers[i].life <= 0) { releaseDmgNumber(damageNumbers[i]); damageNumbers.splice(i, 1); } }
                 for (let i = droppedGems.length - 1; i >= 0; i--) { 
@@ -2291,7 +2299,7 @@
                         dropGems(c.x, c.y, 5 + Math.floor(Math.random()*10));
                         
                         // SPAWN HROBEČKU A DUŠIČEK
-                        decorations.push({ x: c.x, y: c.y, type: 'tombstone', size: 1.2, rotation: 0, name: c.name });
+                        decorations.push({ x: c.x, y: c.y, type: 'tombstone', size: 1.2, rotation: 0, name: c.name, life: 45 });
                         for(let p=0; p<8; p++) {
                             let pt = getParticle(); pt.x = c.x; pt.y = c.y; pt.vx = (Math.random()-0.5)*80; pt.vy = -100 - Math.random()*150; pt.life = 2.5; pt.color = 'rgba(255, 255, 255, 0.6)'; pt.size = 12; particles.push(pt);
                         }
@@ -2322,8 +2330,14 @@
                         c.y += ((c.y - player.y) / distToPlayer) * overlap * (dt * 60) * 0.1;
                     }
 
+                    if (frameCounter % 4 === c.searchOffset || !c.nearEnemiesCache) {
+                        c.nearEnemiesCache = queryGridMap(gridEnemies, c.x, c.y, c.personality === 'aggro' ? 2200 : 1200);
+                        c.nearFoodsCache = queryGridMap(gridFoods, c.x, c.y, c.personality === 'greedy' ? 1800 : 1000);
+                        c.nearGemsCache = queryGridMap(gridGems, c.x, c.y, c.personality === 'greedy' ? 1800 : 1000);
+                    }
+                    
                     let searchRadiusDog = c.personality === 'aggro' ? 2200 : 1200;
-                    let nearEnemies = queryGridMap(gridEnemies, c.x, c.y, searchRadiusDog);
+                    let nearEnemies = c.nearEnemiesCache;
                     let nearestDog = null, minDogDist = Infinity;
                     let nearestBoss = null, minBossDist = Infinity;
                     for(let e of nearEnemies) {
@@ -2334,14 +2348,14 @@
                     let targetDog = (nearestBoss && minBossDist < 2500) ? nearestBoss : nearestDog;
 
                     let searchRadiusFood = c.personality === 'greedy' ? 1800 : 1000;
-                    let nearFoods = queryGridMap(gridFoods, c.x, c.y, searchRadiusFood);
+                    let nearFoods = c.nearFoodsCache;
                     let nearestFood = null, minFoodDist = Infinity;
                     for(let f of nearFoods) {
                         let d = Math.hypot(f.x - c.x, f.y - c.y);
                         if (d < minFoodDist) { nearestFood = f; minFoodDist = d; }
                     }
 
-                    let nearGems = queryGridMap(gridGems, c.x, c.y, searchRadiusFood);
+                    let nearGems = c.nearGemsCache;
                     let nearestGem = null, minGemDist = Infinity;
                     for(let g of nearGems) {
                         let d = Math.hypot(g.x - c.x, g.y - c.y);
@@ -2402,7 +2416,6 @@
                                 if (cArchStats.knockback > 0) { let ang = Math.atan2(targetDog.y - c.y, targetDog.x - c.x); targetDog.knockbackVx = Math.cos(ang) * cArchStats.knockback; targetDog.knockbackVy = Math.sin(ang) * cArchStats.knockback; }
                                 
                                 if (targetDog.hp <= 0) {
-                                    pushKillFeed(`🤖 ${c.name} killed ${targetDog.name}`);
                                     playerRunData.teamKills++; updateUI();
                                     
                                     if (targetDog.playerDamaged) {
@@ -2456,6 +2469,11 @@
                 if (player.dashActive > 0) player.dashActive -= dt;
                 
                 let arch = getWeaponArchetype(stats.weaponType); let archStats = ARCH_STATS[arch];
+                let pHTier = prog.helmetUpgrades[player.level] || 0;
+
+                if (pHTier > 0 && player.hp < player.maxHp && !activeMods.noHeal) {
+                    player.hp = Math.min(player.maxHp, player.hp + (player.maxHp * pHTier * 0.005) * dt);
+                }
                 
                 if (player.attackTimer > 0) { player.attackTimer -= dt; player.attackProgress = 1 - (player.attackTimer / player.attackCooldown); } 
                 else { player.attackProgress = 0; player.hasAttacked = false; }
@@ -2502,7 +2520,7 @@
                         spawnBoss();
                         if (activeMods.doubleBoss) spawnBoss(); 
                     }
-                    bossSpawnTimer = 120; 
+                    bossSpawnTimer = BOSS_TIMEOUT; 
                 }
                 miniBossSpawnTimer -= dt; if(miniBossSpawnTimer <= 0) { if (enemies.filter(e=>e.isMiniBoss).length < 2) spawnMiniBoss(); miniBossSpawnTimer = 50; }
                 
@@ -2554,6 +2572,7 @@
 
                 for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i]; if (e.hp <= 0) continue;
+                    if (e.invuln > 0) e.invuln -= dt;
                     
                     let target = player;
                     let minDistToTarget = Math.hypot(player.x - e.x, player.y - e.y);
@@ -2649,11 +2668,12 @@
                     
                     if (pDealDamage) {
                         let distToPFromE = Math.hypot(player.x - e.x, player.y - e.y); 
-                        if (distToPFromE > pAttackReach + e.size) continue; 
+                        if (distToPFromE > pAttackReach + e.size || e.invuln > 0) continue; 
                         let aToE = Math.atan2(e.y - player.y, e.x - player.x), aDiff = Math.abs(((aToE - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
                         
                         if (aDiff < Math.PI / 1.5 || distToPFromE < (pSize + e.size) * 1.5) { 
                             let dmg = stats.playerDamage * pDmgMult; e.hp -= dmg; hitStop = 0.05; playSound('hit');
+                            e.invuln = 0.1; // Invuln window pro nepratele (proti oneshot combo stackum)
                             e.playerDamaged = true; // Značka: Hráč se aktivně podílel na poškození
                             if (archStats.knockback > 0) { let ang = Math.atan2(e.y - player.y, e.x - player.x); e.knockbackVx = Math.cos(ang) * archStats.knockback; e.knockbackVy = Math.sin(ang) * archStats.knockback; }
                             let d = getDmgNumber(); d.x=e.x; d.y=e.y-e.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
@@ -2666,7 +2686,7 @@
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
                                 if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
                                 
-                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = 90; playerRunData.bossKills++; } 
+                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = BOSS_RESPAWN_AFTER_KILL; playerRunData.bossKills++; } 
                                 else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss'); playerRunData.bossKills++; }
                                 else if (e.level >= player.level + 1) dropGems(e.x, e.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(e.x, e.y, 1); 
                                 enemies.splice(i, 1); continue; 
@@ -2929,7 +2949,7 @@
                     break;
                 }
             }
-            if (prog.globalLevel > 50) { prog.globalLevel = 50; prog.globalXp = 0; } 
+            if (prog.globalLevel >= 50) { prog.globalLevel = 50; prog.globalXp = 0; } 
             
             await forceSaveNow(); 
             goToMenu(); 
@@ -3088,7 +3108,12 @@
             if (window.fetchFromFirestore) {
                  let cloudData = await window.fetchFromFirestore(uid);
                  if (cloudData) {
-                     window.prog = { ...window.defaultProg, ...cloudData };
+                     if (!localProg || (cloudData.totalKills || 0) >= (localProg.totalKills || 0)) {
+                         window.prog = { ...window.defaultProg, ...cloudData };
+                     } else {
+                         window.prog = localProg;
+                         debouncedForceSaveNow();
+                     }
                      cloudLoaded = true;
                      console.log("[CatWars] Game data SUCCESSFULLY loaded from Firebase!");
                  }
@@ -3128,6 +3153,8 @@
                 const uid = auth.currentUser.uid;
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'gamedata', 'progress');
                 const dataToSave = JSON.parse(JSON.stringify(progressData));
+                
+                if (dataToSave.gems > 100000000) dataToSave.gems = 100000000; // Basic client sanity cap
                 
                 await setDoc(docRef, dataToSave, { merge: true });
                 
