@@ -1833,7 +1833,7 @@
 
             player = { name: prog.nickname, x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, level: 1, xp: 0, angle: 0, attackTimer: 0, attackCooldown: 0.66, hasAttacked: false, hp: finalMaxHp, maxHp: finalMaxHp, invuln: 2.0, dashTimer: 0, dashCooldown: 3.0, dashActive: 0, knockbackVx: 0, knockbackVy: 0 };
             playerRunData = { kills: 0, teamKills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 }; combo = 0; comboTimer = 0;
-            gameStartTime = performance.now(); finalBossSpawned = false; gameWon = false;
+            gameStartTime = performance.now(); pauseStartTime = 0; finalBossSpawned = false; gameWon = false;
             
             for(let p of particles) releaseParticle(p); particles = [];
             for(let d of damageNumbers) releaseDmgNumber(d); damageNumbers = [];
