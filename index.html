@@ -1948,8 +1948,14 @@
             
             let stats = evolutions[49]; // God Cat variant pre Overlorda
             let bossLvl = 60;
-            let bossHp = 200000 * (activeMods.doubleDmg ? 1.5 : 1.0); // Absolutní monstrum
-            let bossDmg = 350 * (activeMods.doubleDmg ? 2 : 1);
+            
+            // OPRAVA: Hp a Dmg finálního bosse musí exponenciálně růst stejně jako u hráče.
+            // Běžný boss má 8000 * mult (HP) a 40 * mult (DMG). 
+            // Finální boss je nyní zhruba 2.5x silnější (20000 HP báze, 100 DMG báze)
+            let hpMult = Math.pow(1.25, 50);
+            let dmgMult = Math.pow(1.28, 50);
+            let bossHp = Math.floor(20000 * hpMult * (activeMods.doubleDmg ? 1.5 : 1.0)); 
+            let bossDmg = Math.floor(100 * dmgMult * (activeMods.doubleDmg ? 2 : 1));
             
             enemies.push({ 
                 x: ex, y: ey, level: bossLvl, name: 'SUPREME OVERLORD', size: stats.baseSize * 2.5, 
