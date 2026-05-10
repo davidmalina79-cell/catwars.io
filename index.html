@@ -1755,12 +1755,19 @@
             } 
         }
 
+        let pauseStartTime = 0;
+
         function togglePause() {
             if (gameState === 'playing') {
                 gameState = 'paused';
+                pauseStartTime = performance.now();
                 document.getElementById('pause-overlay').style.display = 'flex';
             } else if (gameState === 'paused') {
                 gameState = 'playing';
+                // OPRAVA TIMERU: Posuneme startovní čas hry o dobu strávenou v pauze
+                if (pauseStartTime > 0) {
+                    gameStartTime += (performance.now() - pauseStartTime);
+                }
                 lastTime = performance.now();
                 document.getElementById('pause-overlay').style.display = 'none';
             }
@@ -1965,7 +1972,10 @@
         function triggerWin() {
             if (gameWon) return;
             gameWon = true;
-            gameState = 'game_over';
+            
+            // OPRAVA ZAMRZNUTÍ: Odstraněno gameState = 'game_over'; aby hra nezamrzla a doběhly exploze
+            if (player) player.invuln = 9999;
+            for (let c of aiCats) c.invuln = 9999;
             
             let timeElapsedMs = performance.now() - gameStartTime;
             let minutes = Math.floor(timeElapsedMs / 60000);
