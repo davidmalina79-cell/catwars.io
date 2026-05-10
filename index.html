@@ -597,14 +597,14 @@
         };
 
         const BOSS_VARIANTS = [
-            { name: '⚡ SWIFT BOSS', hpMult: 0.7, dmgMult: 0.8, speedMult: 1.6, sizeMult: 1.1, cdMult: 0.7, color: '#00d4ff', alert: '⚡ SWIFT BOSS!', weapon: 'twin blades', ability: 'dash' },
-            { name: '🛡️ TANK BOSS', hpMult: 1.6, dmgMult: 1.3, speedMult: 0.7, sizeMult: 1.5, cdMult: 1.4, color: '#7f8c8d', alert: '🛡️ TANK BOSS!', weapon: 'warhammer', ability: 'stomp' },
-            { name: '👑 MEGA BOSS',  hpMult: 1.0, dmgMult: 1.0, speedMult: 1.0, sizeMult: 1.4, cdMult: 1.0, color: '#ffd700', alert: '👑 MEGA BOSS!', weapon: 'godslayer', ability: 'stomp' },
+            { name: '⚡ SWIFT BOSS', hpMult: 0.6, dmgMult: 0.7, cdMult: 1.3, windupMs: 350, speedMult: 1.6, sizeMult: 1.0, color: '#00d4ff', accent: '#111111', pattern: 'demon', alert: '⚡ SWIFT BOSS!', weapon: 'twin blades', ability: 'dash', aura: 'swift' },
+            { name: '🛡️ TANK BOSS', hpMult: 1.3, dmgMult: 0.85, cdMult: 1.5, windupMs: 600, speedMult: 0.7, sizeMult: 1.25, color: '#7f8c8d', accent: '#111111', pattern: 'demon', alert: '🛡️ TANK BOSS!', weapon: 'warhammer', ability: 'stomp', aura: 'tank' },
+            { name: '👑 MEGA BOSS',  hpMult: 1.0, dmgMult: 0.85, cdMult: 1.0, windupMs: 400, speedMult: 1.0, sizeMult: 1.1, color: '#ffd700', accent: '#111111', pattern: 'demon', alert: '👑 MEGA BOSS!', weapon: 'godslayer', ability: 'stomp', aura: 'mega' }
         ];
         
         const MINIBOSS_VARIANTS = [
-            { name: '🔥 ELITE HOUND', hpMult: 0.4, dmgMult: 0.6, speedMult: 1.1, sizeMult: 1.15, cdMult: 0.9, color: '#e67e22', weapon: 'mace' },
-            { name: '💀 BONE CRUSHER', hpMult: 0.6, dmgMult: 0.9, speedMult: 0.8, sizeMult: 1.25, cdMult: 1.2, color: '#bdc3c7', weapon: 'battleaxe' }
+            { name: '🔥 ELITE HOUND', hpMult: 0.8, dmgMult: 0.8, cdMult: 1.0, windupMs: 300, speedMult: 1.1, sizeMult: 1.15, color: '#e67e22', accent: '#111111', pattern: 'demon', weapon: 'mace', aura: 'mini_fire' },
+            { name: '💀 BONE CRUSHER', hpMult: 1.2, dmgMult: 1.1, cdMult: 1.2, windupMs: 450, speedMult: 0.8, sizeMult: 1.25, color: '#bdc3c7', accent: '#111111', pattern: 'demon', weapon: 'battleaxe', aura: 'mini_bone' }
         ];
         
         const QUEST_POOL = [
@@ -1385,53 +1385,36 @@
             ctx.restore();
         }
 
-        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0, wTierOverride = -1) {
+        function drawEntity(ctx, isCat, size, color, accent, pattern, attackProgress, weaponType, level, helmetTier = 0, wTierOverride = -1, aura = null) {
             ctx.save(); 
             
-            // NOVÉ: Epické TEMNÉ aury a efekty pozadí pro high-level psy (39-50)
-            if (!isCat && level >= 39) {
+            // NOVÉ: Custom Aury pro bossy a high-level entity
+            if (!isCat) {
                 ctx.save();
-                if (level === 39) { // Nebula Dog
-                    let nGrad = ctx.createRadialGradient(0,0,size*0.5, 0,0,size*1.8);
-                    nGrad.addColorStop(0, 'rgba(0, 255, 0, 0.6)'); nGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                    ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0,0,size*1.8,0,Math.PI*2); ctx.fill();
-                } else if (level === 40) { // Galaxy Dog
-                    ctx.strokeStyle = 'rgba(200, 0, 0, 0.6)'; ctx.lineWidth = size*0.4; ctx.lineCap = 'round';
+                if (aura === 'mini_fire') {
+                    ctx.shadowColor = '#e67e22'; ctx.shadowBlur = 20; ctx.fillStyle = 'rgba(230, 126, 34, 0.2)';
+                    ctx.beginPath(); ctx.arc(0, 0, size * 1.4, 0, Math.PI * 2); ctx.fill();
+                } else if (aura === 'mini_bone') {
+                    ctx.shadowColor = '#bdc3c7'; ctx.shadowBlur = 15; ctx.fillStyle = 'rgba(189, 195, 199, 0.2)';
+                    ctx.beginPath(); ctx.arc(0, 0, size * 1.4, 0, Math.PI * 2); ctx.fill();
+                } else if (aura === 'swift') {
+                    ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 25; ctx.fillStyle = 'rgba(0, 212, 255, 0.2)';
+                    ctx.beginPath(); ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2); ctx.fill();
+                } else if (aura === 'tank') {
+                    ctx.strokeStyle = 'rgba(127, 140, 141, 0.6)'; ctx.lineWidth = size*0.4; ctx.lineCap = 'round';
                     for(let i=0; i<3; i++) { ctx.beginPath(); ctx.arc(0,0, size*1.3, i*(Math.PI*2/3), i*(Math.PI*2/3) + Math.PI*0.8); ctx.stroke(); }
-                } else if (level === 41) { // Universe Dog
-                    ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 3; ctx.setLineDash([8, 4]); ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
-                    ctx.beginPath(); ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2); ctx.stroke();
-                    ctx.setLineDash([]);
-                } else if (level === 42) { // Cosmic Dog
-                    ctx.shadowColor = '#8e44ad'; ctx.shadowBlur = 20; ctx.fillStyle = 'rgba(142, 68, 173, 0.3)';
-                    ctx.beginPath(); ctx.arc(0, 0, size * 1.6, 0, Math.PI * 2); ctx.fill();
-                } else if (level === 43) { // Astral Hound
-                    ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = 15; ctx.fillStyle = 'rgba(0, 255, 170, 0.4)';
-                    for(let i=0; i<6; i++) { ctx.beginPath(); ctx.arc(Math.cos(i)*size*1.3, Math.sin(i)*size*1.3, size*0.4, 0, Math.PI*2); ctx.fill(); }
-                } else if (level === 44) { // God Dog
-                    ctx.fillStyle = '#111'; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
+                } else if (aura === 'mega') {
+                    ctx.fillStyle = '#111'; ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 15;
                     for(let i=0; i<8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a-0.1)*size, Math.sin(a-0.1)*size); ctx.lineTo(Math.cos(a)*size*1.9, Math.sin(a)*size*1.9); ctx.lineTo(Math.cos(a+0.1)*size, Math.sin(a+0.1)*size); ctx.fill(); }
-                } else if (level === 45) { // Titan Hound
-                    ctx.strokeStyle = '#ff4500'; ctx.lineWidth = 3; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 15;
-                    for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*size*1.7, Math.sin(a)*size*1.7); ctx.stroke(); }
-                } else if (level === 46) { // Omega Dog
-                    ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
-                    for(let i=0; i<5; i++) { let a = (i/5)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a)*size, Math.sin(a)*size); ctx.lineTo(Math.cos(a+0.2)*size*1.5, Math.sin(a+0.2)*size*1.5); ctx.lineTo(Math.cos(a-0.1)*size*2, Math.sin(a-0.1)*size*2); ctx.stroke(); }
-                } else if (level === 47) { // Eternity Hound
-                    ctx.strokeStyle = '#444'; ctx.lineWidth = 4; ctx.lineCap='round'; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 8;
-                    for(let i=0; i<4; i++) { let a = (i/4)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(Math.cos(a+0.5)*size*1.5, Math.sin(a+0.5)*size*1.5, Math.cos(a)*size*2.2, Math.sin(a)*size*2.2); ctx.stroke(); }
-                } else if (level === 48) { // Celestial Dog
-                    ctx.fillStyle = '#111'; ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 15;
-                    for(let i=0; i<10; i++) { let a = (i/10)*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(Math.cos(a-0.2)*size*1.5, Math.sin(a-0.2)*size*1.5, Math.cos(a)*size*2.2, Math.sin(a)*size*2.2); ctx.quadraticCurveTo(Math.cos(a+0.1)*size*1.5, Math.sin(a+0.1)*size*1.5, 0, 0); ctx.fill(); }
-                } else if (level === 49) { // Dimensional Hound
-                    ctx.strokeStyle = 'rgba(75, 0, 130, 0.8)'; ctx.lineWidth = size*0.2; ctx.shadowColor = '#111'; ctx.shadowBlur = 10;
-                    for(let i=1; i<=4; i++) { ctx.beginPath(); ctx.arc(0,0, size*0.4*i, 0, Math.PI*2); ctx.stroke(); }
-                } else if (level === 50) { // Supreme Overlord
+                } else if (aura === 'final' || level >= 50) { 
                     let nGrad = ctx.createRadialGradient(0,0,size*0.8, 0,0,size*2.5);
                     nGrad.addColorStop(0, '#000000'); nGrad.addColorStop(0.3, '#ff0000'); nGrad.addColorStop(1, 'rgba(0,0,0,0)');
                     ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0,0,size*2.5,0,Math.PI*2); ctx.fill();
                     ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2;
                     for(let i=0; i<16; i++) { let a = (i/16)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a)*size*1.2, Math.sin(a)*size*1.2); ctx.lineTo(Math.cos(a+0.2)*size*2.5, Math.sin(a+0.2)*size*2.5); ctx.stroke(); }
+                } else if (level >= 39) {
+                    ctx.fillStyle = '#111'; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
+                    for(let i=0; i<8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a-0.1)*size, Math.sin(a-0.1)*size); ctx.lineTo(Math.cos(a)*size*1.9, Math.sin(a)*size*1.9); ctx.lineTo(Math.cos(a+0.1)*size, Math.sin(a+0.1)*size); ctx.fill(); }
                 }
                 ctx.restore();
             }
@@ -1495,7 +1478,6 @@
             ctx.beginPath(); ctx.moveTo(size*0.6, -size*1.0); ctx.lineTo(size*0.7, -size*1.0); ctx.stroke();
             ctx.restore();
 
-            // Transformace pro zbraň a pravou tlapku
             ctx.save(); let swingAng = Math.PI / 4, armExtend = size * 1.1; 
             if (attackProgress > 0) { 
                 if (attackProgress < 0.2) swingAng = Math.PI/3 + attackProgress*0.2; 
@@ -1504,6 +1486,13 @@
             } 
             ctx.rotate(swingAng); ctx.translate(armExtend, 0); 
             ctx.save(); ctx.rotate(Math.PI/8); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; 
+            
+            // RED GLOW BĚHEM NÁPŘAHU (WINDUP)
+            if (attackProgress > 0 && attackProgress <= 0.2 && !isCat) {
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 25;
+            }
+            
             drawWeaponShape(ctx, wLen, wWid, weaponType, color, currentTier); 
             ctx.restore(); 
             
@@ -1532,7 +1521,7 @@
             let visSize = (22 + Math.min(level, 50) * 0.35) * 1.35; 
             tCtx.rotate(Math.PI / 2); 
             
-            drawEntity(tCtx, isCat, visSize, cColor, stats.accent, stats.pattern, 0, stats.weaponType, level, helmetTier, weaponTier);
+            drawEntity(tCtx, isCat, visSize, cColor, stats.accent, stats.pattern, 0, stats.weaponType, level, helmetTier, weaponTier, null);
             
             let data = tempC.toDataURL(); spritesCache[type][key] = data; return data;
         }
@@ -1930,16 +1919,34 @@
             
             let variant = MINIBOSS_VARIANTS[Math.floor(Math.random() * MINIBOSS_VARIANTS.length)];
             let pStats = evolutions[Math.min(player.level - 1, 49)];
-            let mbLvl = Math.min(50, player.level + 3);
-            let mbHp = Math.floor(400 * Math.pow(1.25, player.level)) * variant.hpMult;
-            let mbDmg = Math.floor(25 * Math.pow(1.28, player.level)) * variant.dmgMult; 
+            let mbLvl = player.level;
+            let mbHp = Math.floor(400 * Math.pow(1.25, player.level - 1)) * variant.hpMult;
+            let mbDmg = Math.floor(45 * Math.pow(1.25, player.level - 1)) * variant.dmgMult; 
             
             let eSpeed = pStats.speed * 0.85 * variant.speedMult;
             if (activeMods.fast) eSpeed *= 1.5;
 
-            enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#111111', pattern: 'demon', weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), playerDamaged: false, invuln: 0 });
+            enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, windup: variant.windupMs / 1000, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: variant.accent, pattern: variant.pattern, aura: variant.aura, weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), playerDamaged: false, invuln: 0 });
             
             let alert = document.getElementById('boss-alert'); alert.innerText = '⚠️ MINI-BOSS SPAWNED!'; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 2500);
+        }
+
+        function spawnBoss() {
+            let cameraDiag = Math.sqrt(width * width + height * height) / (2 * currentZoom); let ex, ey; let attempts = 0;
+            do { let angle = Math.random() * Math.PI * 2; let dist = cameraDiag + 800; ex = Math.max(200, Math.min(WORLD_SIZE - 200, player.x + Math.cos(angle) * dist)); ey = Math.max(200, Math.min(WORLD_SIZE - 200, player.y + Math.sin(angle) * dist)); attempts++; } while (Math.hypot(ex - player.x, ey - player.y) < cameraDiag && attempts < 15);
+            
+            let variant = BOSS_VARIANTS[Math.floor(Math.random() * BOSS_VARIANTS.length)];
+            let stats = evolutions[49]; 
+            let pStats = evolutions[Math.min(player.level - 1, 49)];
+            let bossLvl = player.level;
+            let bossHp = Math.floor(400 * Math.pow(1.25, player.level - 1)) * variant.hpMult;
+            let bossDmg = Math.floor(30 * Math.pow(1.25, player.level - 1)) * variant.dmgMult; 
+            
+            let eSpeed = pStats.speed * 0.7 * variant.speedMult;
+            if (activeMods.fast) eSpeed *= 1.5; 
+            
+            enemies.push({ x: ex, y: ey, level: bossLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.2, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.0 * variant.cdMult, windup: variant.windupMs / 1000, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: variant.accent, pattern: variant.pattern, aura: variant.aura, weaponType: variant.weapon, hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), ability: variant.ability, specialTimer: 5.0, specialPhase: 0, playerDamaged: false });
+            playSound('boss'); let alert = document.getElementById('boss-alert'); alert.innerText = variant.alert; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 3500);
         }
 
         function spawnFinalBoss() {
@@ -1947,21 +1954,18 @@
             let ex = WORLD_SIZE / 2; let ey = WORLD_SIZE / 2; 
             
             let stats = evolutions[49]; // God Cat variant pre Overlorda
-            let bossLvl = 60;
+            let bossLvl = 50;
             
-            // OPRAVA: Hp a Dmg finálního bosse musí exponenciálně růst stejně jako u hráče.
-            // Běžný boss má 8000 * mult (HP) a 40 * mult (DMG). 
-            // Finální boss je nyní zhruba 2.5x silnější (20000 HP báze, 100 DMG báze)
-            let hpMult = Math.pow(1.25, 50);
-            let dmgMult = Math.pow(1.28, 50);
-            let bossHp = Math.floor(20000 * hpMult * (activeMods.doubleDmg ? 1.5 : 1.0)); 
-            let bossDmg = Math.floor(100 * dmgMult * (activeMods.doubleDmg ? 2 : 1));
+            let hpMult = Math.pow(1.25, 49);
+            let dmgMult = Math.pow(1.25, 49);
+            let bossHp = Math.floor(1500 * hpMult * (activeMods.doubleDmg ? 1.5 : 1.0)); 
+            let bossDmg = Math.floor(30 * dmgMult * (activeMods.doubleDmg ? 2 : 1));
             
             enemies.push({ 
-                x: ex, y: ey, level: bossLvl, name: 'SUPREME OVERLORD', size: stats.baseSize * 2.5, 
+                x: ex, y: ey, level: bossLvl, name: 'SUPREME OVERLORD', size: stats.baseSize * 1.8, 
                 speed: 380, weaponLength: stats.weaponLength * 1.5, angle: 0, attackTimer: 0, 
-                attackCooldown: 1.0, hasAttacked: false, state: 'chase', stateTimer: 9999, 
-                color: '#111111', accent: '#ff0000', pattern: 'god', weaponType: 'infinity blade', 
+                attackCooldown: 1.1, windup: 0.5, hasAttacked: false, state: 'chase', stateTimer: 9999, 
+                color: '#111111', accent: '#ff0000', pattern: 'demon', aura: 'final', weaponType: 'infinity blade', 
                 hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, isFinalBoss: true, 
                 knockbackVx: 0, knockbackVy: 0, archetype: 'heavy', ability: 'stomp', 
                 specialTimer: 4.0, specialPhase: 0, playerDamaged: false 
@@ -2544,7 +2548,7 @@
                     if (e.x < e.size || e.x > WORLD_SIZE - e.size || e.y < e.size || e.y > WORLD_SIZE - e.size) { e.x = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.x)); e.y = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.y)); e.state = 'wander'; e.angle = Math.atan2(WORLD_SIZE/2 - e.y, WORLD_SIZE/2 - e.x); e.stateTimer = 1.0; }
                     
                     if (e.attackTimer > 0) e.attackTimer -= dt; 
-                    else if (minDistToTarget < e.weaponLength + targetSize * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; if(Math.hypot(player.x-e.x, player.y-e.y) < viewRadius) playSound('swing'); }
+                    else if (minDistToTarget < e.weaponLength + targetSize * 1.6) { e.attackTimer = e.attackCooldown; e.hasAttacked = false; }
                     
                     if (pDealDamage) {
                         let distToPFromE = Math.hypot(player.x - e.x, player.y - e.y); 
@@ -2576,10 +2580,15 @@
                         }
                     }
                     
+                    // NÁPŘAH (WINDUP) A ÚTOK NEPŘÁTEL
                     if (e.attackTimer > 0 && !e.hasAttacked) {
-                        let eProgress = 1 - (e.attackTimer / e.attackCooldown);
-                        if (eProgress >= 0.4 && eProgress <= 0.65) {
+                        let timeSpent = e.attackCooldown - e.attackTimer;
+                        let eWindup = e.windup || 0.35; // Default nápřah 350ms, pokud není specifikován
+
+                        if (timeSpent >= eWindup) {
                             e.hasAttacked = true;
+                            if(Math.hypot(player.x-e.x, player.y-e.y) < viewRadius) playSound('swing');
+                            
                             let aToP = Math.atan2(target.y - e.y, target.x - e.x), aDiff = Math.abs(((aToP - e.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
                             if (minDistToTarget < (e.size * 1.5) + e.weaponLength + targetSize && (aDiff < Math.PI / 1.7 || minDistToTarget < (e.size + targetSize) * 1.3)) { 
                                 if (target.invuln === undefined || target.invuln <= 0) { 
@@ -2650,7 +2659,7 @@
                 ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.angle);
                 if (c.invuln > 0 && Math.floor(Date.now() / 150) % 2 === 0) ctx.globalAlpha = 0.5;
                 let cStats = evolutions[Math.min(c.level - 1, 49)];
-                drawEntity(ctx, true, c.size, cStats.catColor, cStats.accent, cStats.pattern, c.attackProgress, cStats.weaponType, c.level, c.hTier, c.wTier); 
+                drawEntity(ctx, true, c.size, cStats.catColor, cStats.accent, cStats.pattern, c.attackProgress, cStats.weaponType, c.level, c.hTier, c.wTier, null); 
                 ctx.restore();
                 
                 ctx.fillStyle = "#3498db"; ctx.font = "bold 14px Arial"; ctx.textAlign = "center"; 
@@ -2666,8 +2675,8 @@
                 if (e.x < camL - e.size * 5 || e.x > camR + e.size * 5 || e.y < camT - e.size * 5 || e.y > camB + e.size * 5) return; 
                 
                 ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle); 
-                if (e.isBoss) { ctx.shadowColor = e.color; ctx.shadowBlur = 30; } 
-                else if (e.isMiniBoss) { ctx.shadowColor = '#e67e22'; ctx.shadowBlur = 15; }
+                if (e.isBoss && !e.aura) { ctx.shadowColor = e.color; ctx.shadowBlur = 30; } // Fallback
+                else if (e.isMiniBoss && !e.aura) { ctx.shadowColor = '#e67e22'; ctx.shadowBlur = 15; }
                 
                 if (e.isBoss && e.specialPhase === 1) {
                     if (e.ability === 'stomp') {
@@ -2681,8 +2690,19 @@
                     }
                 }
 
-                let eProgress = e.attackTimer > 0 ? 1 - (e.attackTimer / e.attackCooldown) : 0;
-                drawEntity(ctx, false, e.size, e.color, e.accent, e.pattern, eProgress, e.weaponType, e.level); ctx.restore(); 
+                let eProgress = 0;
+                if (e.attackTimer > 0) {
+                    let timeSpent = e.attackCooldown - e.attackTimer;
+                    let eWindup = e.windup || 0.35;
+                    // Propočet animace: 0-0.15 = nápřah (windup), 0.15-1.0 = švih
+                    if (timeSpent < eWindup) {
+                        eProgress = (timeSpent / eWindup) * 0.15;
+                    } else {
+                        eProgress = 0.15 + ((timeSpent - eWindup) / (e.attackCooldown - eWindup)) * 0.85;
+                    }
+                }
+
+                drawEntity(ctx, false, e.size, e.color, e.accent, e.pattern, eProgress, e.weaponType, e.level, 0, -1, e.aura); ctx.restore(); 
                 
                 ctx.fillStyle = "white"; ctx.font = e.isBoss ? "bold 24px Arial" : (e.isMiniBoss ? "bold 20px Arial" : "bold 15px Arial"); ctx.textAlign = "center"; ctx.fillText(e.name, e.x, e.y - e.size - 35); 
                 ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(e.x - e.size, e.y - e.size - 25, e.size * 2, (e.isBoss || e.isMiniBoss) ? 15 : 9); 
@@ -2691,7 +2711,7 @@
             
             ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); if (player.invuln > 0 && Math.floor(Date.now() / 150) % 2 === 0) ctx.globalAlpha = 0.5; if (combo >= COMBO_BUFF_THRESHOLD){ ctx.shadowColor = '#f1c40f'; ctx.shadowBlur = 25; }
             let pHTier = prog.helmetUpgrades[player.level] || 0;
-            drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier); ctx.restore();
+            drawEntity(ctx, true, playerStats.baseSize, playerStats.catColor, playerStats.accent, playerStats.pattern, player.attackProgress, playerStats.weaponType, player.level, pHTier, -1, null); ctx.restore();
             
             ctx.fillStyle = "white"; ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
             ctx.fillText(player.name, player.x, player.y - playerStats.baseSize - 35);
