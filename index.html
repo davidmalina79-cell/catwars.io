@@ -548,11 +548,11 @@
           { cat:"God Cat", dog:"Supreme Overlord", w:"infinity blade", c:"#ffd700", d:"#ffffff", acc:"#ffffff", pat:"god" } 
         ];
 
-        // Změněno: Kočka roste o něco pomaleji (dříve *4.5, nyní *3.2), aby nebyla tak obří
+        // Změněno: Kočka roste pomaleji (*1.2) a zpomaluje se méně (*0.8) na základě Sandboxu
         const evolutions = TIER_VISUALS.map((t, i) => {
             let level = i + 1;
-            let size = 20 + (level * 3.2); 
-            let speed = Math.max(120, 310 - (level * 3.5)); 
+            let size = 20 + (level * 1.2); 
+            let speed = Math.max(120, 310 - (level * 0.8)); 
             let weaponLength = size * 2.5; 
             
             let multiplier = Math.pow(1.25, i);
@@ -589,11 +589,11 @@
         }
 
         const ARCH_STATS = {
-            balanced: { cdMult: 1.0, dmgMult: 1.0, reachMult: 1.0, knockback: 0 },
-            fast:     { cdMult: 0.6, dmgMult: 0.85, reachMult: 0.9, knockback: 0 },
-            heavy:    { cdMult: 1.45, dmgMult: 1.55, reachMult: 1.0, knockback: 280 },
-            wide:     { cdMult: 1.1, dmgMult: 0.9, reachMult: 1.1, knockback: 0 },
-            reach:    { cdMult: 1.0, dmgMult: 1.0, reachMult: 1.35, knockback: 0 },
+            balanced: { cdMult: 1.0, dmgMult: 1.0, reachMult: 1.0, knockback: 150, sweepAngle: Math.PI / 2 },
+            fast:     { cdMult: 0.5, dmgMult: 0.8, reachMult: 0.9, knockback: 20, sweepAngle: Math.PI / 3 },
+            heavy:    { cdMult: 1.5, dmgMult: 1.5, reachMult: 1.0, knockback: 600, sweepAngle: Math.PI / 2.2 },
+            wide:     { cdMult: 1.2, dmgMult: 0.8, reachMult: 1.1, knockback: 80, sweepAngle: Math.PI / 1.5 },
+            reach:    { cdMult: 1.15, dmgMult: 0.85, reachMult: 1.35, knockback: 250, sweepAngle: Math.PI / 2.5 },
         };
 
         const BOSS_VARIANTS = [
@@ -1493,6 +1493,7 @@
                 ctx.shadowBlur = 25;
             }
             
+            if (attackProgress > 0.25) ctx.globalAlpha = 0.4; // Zbraň je v cooldownu vizuálně potlačena
             drawWeaponShape(ctx, wLen, wWid, weaponType, color, currentTier); 
             ctx.restore(); 
             
@@ -1611,12 +1612,12 @@
                 let html = `
                     <h3 style="margin-top:0; color:#fff;">🛡️ Weapon Archetypes</h3>
                     <table class="stats-table">
-                        <tr><th>Archetype</th><th>Speed (CD)</th><th>Damage</th><th>Reach</th><th>Knockback</th></tr>
-                        <tr><td style="color:var(--primary); font-weight:bold;">⚔️ Balanced</td><td>1.0x</td><td>1.0x</td><td>1.0x</td><td>None</td></tr>
-                        <tr><td style="color:var(--primary); font-weight:bold;">⚡ Fast</td><td>0.6x (Faster)</td><td>0.85x</td><td>0.9x</td><td>None</td></tr>
-                        <tr><td style="color:var(--primary); font-weight:bold;">🔨 Heavy</td><td>1.45x (Slower)</td><td>1.55x</td><td>1.0x</td><td>High</td></tr>
-                        <tr><td style="color:var(--primary); font-weight:bold;">🌀 Wide</td><td>1.1x</td><td>0.9x</td><td>1.1x</td><td>None</td></tr>
-                        <tr><td style="color:var(--primary); font-weight:bold;">➡️ Reach</td><td>1.0x</td><td>1.0x</td><td>1.35x</td><td>None</td></tr>
+                        <tr><th>Archetype</th><th>Speed (CD)</th><th>Damage</th><th>Reach</th><th>Angle</th><th>Knockback</th></tr>
+                        <tr><td style="color:var(--primary); font-weight:bold;">⚔️ Balanced</td><td>1.0x</td><td>1.0x</td><td>1.0x</td><td>180°</td><td>Low</td></tr>
+                        <tr><td style="color:var(--primary); font-weight:bold;">⚡ Fast</td><td>0.6x (Faster)</td><td>0.85x</td><td>0.9x</td><td>120°</td><td>None</td></tr>
+                        <tr><td style="color:var(--primary); font-weight:bold;">🔨 Heavy</td><td>1.45x (Slower)</td><td>1.55x</td><td>1.0x</td><td>163°</td><td>High</td></tr>
+                        <tr><td style="color:var(--primary); font-weight:bold;">🌀 Wide</td><td>1.1x</td><td>0.9x</td><td>1.1x</td><td>240°</td><td>Very Low</td></tr>
+                        <tr><td style="color:var(--primary); font-weight:bold;">➡️ Reach</td><td>1.0x</td><td>1.0x</td><td>1.35x</td><td>144°</td><td>Medium</td></tr>
                     </table>
                     
                     <h3 style="color:#fff; margin-top: 30px;">🗡️ Weapon Evolution Gallery</h3>
@@ -2261,7 +2262,7 @@
 
                     c.x += Math.cos(c.angle) * cSpeed * dt + c.knockbackVx * dt;
                     c.y += Math.sin(c.angle) * cSpeed * dt + c.knockbackVy * dt;
-                    c.knockbackVx *= Math.pow(0.001, dt); c.knockbackVy *= Math.pow(0.001, dt);
+                    c.knockbackVx *= Math.pow(0.05, dt); c.knockbackVy *= Math.pow(0.05, dt);
                     c.x = Math.max(c.size, Math.min(WORLD_SIZE - c.size, c.x)); c.y = Math.max(c.size, Math.min(WORLD_SIZE - c.size, c.y));
 
                     if (c.attackTimer > 0) {
@@ -2281,7 +2282,7 @@
                         if (targetDog) {
                             let aToE = Math.atan2(targetDog.y - c.y, targetDog.x - c.x);
                             let aDiff = Math.abs(((aToE - c.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                            if (aDiff < Math.PI / 1.5 && minDogDist < cAttackReach + targetDog.size) {
+                            if (aDiff < cArchStats.sweepAngle && minDogDist < cAttackReach + targetDog.size) {
                                 let dmg = cStats.playerDamage * cDmgMult;
                                 targetDog.hp -= dmg;
                                 let d = getDmgNumber(); d.x = targetDog.x; d.y = targetDog.y - targetDog.size; d.val = Math.round(dmg); d.color = '#3498db'; d.life = 1.0; d.vy = -200; damageNumbers.push(d);
@@ -2295,7 +2296,7 @@
                                     if (targetDog.playerDamaged) {
                                         prog.totalKills++; 
                                         prog.dogKills[targetDog.name] = (prog.dogKills[targetDog.name] || 0) + 1;
-                                        player.xp += targetDog.isBoss ? 5000 : Math.floor(25 * Math.pow(1.28, targetDog.level - 1));
+                                        player.xp += targetDog.isBoss ? 5000 : Math.floor(25 * Math.pow(1.20, targetDog.level - 1));
                                         updateLevel();
                                     }
                                     
@@ -2385,7 +2386,7 @@
                 }
                 
                 player.x += player.knockbackVx * dt; player.y += player.knockbackVy * dt;
-                player.knockbackVx *= Math.pow(0.001, dt); player.knockbackVy *= Math.pow(0.001, dt);
+                player.knockbackVx *= Math.pow(0.05, dt); player.knockbackVy *= Math.pow(0.05, dt);
                 player.x = Math.max(pSize, Math.min(WORLD_SIZE - pSize, player.x)); player.y = Math.max(pSize, Math.min(WORLD_SIZE - pSize, player.y));
                 
                 if (!finalBossSpawned) {
@@ -2442,7 +2443,7 @@
                     for (let i = chests.length - 1; i >= 0; i--) {
                         let c = chests[i]; let distToC = Math.hypot(player.x - c.x, player.y - c.y); if (distToC > pAttackReach + c.size) continue;
                         let aToC = Math.atan2(c.y - player.y, c.x - player.x), aDiff = Math.abs(((aToC - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                        if (aDiff < Math.PI / 1.5 || distToC < (pSize + c.size) * 1.5) { 
+                        if (aDiff < archStats.sweepAngle) { 
                             let dmg = stats.playerDamage * pDmgMult; c.hp -= dmg; chestHit = true; 
                             let d = getDmgNumber(); d.x=c.x; d.y=c.y-c.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
                             for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=c.x; pt.y=c.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=CHEST_TYPES[c.type].color; particles.push(pt); }
@@ -2543,7 +2544,7 @@
                     if (!isSpecialCasting || e.specialPhase === 2) {
                         e.x += Math.cos(e.angle) * eSpeed * dt + e.knockbackVx * dt; e.y += Math.sin(e.angle) * eSpeed * dt + e.knockbackVy * dt;
                     }
-                    e.knockbackVx *= Math.pow(0.001, dt); e.knockbackVy *= Math.pow(0.001, dt);
+                    e.knockbackVx *= Math.pow(0.05, dt); e.knockbackVy *= Math.pow(0.05, dt);
                     
                     if (e.x < e.size || e.x > WORLD_SIZE - e.size || e.y < e.size || e.y > WORLD_SIZE - e.size) { e.x = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.x)); e.y = Math.max(e.size, Math.min(WORLD_SIZE - e.size, e.y)); e.state = 'wander'; e.angle = Math.atan2(WORLD_SIZE/2 - e.y, WORLD_SIZE/2 - e.x); e.stateTimer = 1.0; }
                     
@@ -2555,7 +2556,7 @@
                         if (distToPFromE > pAttackReach + e.size || e.invuln > 0) continue; 
                         let aToE = Math.atan2(e.y - player.y, e.x - player.x), aDiff = Math.abs(((aToE - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
                         
-                        if (aDiff < Math.PI / 1.5 || distToPFromE < (pSize + e.size) * 1.5) { 
+                        if (aDiff < archStats.sweepAngle) { 
                             let dmg = stats.playerDamage * pDmgMult; e.hp -= dmg; hitStop = 0.05; playSound('hit');
                             e.invuln = 0.1; // Invuln window pro nepratele (proti oneshot combo stackum)
                             e.playerDamaged = true; // Značka: Hráč se aktivně podílel na poškození
@@ -2564,7 +2565,7 @@
                             for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : '#ff2a2a'; particles.push(pt); } 
                             
                             if (e.hp <= 0) { 
-                                player.xp += e.isBoss ? 5000 : Math.floor(25 * Math.pow(1.28, e.level - 1)); playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
+                                player.xp += e.isBoss ? 5000 : Math.floor(25 * Math.pow(1.20, e.level - 1)); playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
                                 combo++; comboTimer = COMBO_WINDOW; if(combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if(combo > prog.bestCombo) prog.bestCombo = combo;
                                 questProgress('combo', combo); questProgress('kills', 1);
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
@@ -2590,7 +2591,8 @@
                             if(Math.hypot(player.x-e.x, player.y-e.y) < viewRadius) playSound('swing');
                             
                             let aToP = Math.atan2(target.y - e.y, target.x - e.x), aDiff = Math.abs(((aToP - e.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                            if (minDistToTarget < (e.size * 1.5) + e.weaponLength + targetSize && (aDiff < Math.PI / 1.7 || minDistToTarget < (e.size + targetSize) * 1.3)) { 
+                            let eArchStats = ARCH_STATS[e.archetype] || ARCH_STATS.balanced;
+                            if (minDistToTarget < (e.size * 1.5) + e.weaponLength + targetSize && aDiff < eArchStats.sweepAngle) { 
                                 if (target.invuln === undefined || target.invuln <= 0) { 
                                     let dmgTaken = e.damage * (activeMods.doubleDmg ? 2 : 1);
                                     target.hp -= dmgTaken; 
