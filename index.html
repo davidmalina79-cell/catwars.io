@@ -654,6 +654,19 @@
         
         window.currentUserUid = null;
 
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false }); // alpha: false pro lepsi vykon
+        const mmCanvas = document.getElementById('minimap');
+        const mmCtx = mmCanvas.getContext('2d');
+        
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        let isMouseDown = false;
+        let isRightMouseDown = false;
+        let dashRequested = false;
+
         function getGlobalRankInfo(level) {
             const tiers = [
                 { name: "Stray Recruit", color: "#7f8c8d" },       
@@ -1584,9 +1597,9 @@
             let key = `${weaponType}_${upgradeTier}`;
             if (weaponCache[key]) return weaponCache[key];
             
-            let tempC = document.createElement('canvas'); tempC.width = 240; tempC.height = 240;
-            let tCtx = tempC.getContext('2d'); tCtx.translate(90, 160); tCtx.rotate(-Math.PI / 2);
-            let size = 30; // Zmenšeno ze 42 na 30, aby se i godslayer vešel do ikonky
+            let tempC = document.createElement('canvas'); tempC.width = 300; tempC.height = 120;
+            let tCtx = tempC.getContext('2d'); tCtx.translate(50, 60); // Horizontální pozice (bez rotace)
+            let size = 42; // Zvětšeno na 42, horizontálně máme víc místa
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let sizeMult = UPGRADE_SIZE_MULT[upgradeTier] || 1.0;
             let wLen = (size * 2.5) * archStats.reachMult * sizeMult; 
@@ -1697,10 +1710,10 @@
                     for(let tier = 0; tier <= 4; tier++) {
                         let tierCard = document.createElement('div');
                         tierCard.style.background = '#1a252f'; let borderColor = UPGRADE_COLORS[tier] || '#555';
-                        tierCard.style.border = `2px solid ${borderColor}`; tierCard.style.borderRadius = '8px'; tierCard.style.padding = '10px'; tierCard.style.minWidth = '130px'; tierCard.style.textAlign = 'center'; tierCard.style.flex = '1';
+                        tierCard.style.border = `2px solid ${borderColor}`; tierCard.style.borderRadius = '8px'; tierCard.style.padding = '10px'; tierCard.style.minWidth = '160px'; tierCard.style.textAlign = 'center'; tierCard.style.flex = '1';
                         if(tier >= 3) tierCard.style.boxShadow = `inset 0 0 15px ${borderColor}40`;
                         
-                        let img = document.createElement('img'); img.src = getWeaponDataURL(w, tier); img.style.width = '90px'; img.style.height = '90px'; img.style.objectFit = 'contain';
+                        let img = document.createElement('img'); img.src = getWeaponDataURL(w, tier); img.style.width = '100%'; img.style.height = '70px'; img.style.objectFit = 'contain';
                         if(tier > 0) img.style.filter = `drop-shadow(0px 0px 5px ${borderColor})`;
                         
                         let tierName = document.createElement('div'); tierName.style.fontWeight = 'bold'; tierName.style.fontSize = '14px'; tierName.style.marginTop = '5px'; tierName.style.color = borderColor === '#555' ? '#ccc' : borderColor; tierName.innerText = WEAPON_TIERS[tier];
