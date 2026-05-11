@@ -1657,9 +1657,18 @@
         }
 
         // MENUS & UI
-        window.openLeaderboard = () => {
+        window.openLeaderboard = async () => {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('leaderboard-screen').style.display = 'flex';
+            document.getElementById('lb-table-body').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #aaa;">Loading data from satellite...</td></tr>';
+            
+            // Asynchronně stáhneme reálná data z Firebase
+            if (window.fetchLeaderboard) {
+                window.leaderboardData = await window.fetchLeaderboard();
+            } else {
+                window.leaderboardData = [];
+            }
+            
             window.switchLbTab('kills'); // Výchozí záložka při otevření
         };
         
@@ -1682,59 +1691,49 @@
             header.innerHTML = `<th style="width: 10%;">Rank</th><th style="width: 25%; text-align: left;">Player</th><th style="width: 30%; text-align: left;">Level</th><th style="width: 15%;">Max Cat Lv.</th><th style="width: 20%; color: #00d4ff;">${isTime ? 'Time Survived ⏱️' : 'Total Kills ⚔️'}</th>`;
             
             let html = '';
-            const formatTime = ms => ms ? `${Math.floor(ms/60000)}:${Math.floor((ms%60000)/1000).toString().padStart(2,'0')}` : null;
+            const formatTime = ms => ms ? `${Math.floor(ms/60000)}:${Math.floor((ms%60000)/1000).toString().padStart(2,'0')}` : '--:--';
 
-            // Generování Sandbox Mock dat pro Top 50
-            for(let i=1; i<=50; i++) {
-                let pName = i === 1 ? "DevPlayer" : (i === 2 ? "ProGamer99" : `Player_${Math.floor(Math.random()*9000)+1000}`);
-                let pRank = Math.max(1, 50 - Math.floor(i / 1.5));
-                let pMaxCat = Math.min(50, Math.floor(pRank * 1.2 + 5)); // Falešný max level kočky
-                let scoreStr = isTime ? `${Math.floor(25 - i*0.4)}:${(60 - i).toString().padStart(2, '0')}` : (250000 - i*4500).toLocaleString();
-                
-                // Předstíráme, že aktuální hráč je na 3. místě v Hardcore módu
-                let isMe = (tab === 'hardcore' && i === 3);
-                if (isMe) {
-                    pName = prog.nickname || 'Hero'; 
-                    pRank = prog.globalLevel || 1; 
-                    pMaxCat = prog.maxCatLevel || 1; 
-                    scoreStr = formatTime(prog.bestTimes?.hardcore) || "08:15";
-                }
+            // Vykreslení REÁLNÝCH stažených dat
+            let dataToRender = window.leaderboardData || [];
+            
+            if (dataToRender.length === 0) {
+                html = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #aaa;">No data available. Play a game to submit your score!</td></tr>';
+            } else {
+                dataToRender.forEach((p, index) => {
+                    let i = index + 1;
+                    let pName = p.nickname || 'Unknown';
+                    let pRank = p.globalLevel || 1;
+                    let pMaxCat = p.maxLevel || 1;
+                    
+                    // Zatím ukládáme v DB hlavně totalKills. Časy můžeme třídit výhledově.
+                    let scoreStr = isTime ? '--:--' : (p.kills || 0).toLocaleString();
+                    let isMe = (p.uid === window.currentUserUid);
 
-                let rankStyle = i <= 3 ? `color:var(--primary);font-weight:bold;font-size:18px;` : `color:#ccc;`;
-                let rowBg = isMe ? `background: rgba(243, 156, 18, 0.3); border: 1px solid var(--primary);` : ``;
-                
-                let rInfo = getGlobalRankInfo(pRank);
-                
-                html += `<tr style="${rowBg}">
-                    <td style="width: 10%; ${rankStyle}">#${i}</td>
-                    <td style="width: 25%; text-align: left; ${isMe ? 'color:var(--primary); font-weight:bold;' : ''}">${pName} ${isMe ? '(You)' : ''}</td>
-                    <td style="width: 30%; text-align: left;">
-                        <span style="font-size: 14px; color: #aaa;">Level ${pRank}</span>
-                        <span style="font-size: 16px; color: ${rInfo.color}; font-weight: bold; margin-left: 5px; letter-spacing: 1px;">${rInfo.stars}</span>
-                    </td>
-                    <td style="width: 15%; color:#aaa;">Lv. ${pMaxCat}</td>
-                    <td style="width: 20%; font-weight:bold; color: #fff; font-size: 16px;">${scoreStr}</td>
-                </tr>`;
+                    let rankStyle = i <= 3 ? `color:var(--primary);font-weight:bold;font-size:18px;` : `color:#ccc;`;
+                    let rowBg = isMe ? `background: rgba(243, 156, 18, 0.3); border: 1px solid var(--primary);` : ``;
+                    let rInfo = getGlobalRankInfo(pRank);
+                    
+                    html += `<tr style="${rowBg}">
+                        <td style="width: 10%; ${rankStyle}">#${i}</td>
+                        <td style="width: 25%; text-align: left; ${isMe ? 'color:var(--primary); font-weight:bold;' : ''}">${escapeHtml(pName)} ${isMe ? '(You)' : ''}</td>
+                        <td style="width: 30%; text-align: left;">
+                            <span style="font-size: 14px; color: #aaa;">Level ${pRank}</span>
+                            <span style="font-size: 16px; color: ${rInfo.color}; font-weight: bold; margin-left: 5px; letter-spacing: 1px;">${rInfo.stars}</span>
+                        </td>
+                        <td style="width: 15%; color:#aaa;">Lv. ${pMaxCat}</td>
+                        <td style="width: 20%; font-weight:bold; color: #fff; font-size: 16px;">${scoreStr}</td>
+                    </tr>`;
+                });
             }
             tbody.innerHTML = html;
 
-            // Zobrazení pozice aktuálního hráče pod tabulkou
-            let myRank, myScore;
-            if (tab === 'hardcore') {
-                myRank = 3; myScore = formatTime(prog.bestTimes?.hardcore) || "08:15"; 
-            } else if (tab === 'solo') {
-                myRank = 142; myScore = formatTime(prog.bestTimes?.solo) || "12:34"; 
-            } else if (tab === 'team') {
-                myRank = 502; myScore = "10:45"; 
-            } else {
-                myRank = 856; myScore = (prog.totalKills || 0).toLocaleString(); 
-            }
-
+            // Zobrazení pozice aktuálního hráče pod tabulkou (z lokálního progresu)
+            let myScore = isTime ? (formatTime(prog.bestTimes?.[tab]) || '--:--') : (prog.totalKills || 0).toLocaleString();
             let myRInfo = getGlobalRankInfo(prog.globalLevel || 1);
 
             currentBody.innerHTML = `<tr>
-                <td style="width: 10%; color:var(--primary);font-weight:bold;">#${myRank}</td>
-                <td style="width: 25%; text-align: left; color:var(--primary); font-weight:bold;">${prog.nickname || 'Guest'} (You)</td>
+                <td style="width: 10%; color:var(--primary);font-weight:bold;">-</td>
+                <td style="width: 25%; text-align: left; color:var(--primary); font-weight:bold;">${escapeHtml(prog.nickname || 'Guest')} (You)</td>
                 <td style="width: 30%; text-align: left;">
                     <span style="font-size: 14px; color: #aaa;">Level ${prog.globalLevel || 1}</span>
                     <span style="font-size: 16px; color: ${myRInfo.color}; font-weight: bold; margin-left: 5px; letter-spacing: 1px;">${myRInfo.stars}</span>
