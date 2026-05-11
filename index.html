@@ -2011,7 +2011,7 @@
         }
 
         function dropGems(x, y, count, type = 'normal') { 
-            for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 600, vy: (Math.random() - 0.5) * 600, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff' }); 
+            for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 600, vy: (Math.random() - 0.5) * 600, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff', isXp: type === 'boss' }); 
         }
         
         function spawnFood() { 
@@ -2147,6 +2147,10 @@
                     if (gDist < 250) { g.x += (player.x - g.x) * Math.min(1, dt*8); g.y += (player.y - g.y) * Math.min(1, dt*8); } 
                     if (gDist < pSize + 20) { 
                         droppedGems.splice(i, 1); 
+                        if (g.isXp) {
+                            player.xp += 50;
+                            updateLevel();
+                        }
                         let val = g.size > 15 ? 10 : 1; 
                         val = Math.floor(val * currentGemMultiplier);
                         playerRunData.gems += val; playerRunData.totalRunGems += val; playSound('gem'); updateUI(); 
@@ -2296,7 +2300,7 @@
                                     if (targetDog.playerDamaged) {
                                         prog.totalKills++; 
                                         prog.dogKills[targetDog.name] = (prog.dogKills[targetDog.name] || 0) + 1;
-                                        player.xp += targetDog.isBoss ? 5000 : Math.floor(25 * Math.pow(1.20, targetDog.level - 1));
+                                        player.xp += Math.floor(25 * Math.pow(1.20, targetDog.level - 1));
                                         updateLevel();
                                     }
                                     
@@ -2335,6 +2339,16 @@
                         let g = droppedGems[j];
                         if (Math.hypot(c.x - g.x, c.y - g.y) < c.size + 20) {
                             droppedGems.splice(j, 1);
+                            if (g.isXp) {
+                                c.xp += 50;
+                                let cStats = evolutions[Math.min(c.level - 1, 49)];
+                                while (c.xp >= cStats.nextXp && c.level < 50) {
+                                    c.level++; c.xp -= cStats.nextXp;
+                                    cStats = evolutions[Math.min(c.level - 1, 49)];
+                                    c.maxHp = cStats.maxHp * HELMET_HP_MULT[c.hTier]; c.hp = c.maxHp; c.size = cStats.baseSize;
+                                    for(let p=0; p<15; p++) { let pt = getParticle(); pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
+                                }
+                            }
                         }
                     }
                 }
@@ -2565,7 +2579,9 @@
                             for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : '#ff2a2a'; particles.push(pt); } 
                             
                             if (e.hp <= 0) { 
-                                player.xp += e.isBoss ? 5000 : Math.floor(25 * Math.pow(1.20, e.level - 1)); playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
+                                player.xp += Math.floor(25 * Math.pow(1.20, e.level - 1)); 
+                                updateLevel();
+                                playerRunData.kills++; prog.totalKills++; prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
                                 combo++; comboTimer = COMBO_WINDOW; if(combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if(combo > prog.bestCombo) prog.bestCombo = combo;
                                 questProgress('combo', combo); questProgress('kills', 1);
                                 if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
