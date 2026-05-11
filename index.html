@@ -921,7 +921,7 @@
         
         const particlePool = [];
         const dmgNumberPool = [];
-        function getParticle() { return particlePool.pop() || { x:0, y:0, vx:0, vy:0, life:0, color:'#fff', size:6 }; }
+        function getParticle() { let p = particlePool.pop(); if (p) { p.size = 6; return p; } return { x:0, y:0, vx:0, vy:0, life:0, color:'#fff', size:6 }; }
         function releaseParticle(p) { particlePool.push(p); }
         function getDmgNumber() { return dmgNumberPool.pop() || { x:0, y:0, vy:0, val:0, life:0, color:'#fff' }; }
         function releaseDmgNumber(d) { dmgNumberPool.push(d); }
@@ -2121,7 +2121,7 @@
                 let stats = evolutions[Math.min(player.level - 1, 49)]; let pSize = stats.baseSize;
                 let targetZoom = Math.max(0.45, 1 / (1 + (player.level - 1) * 0.02)); 
                 currentZoom += (targetZoom - currentZoom) * (dt * 3);
-                let viewRadius = (Math.max(width, height) / currentZoom) * 0.6;
+                let viewRadius = (Math.min(width, height) / currentZoom) * 0.6; // Omezeno jen na 60% menší strany (zvuky nebudou hrát mimo obrazovku)
                 
                 for (let i = decorations.length - 1; i >= 0; i--) {
                     if (decorations[i].life !== undefined) {
@@ -2130,7 +2130,11 @@
                     }
                 }
 
-                for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx * dt; particles[i].y += particles[i].vy * dt; particles[i].life -= dt; if (particles[i].life <= 0) { releaseParticle(particles[i]); particles.splice(i, 1); } }
+                for (let i = particles.length - 1; i >= 0; i--) { 
+                    let p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; 
+                    p.vx *= Math.pow(0.01, dt); p.vy *= Math.pow(0.01, dt); p.size *= Math.pow(0.1, dt); 
+                    p.life -= dt; if (p.life <= 0) { releaseParticle(p); particles.splice(i, 1); } 
+                }
                 for (let i = damageNumbers.length - 1; i >= 0; i--) { damageNumbers[i].y += damageNumbers[i].vy * dt; damageNumbers[i].vy += 800 * dt; damageNumbers[i].life -= dt; if (damageNumbers[i].life <= 0) { releaseDmgNumber(damageNumbers[i]); damageNumbers.splice(i, 1); } }
                 for (let i = droppedGems.length - 1; i >= 0; i--) { 
                     let g = droppedGems[i]; g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= Math.pow(0.05, dt); g.vy *= Math.pow(0.05, dt); g.life -= dt; 
@@ -2456,7 +2460,7 @@
                         if (aDiff < archStats.sweepAngle) { 
                             let dmg = stats.playerDamage * pDmgMult; c.hp -= dmg; chestHit = true; 
                             let d = getDmgNumber(); d.x=c.x; d.y=c.y-c.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                            for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=c.x; pt.y=c.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=CHEST_TYPES[c.type].color; particles.push(pt); }
+                            for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=c.x; pt.y=c.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color=CHEST_TYPES[c.type].color; particles.push(pt); }
                             if (c.hp <= 0) { dropGems(c.x, c.y, Math.floor(Math.random() * (CHEST_TYPES[c.type].gems[1] - CHEST_TYPES[c.type].gems[0])) + CHEST_TYPES[c.type].gems[0]); chests.splice(i, 1); playerRunData.chestsOpened++; questProgress('chests', 1); } 
                         }
                     }
@@ -2572,7 +2576,7 @@
                             e.playerDamaged = true; // Značka: Hráč se aktivně podílel na poškození
                             if (archStats.knockback > 0) { let ang = Math.atan2(e.y - player.y, e.x - player.x); e.knockbackVx = Math.cos(ang) * archStats.knockback; e.knockbackVy = Math.sin(ang) * archStats.knockback; }
                             let d = getDmgNumber(); d.x=e.x; d.y=e.y-e.size; d.val=Math.round(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                            for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : '#ff2a2a'; particles.push(pt); } 
+                            for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : '#ff2a2a'; particles.push(pt); } 
                             
                             if (e.hp <= 0) { 
                                 player.xp += Math.floor(25 * Math.pow(1.20, e.level - 1)); 
@@ -2617,7 +2621,7 @@
                                     }
                                     
                                     let d = getDmgNumber(); d.x=target.x; d.y=target.y-targetSize; d.val=Math.round(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                                    for(let p=0; p<12; p++) { let pt = getParticle(); pt.x=target.x; pt.y=target.y; pt.vx=(Math.random()-0.5)*350; pt.vy=(Math.random()-0.5)*350; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
+                                    for(let p=0; p<12; p++) { let pt = getParticle(); pt.x=target.x; pt.y=target.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
                                 } 
                             }
                         }
