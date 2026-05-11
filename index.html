@@ -2001,8 +2001,8 @@
             setTimeout(() => showDeathScreen(true, timeStr, isCompHardcore), 2000);
         }
 
-        function dropGems(x, y, count, type = 'normal') { 
-            for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 1000, vy: (Math.random() - 0.5) * 1000, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff', isXp: type === 'boss', pickupDelay: 0.8 }); 
+        function dropGems(x, y, count, type = 'normal', xpValue = 0) { 
+            for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 1000, vy: (Math.random() - 0.5) * 1000, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff', isXp: type === 'boss', pickupDelay: 0.8, xpVal: xpValue }); 
         }
         
         function spawnFood() { 
@@ -2144,9 +2144,9 @@
                     if (gDist < pSize + 20) { 
                         droppedGems.splice(i, 1); 
                         if (g.isXp) {
-                            player.xp += 50;
+                            player.xp += g.xpVal;
                             updateLevel();
-                            let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*60; d.y=player.y - pSize - 20; d.val="+50 XP"; d.color='#f1c40f'; d.life=0.9; d.vy=-150 - Math.random()*100; damageNumbers.push(d);
+                            let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*60; d.y=player.y - pSize - 20; d.val="+" + g.xpVal + " XP"; d.color='#f1c40f'; d.life=0.9; d.vy=-150 - Math.random()*100; damageNumbers.push(d);
                         }
                         let val = g.size > 15 ? 10 : 1; 
                         val = Math.floor(val * currentGemMultiplier);
@@ -2301,8 +2301,11 @@
                                         updateLevel();
                                     }
                                     
-                                    if (targetDog.isBoss) dropGems(targetDog.x, targetDog.y, 100, 'boss');
-                                    else if (targetDog.isMiniBoss) dropGems(targetDog.x, targetDog.y, 30, 'boss');
+                                    let tStats = evolutions[Math.min(targetDog.level - 1, 49)];
+                                    let orbXp = Math.max(50, Math.floor(tStats.nextXp * 0.015)); // 1 orb = 1.5% levelu (100 orbů = 1.5 levelu)
+                                    
+                                    if (targetDog.isBoss) dropGems(targetDog.x, targetDog.y, 100, 'boss', orbXp);
+                                    else if (targetDog.isMiniBoss) dropGems(targetDog.x, targetDog.y, 30, 'boss', orbXp);
                                     else if (targetDog.level >= c.level + 1) dropGems(targetDog.x, targetDog.y, 3 + Math.floor(Math.random() * 4)); 
                                     else if (Math.random() > 0.75) dropGems(targetDog.x, targetDog.y, 1);
                                     
@@ -2320,7 +2323,8 @@
                             if (c.hp < c.maxHp && !activeMods.noHeal) {
                                 c.hp = Math.min(c.maxHp, c.hp + c.maxHp * 0.15);
                             } else {
-                                c.xp += 18;
+                                let xpGained = (f.type === 'milk' ? Math.max(18, Math.floor(cStats.nextXp * 0.12)) : f.type === 'mouse' ? Math.max(10, Math.floor(cStats.nextXp * 0.06)) : f.type === 'fish' ? Math.max(6, Math.floor(cStats.nextXp * 0.03)) : Math.max(2, Math.floor(cStats.nextXp * 0.01)));
+                                c.xp += xpGained;
                                 if (c.xp >= cStats.nextXp && c.level < 50) {
                                     c.level++; c.xp = 0;
                                     let newStats = evolutions[Math.min(c.level - 1, 49)];
@@ -2338,7 +2342,7 @@
                         if (Math.hypot(c.x - g.x, c.y - g.y) < c.size + 20) {
                             droppedGems.splice(j, 1);
                             if (g.isXp) {
-                                c.xp += 50;
+                                c.xp += g.xpVal;
                                 let cStats = evolutions[Math.min(c.level - 1, 49)];
                                 while (c.xp >= cStats.nextXp && c.level < 50) {
                                     c.level++; c.xp -= cStats.nextXp;
@@ -2438,7 +2442,7 @@
                             let healedPoints = Math.round(player.hp - oldHp); 
                             if (healedPoints > 0) { let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*40; d.y=player.y - pSize - 10; d.val="+"+healedPoints; d.color='#2ecc71'; d.life=1.0; d.vy=-100 - Math.random()*50; damageNumbers.push(d); }
                         } else {
-                            let xpGained = (f.type === 'milk' ? 18 : f.type === 'mouse' ? 10 : f.type === 'fish' ? 6 : Math.max(1, Math.ceil(player.level/3)));
+                            let xpGained = (f.type === 'milk' ? Math.max(18, Math.floor(stats.nextXp * 0.12)) : f.type === 'mouse' ? Math.max(10, Math.floor(stats.nextXp * 0.06)) : f.type === 'fish' ? Math.max(6, Math.floor(stats.nextXp * 0.03)) : Math.max(2, Math.floor(stats.nextXp * 0.01)));
                             player.xp += xpGained;
                             let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*40; d.y=player.y - pSize - 10; d.val="+"+xpGained+" XP"; d.color='#f1c40f'; d.life=1.0; d.vy=-100 - Math.random()*50; damageNumbers.push(d);
                         }
@@ -2589,8 +2593,11 @@
                                 
                                 if (e.isFinalBoss) triggerWin();
                                 
-                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss'); questProgress('boss', 1); bossSpawnTimer = BOSS_RESPAWN_AFTER_KILL; playerRunData.bossKills++; } 
-                                else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss'); playerRunData.bossKills++; }
+                                let eStats = evolutions[Math.min(e.level - 1, 49)];
+                                let orbXp = Math.max(50, Math.floor(eStats.nextXp * 0.015)); // Skálování: Boss dá cca 1.5 levelu (100 * 1.5%)
+                                
+                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss', orbXp); questProgress('boss', 1); bossSpawnTimer = BOSS_RESPAWN_AFTER_KILL; playerRunData.bossKills++; } 
+                                else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss', orbXp); playerRunData.bossKills++; }
                                 else if (e.level >= player.level + 1) dropGems(e.x, e.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(e.x, e.y, 1); 
                                 enemies.splice(i, 1); continue; 
                             } 
