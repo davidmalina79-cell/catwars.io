@@ -1406,6 +1406,12 @@
                 } else if (aura === 'mega') {
                     ctx.fillStyle = '#111'; ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 15;
                     for(let i=0; i<8; i++) { let a = (i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a-0.1)*size, Math.sin(a-0.1)*size); ctx.lineTo(Math.cos(a)*size*1.9, Math.sin(a)*size*1.9); ctx.lineTo(Math.cos(a+0.1)*size, Math.sin(a+0.1)*size); ctx.fill(); }
+                } else if (aura === 'omega') {
+                    let nGrad = ctx.createRadialGradient(0,0,size*0.8, 0,0,size*3.0);
+                    nGrad.addColorStop(0, '#000000'); nGrad.addColorStop(0.4, '#cc00ff'); nGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0,0,size*3.0,0,Math.PI*2); ctx.fill();
+                    ctx.strokeStyle = '#cc00ff'; ctx.lineWidth = 4;
+                    for(let i=0; i<20; i++) { let a = (i/20)*Math.PI*2 + (Date.now()/500); ctx.beginPath(); ctx.moveTo(Math.cos(a)*size*1.2, Math.sin(a)*size*1.2); ctx.lineTo(Math.cos(a+0.3)*size*2.8, Math.sin(a+0.3)*size*2.8); ctx.stroke(); }
                 } else if (aura === 'final' || level >= 50) { 
                     let nGrad = ctx.createRadialGradient(0,0,size*0.8, 0,0,size*2.5);
                     nGrad.addColorStop(0, '#000000'); nGrad.addColorStop(0.3, '#ff0000'); nGrad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -1895,24 +1901,6 @@
             });
         }
 
-        function spawnBoss() {
-            let cameraDiag = Math.sqrt(width * width + height * height) / (2 * currentZoom); let ex, ey; let attempts = 0;
-            do { let angle = Math.random() * Math.PI * 2; let dist = cameraDiag + 800; ex = Math.max(200, Math.min(WORLD_SIZE - 200, player.x + Math.cos(angle) * dist)); ey = Math.max(200, Math.min(WORLD_SIZE - 200, player.y + Math.sin(angle) * dist)); attempts++; } while (Math.hypot(ex - player.x, ey - player.y) < cameraDiag && attempts < 15);
-            
-            let variant = BOSS_VARIANTS[Math.floor(Math.random() * BOSS_VARIANTS.length)];
-            let stats = evolutions[49]; 
-            let pStats = evolutions[Math.min(player.level + 4, 49)];
-            let bossLvl = Math.min(60, player.level + 8);
-            let bossHp = Math.floor(8000 * Math.pow(1.25, player.level)) * variant.hpMult;
-            let bossDmg = Math.floor(40 * Math.pow(1.28, player.level)) * variant.dmgMult; 
-            
-            let eSpeed = pStats.speed * 0.7 * variant.speedMult;
-            if (activeMods.fast) eSpeed *= 1.5; 
-            
-            enemies.push({ x: ex, y: ey, level: bossLvl, name: variant.name, size: stats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: stats.weaponLength * 1.2, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.4 * variant.cdMult, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: '#ffffff', pattern: 'god', weaponType: variant.weapon, hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), ability: variant.ability, specialTimer: 5.0, specialPhase: 0, playerDamaged: false });
-            playSound('boss'); let alert = document.getElementById('boss-alert'); alert.innerText = variant.alert; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 3500);
-        }
-
         function spawnMiniBoss() {
             if (!player) return;
             let cameraDiag = Math.sqrt(width * width + height * height) / (2 * currentZoom); let ex, ey; let attempts = 0;
@@ -1927,7 +1915,8 @@
             let eSpeed = pStats.speed * 0.85 * variant.speedMult;
             if (activeMods.fast) eSpeed *= 1.5;
 
-            enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, windup: variant.windupMs / 1000, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: variant.accent, pattern: variant.pattern, aura: variant.aura, weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), playerDamaged: false, invuln: 0 });
+            // Zvětšeno o 30% (* 1.3)
+            enemies.push({ x: ex, y: ey, level: mbLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult * 1.3, speed: eSpeed, weaponLength: pStats.weaponLength * 1.1, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.2 * variant.cdMult, windup: variant.windupMs / 1000, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: variant.accent, pattern: variant.pattern, aura: variant.aura, weaponType: variant.weapon, hp: mbHp, maxHp: mbHp, damage: mbDmg, isBoss: false, isMiniBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), playerDamaged: false, invuln: 0 });
             
             let alert = document.getElementById('boss-alert'); alert.innerText = '⚠️ MINI-BOSS SPAWNED!'; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 2500);
         }
@@ -1946,7 +1935,8 @@
             let eSpeed = pStats.speed * 0.7 * variant.speedMult;
             if (activeMods.fast) eSpeed *= 1.5; 
             
-            enemies.push({ x: ex, y: ey, level: bossLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult, speed: eSpeed, weaponLength: pStats.weaponLength * 1.2, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.0 * variant.cdMult, windup: variant.windupMs / 1000, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: variant.accent, pattern: variant.pattern, aura: variant.aura, weaponType: variant.weapon, hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), ability: variant.ability, specialTimer: 5.0, specialPhase: 0, playerDamaged: false });
+            // Zvětšeno o 60% (* 1.6)
+            enemies.push({ x: ex, y: ey, level: bossLvl, name: variant.name, size: pStats.baseSize * variant.sizeMult * 1.6, speed: eSpeed, weaponLength: pStats.weaponLength * 1.2, angle: Math.random() * Math.PI * 2, attackTimer: 0, attackCooldown: 1.0 * variant.cdMult, windup: variant.windupMs / 1000, hasAttacked: false, state: 'chase', stateTimer: 9999, color: variant.color, accent: variant.accent, pattern: variant.pattern, aura: variant.aura, weaponType: variant.weapon, hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, knockbackVx: 0, knockbackVy: 0, archetype: getWeaponArchetype(variant.weapon), ability: variant.ability, specialTimer: 5.0, specialPhase: 0, playerDamaged: false });
             playSound('boss'); let alert = document.getElementById('boss-alert'); alert.innerText = variant.alert; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 3500);
         }
 
@@ -1962,11 +1952,12 @@
             let bossHp = Math.floor(1500 * hpMult * (activeMods.doubleDmg ? 1.5 : 1.0)); 
             let bossDmg = Math.floor(30 * dmgMult * (activeMods.doubleDmg ? 2 : 1));
             
+            // Masivní God Boss (* 2.8), nový název a černofialová tématika!
             enemies.push({ 
-                x: ex, y: ey, level: bossLvl, name: 'SUPREME OVERLORD', size: stats.baseSize * 1.8, 
+                x: ex, y: ey, level: bossLvl, name: 'THE OMEGA BOSS', size: stats.baseSize * 2.8, 
                 speed: 380, weaponLength: stats.weaponLength * 1.5, angle: 0, attackTimer: 0, 
                 attackCooldown: 1.1, windup: 0.5, hasAttacked: false, state: 'chase', stateTimer: 9999, 
-                color: '#111111', accent: '#ff0000', pattern: 'demon', aura: 'final', weaponType: 'infinity blade', 
+                color: '#050505', accent: '#cc00ff', pattern: 'demon', aura: 'omega', weaponType: 'infinity blade', 
                 hp: bossHp, maxHp: bossHp, damage: bossDmg, isBoss: true, isFinalBoss: true, 
                 knockbackVx: 0, knockbackVy: 0, archetype: 'heavy', ability: 'stomp', 
                 specialTimer: 4.0, specialPhase: 0, playerDamaged: false 
@@ -1974,9 +1965,9 @@
             
             playSound('boss');
             let alert = document.getElementById('boss-alert'); 
-            alert.innerHTML = '🔥 THE END HAS COME! 🔥<br>DEFEAT SUPREME OVERLORD!'; 
+            alert.innerHTML = '🔥 THE END HAS COME! 🔥<br>DEFEAT THE OMEGA BOSS!'; 
             alert.style.display = 'block'; alert.style.background = 'rgba(0,0,0,0.9)'; 
-            alert.style.color = '#ff0000'; alert.style.border = '4px solid #ff0000';
+            alert.style.color = '#cc00ff'; alert.style.border = '4px solid #cc00ff';
             setTimeout(() => { alert.style.display = 'none'; alert.style.background = 'rgba(231, 76, 60, 0.9)'; alert.style.color = 'white'; alert.style.border = '4px solid #fff'; }, 5000);
         }
 
@@ -2011,7 +2002,7 @@
         }
 
         function dropGems(x, y, count, type = 'normal') { 
-            for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 600, vy: (Math.random() - 0.5) * 600, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff', isXp: type === 'boss' }); 
+            for(let i=0; i<count; i++) droppedGems.push({ x: x, y: y, vx: (Math.random() - 0.5) * 1000, vy: (Math.random() - 0.5) * 1000, size: type === 'boss' ? 20 : 10, life: 10, color: type === 'boss' ? '#ffd700' : '#00d4ff', isXp: type === 'boss', pickupDelay: 0.8 }); 
         }
         
         function spawnFood() { 
@@ -2143,6 +2134,7 @@
                 for (let i = damageNumbers.length - 1; i >= 0; i--) { damageNumbers[i].y += damageNumbers[i].vy * dt; damageNumbers[i].vy += 800 * dt; damageNumbers[i].life -= dt; if (damageNumbers[i].life <= 0) { releaseDmgNumber(damageNumbers[i]); damageNumbers.splice(i, 1); } }
                 for (let i = droppedGems.length - 1; i >= 0; i--) { 
                     let g = droppedGems[i]; g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= Math.pow(0.05, dt); g.vy *= Math.pow(0.05, dt); g.life -= dt; 
+                    if (g.pickupDelay > 0) { g.pickupDelay -= dt; continue; } // OPRAVA: Prodleva před sebráním, aby orby explodovaly
                     let gDist = Math.hypot(player.x - g.x, player.y - g.y); 
                     if (gDist < 250) { g.x += (player.x - g.x) * Math.min(1, dt*8); g.y += (player.y - g.y) * Math.min(1, dt*8); } 
                     if (gDist < pSize + 20) { 
@@ -2150,6 +2142,7 @@
                         if (g.isXp) {
                             player.xp += 50;
                             updateLevel();
+                            let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*60; d.y=player.y - pSize - 20; d.val="+50 XP"; d.color='#f1c40f'; d.life=0.9; d.vy=-150 - Math.random()*100; damageNumbers.push(d);
                         }
                         let val = g.size > 15 ? 10 : 1; 
                         val = Math.floor(val * currentGemMultiplier);
@@ -2337,6 +2330,7 @@
                     
                     for (let j = droppedGems.length - 1; j >= 0; j--) {
                         let g = droppedGems[j];
+                        if (g.pickupDelay > 0) continue; // OPRAVA: AI kočky nesmí ukrást XP orby hned po smrti bosse
                         if (Math.hypot(c.x - g.x, c.y - g.y) < c.size + 20) {
                             droppedGems.splice(j, 1);
                             if (g.isXp) {
@@ -2437,10 +2431,12 @@
                         if (player.hp < player.maxHp && !activeMods.noHeal) { 
                             let healPercent = (f.type === 'milk' ? 0.12 : f.type === 'mouse' ? 0.06 : f.type === 'fish' ? 0.03 : 0.01); 
                             let oldHp = player.hp; player.hp = Math.min(player.maxHp, player.hp + Math.ceil(player.maxHp * healPercent)); 
-                            let healedPoints = player.hp - oldHp; 
-                            if (healedPoints > 0) { let d = getDmgNumber(); d.x=player.x; d.y=player.y - pSize - 10; d.val="+"+healedPoints; d.color='#2ecc71'; d.life=1.0; d.vy=-100; damageNumbers.push(d); }
+                            let healedPoints = Math.round(player.hp - oldHp); 
+                            if (healedPoints > 0) { let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*40; d.y=player.y - pSize - 10; d.val="+"+healedPoints; d.color='#2ecc71'; d.life=1.0; d.vy=-100 - Math.random()*50; damageNumbers.push(d); }
                         } else {
-                            player.xp += (f.type === 'milk' ? 18 : f.type === 'mouse' ? 10 : f.type === 'fish' ? 6 : Math.max(1, Math.ceil(player.level/3)));
+                            let xpGained = (f.type === 'milk' ? 18 : f.type === 'mouse' ? 10 : f.type === 'fish' ? 6 : Math.max(1, Math.ceil(player.level/3)));
+                            player.xp += xpGained;
+                            let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*40; d.y=player.y - pSize - 10; d.val="+"+xpGained+" XP"; d.color='#f1c40f'; d.life=1.0; d.vy=-100 - Math.random()*50; damageNumbers.push(d);
                         }
                         spawnFood(); updateLevel(); 
                     } 
@@ -2795,7 +2791,7 @@
                 title.innerText = "VICTORY!";
                 title.style.color = '#f1c40f';
                 title.style.textShadow = '0 0 20px #f39c12';
-                subtitle.innerText = isCompHardcore ? "🏆 YOU BEAT COMPETITIVE HARDCORE!" : "You defeated the Supreme Overlord!";
+                subtitle.innerText = isCompHardcore ? "🏆 YOU BEAT COMPETITIVE HARDCORE!" : "You defeated The Omega Boss!";
                 subtitle.style.color = '#f1c40f';
                 subtitle.style.fontWeight = 'bold';
                 timeEl.style.display = 'block';
