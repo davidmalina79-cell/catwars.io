@@ -1597,13 +1597,23 @@
             let key = `${weaponType}_${upgradeTier}`;
             if (weaponCache[key]) return weaponCache[key];
             
-            let tempC = document.createElement('canvas'); tempC.width = 300; tempC.height = 120;
-            let tCtx = tempC.getContext('2d'); tCtx.translate(50, 60); // Horizontální pozice (bez rotace)
-            let size = 42; // Zvětšeno na 42, horizontálně máme víc místa
+            let tempC = document.createElement('canvas'); tempC.width = 400; tempC.height = 140;
+            let tCtx = tempC.getContext('2d'); 
+            
+            let size = 42; 
             let arch = getWeaponArchetype(weaponType); let archStats = ARCH_STATS[arch];
             let sizeMult = UPGRADE_SIZE_MULT[upgradeTier] || 1.0;
             let wLen = (size * 2.5) * archStats.reachMult * sizeMult; 
             let wWid = Math.max(6, size * 0.22) * sizeMult;
+
+            // Dynamický posun pro vycentrování v plátně
+            let w = (weaponType || '').toLowerCase();
+            let offsetX = wLen * 0.4; // Těžiště většiny zbraní
+            if (w.includes('twin')) offsetX = wLen * 0.1;
+            else if (w.includes('staff') || w.includes('stick')) offsetX = wLen * 0.5;
+
+            tCtx.translate(200 - offsetX, 70); 
+
             drawWeaponShape(tCtx, wLen, wWid, weaponType, '#ffffff', upgradeTier);
             let data = tempC.toDataURL(); weaponCache[key] = data; return data;
         }
