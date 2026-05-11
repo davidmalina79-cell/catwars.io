@@ -341,26 +341,31 @@
 
             <!-- RIGHT COLUMN: Upgrades -->
             <div class="menu-col side">
-                <!-- ZVĚTŠENÁ A BUCLATÁ TLAČÍTKA S HERNÍ GRAFIKOU -->
-                <div style="display: flex; flex-direction: column; gap: 18px; flex-grow: 1; justify-content: flex-start; margin-top: 0;">
-                    <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: var(--info); box-shadow: 0 8px 0 #2980b9; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <img id="btn-icon-cats" src="" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
-                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">UPGRADES</span>
+                <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1; justify-content: flex-start; margin-top: 0;">
+                    <button class="btn-main" onclick="openEncyclopedia('cats')" style="background: #3498db; color: #fff; box-shadow: 0 8px 0 #2980b9; width: 100%; padding: 18px 15px; margin: 0; display: flex; align-items: center; justify-content: flex-start; gap: 15px; border-radius: 16px;">
+                        <span style="font-size: 40px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4)); width: 50px; text-align: center;">🐱</span>
+                        <span style="font-size: 20px; font-weight: 900; letter-spacing: 1px;">UPGRADES</span>
                     </button>
                     
-                    <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; box-shadow: 0 8px 0 #8e44ad; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <img id="btn-icon-dogs" src="" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
-                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">BESTIARY</span>
+                    <button class="btn-main" onclick="openEncyclopedia('dogs')" style="background: #9b59b6; color: #fff; box-shadow: 0 8px 0 #8e44ad; width: 100%; padding: 18px 15px; margin: 0; display: flex; align-items: center; justify-content: flex-start; gap: 15px; border-radius: 16px;">
+                        <span style="font-size: 40px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4)); width: 50px; text-align: center;">🐺</span>
+                        <span style="font-size: 20px; font-weight: 900; letter-spacing: 1px;">BESTIARY</span>
                     </button>
                     
-                    <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; box-shadow: 0 8px 0 #d68910; color: #111; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <img id="btn-icon-armory" src="" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
-                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">WEAPONS</span>
+                    <button class="btn-main" onclick="openEncyclopedia('armory')" style="background: #f1c40f; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: 0 8px 0 #d68910; width: 100%; padding: 18px 15px; margin: 0; display: flex; align-items: center; justify-content: flex-start; gap: 15px; border-radius: 16px;">
+                        <span style="font-size: 40px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4)); width: 50px; text-align: center;">⚔️</span>
+                        <span style="font-size: 20px; font-weight: 900; letter-spacing: 1px;">WEAPONS</span>
                     </button>
                     
-                    <button class="btn-main" onclick="openEncyclopedia('quests')" style="background: #e74c3c; box-shadow: 0 8px 0 #c0392b; width: 100%; padding: 20px 15px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 20px; border-radius: 16px;">
-                        <span style="font-size: 55px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">💎</span>
-                        <span style="font-size: 22px; font-weight: 900; letter-spacing: 1px;">QUESTS</span>
+                    <button class="btn-main" onclick="openEncyclopedia('boosts')" style="background: #e67e22; color: #fff; box-shadow: 0 8px 0 #d35400; width: 100%; padding: 18px 15px; margin: 0; display: flex; align-items: center; justify-content: flex-start; gap: 15px; border-radius: 16px; position: relative;">
+                        <span style="font-size: 40px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4)); width: 50px; text-align: center;">🔥</span>
+                        <span style="font-size: 20px; font-weight: 900; letter-spacing: 1px;">BOOSTS</span>
+                        <div style="position: absolute; top: -5px; right: -5px; background: #555; color: #ccc; font-size: 10px; padding: 3px 6px; border-radius: 8px; font-weight: bold; border: 2px solid #333; text-transform: uppercase;">SOON</div>
+                    </button>
+                    
+                    <button class="btn-main" onclick="openEncyclopedia('quests')" style="background: #e74c3c; color: #fff; box-shadow: 0 8px 0 #c0392b; width: 100%; padding: 18px 15px; margin: 0; display: flex; align-items: center; justify-content: flex-start; gap: 15px; border-radius: 16px;">
+                        <span style="font-size: 40px; line-height: 1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4)); width: 50px; text-align: center;">💎</span>
+                        <span style="font-size: 20px; font-weight: 900; letter-spacing: 1px;">QUESTS</span>
                     </button>
                 </div>
             </div>
@@ -369,13 +374,42 @@
 
     <!-- LEADERBOARD SCREEN -->
     <div id="leaderboard-screen" class="overlay" style="display: none; z-index: 250;">
-        <div class="panel" style="max-width: 550px; width: 95%; padding: 20px;">
-            <h1 style="color: #f1c40f; font-size: 35px; margin-bottom: 10px;">🏆 LEADERBOARD</h1>
-            <p style="color: #aaa; margin-top: 0;">Top 50 Players Globally</p>
-            <div id="lb-content" style="max-height: 50vh; overflow-y: auto; text-align: left; margin-bottom: 20px; background: rgba(0,0,0,0.4); border-radius: 10px; padding: 10px;">
-                <p style="text-align: center; color: #aaa;">Loading data from satellite...</p>
+        <div class="panel" style="max-width: 900px; width: 95%; padding: 20px; display: flex; flex-direction: column; max-height: 90vh;">
+            <h1 style="color: #f1c40f; font-size: 35px; margin-bottom: 10px; margin-top: 0;">🏆 LEADERBOARD</h1>
+            
+            <div class="enc-tabs" style="margin-bottom: 15px; width: 100%;">
+                <button class="enc-tab lb-tab active" onclick="switchLbTab('kills')">Total Kills</button>
+                <button class="enc-tab lb-tab" onclick="switchLbTab('solo')">Best Solo</button>
+                <button class="enc-tab lb-tab" onclick="switchLbTab('hardcore')">Best Hardcore</button>
+                <button class="enc-tab lb-tab" onclick="switchLbTab('team')">Best Co-Op</button>
             </div>
-            <button class="btn-main" onclick="window.closeLeaderboard()">🏠 Back to Menu</button>
+
+            <div style="background: rgba(0,0,0,0.4); border-radius: 10px; padding: 10px; flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; text-align: left; margin-bottom: 20px;">
+                <div style="padding-right: 8px;">
+                    <table class="stats-table" style="margin-bottom:0;">
+                        <thead>
+                            <tr id="lb-header"><th>Rank</th><th style="text-align: left;">Player</th><th style="text-align: left;">Level</th><th>Max Cat Lv.</th><th>Score</th></tr>
+                        </thead>
+                    </table>
+                </div>
+                <div id="lb-scroll-area" style="overflow-y: auto; flex-grow: 1;">
+                    <table class="stats-table" style="margin-bottom:0;">
+                        <tbody id="lb-table-body">
+                            <!-- JS fills this -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Current Player Sticky Row -->
+                <div style="border-top: 2px solid var(--primary); margin-top: 5px; padding-top: 5px;">
+                    <table class="stats-table" style="margin-bottom:0; background: rgba(243, 156, 18, 0.2);">
+                        <tbody id="lb-current-player">
+                            <!-- JS fills this -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <button class="btn-main" onclick="closeLeaderboard()" style="margin-top: auto; max-width: 300px; align-self: center;">🏠 Back to Menu</button>
         </div>
     </div>
 
@@ -740,23 +774,14 @@
             let rankInfo = getGlobalRankInfo(prog.globalLevel || 1);
             let badgeEl = document.getElementById('mm-global-rank-badge');
             if(badgeEl) {
-                badgeEl.innerText = rankInfo.fullText;
+                // Formátování podle screenshotu
+                badgeEl.innerHTML = `${rankInfo.title}<br><span style="font-size: 16px;">${rankInfo.stars}</span>`;
                 badgeEl.style.background = rankInfo.color;
                 document.getElementById('mm-global-level').innerText = prog.globalLevel || 1;
                 
                 let xpPct = prog.globalLevel >= 50 ? 100 : ((prog.globalXp || 0) / rankInfo.nextXp) * 100;
                 document.getElementById('global-xp-bar').style.width = `${Math.min(100, xpPct)}%`;
                 document.getElementById('global-xp-text').innerText = prog.globalLevel >= 50 ? "MAX RANK REACHED" : `${prog.globalXp || 0} / ${rankInfo.nextXp} XP`;
-            }
-
-            if(typeof getSpriteDataURL === 'function' && document.getElementById('btn-icon-cats')) {
-                try {
-                    let wTier = prog.weaponUpgrades[prog.maxCatLevel] || 0;
-                    let hTier = prog.helmetUpgrades[prog.maxCatLevel] || 0;
-                    document.getElementById('btn-icon-cats').src = getSpriteDataURL('cats', prog.maxCatLevel, wTier, hTier);
-                    document.getElementById('btn-icon-dogs').src = getSpriteDataURL('dogs', prog.maxCatLevel);
-                    document.getElementById('btn-icon-armory').src = getWeaponDataURL('longsword', 3);
-                } catch(e) {}
             }
         }
 
@@ -774,16 +799,26 @@
 
         function toggleCompetitiveHardcore() {
             let isChecked = document.getElementById('mod-comp-hardcore').checked;
-            document.getElementById('mod-double-dmg').checked = isChecked;
-            document.getElementById('mod-noheal').checked = isChecked;
-            document.getElementById('mod-doubleboss').checked = isChecked;
-            document.getElementById('mod-fast').checked = isChecked;
-            document.getElementById('mod-nodash').checked = isChecked;
+            let mods = ['mod-double-dmg', 'mod-noheal', 'mod-doubleboss', 'mod-fast', 'mod-nodash'];
+            
+            for (let id of mods) {
+                let cb = document.getElementById(id);
+                if (isChecked) {
+                    cb.checked = true;
+                    cb.disabled = true; // Uzamkne checkbox
+                    cb.parentElement.style.pointerEvents = 'none'; // Zakáže kliknutí na text (label)
+                    cb.parentElement.style.opacity = '0.5'; // Vizuálně naznačí, že je to zamčené
+                } else {
+                    cb.disabled = false; // Odemkne checkbox
+                    cb.parentElement.style.pointerEvents = 'auto'; // Povolí kliknutí
+                    cb.parentElement.style.opacity = '1';
+                }
+            }
             calcModMultiplier();
         }
         window.toggleCompetitiveHardcore = toggleCompetitiveHardcore;
 
-        let selectedGameMode = 'solo';
+        let selectedGameMode = 'hardcore'; // Výchozí mód podle screenshotu
         function selectMode(mode) {
             if (mode === 'ffa') return; 
             
@@ -796,22 +831,25 @@
 
             if (mode === 'solo') {
                 modPanel.style.display = 'none';
-                startBtn.innerHTML = '▶️ PLAY SOLO';
+                startBtn.innerHTML = '🗡️ PLAY SOLO';
                 startBtn.style.background = 'var(--success)';
                 startBtn.style.boxShadow = '0 6px 0 #27ae60';
-                startBtn.style.color = '#111';
+                startBtn.style.color = '#fff';
+                startBtn.style.textShadow = '1px 1px 2px #000';
             } else if (mode === 'hardcore') {
-                modPanel.style.display = 'block';
+                modPanel.style.display = 'flex'; // Změněno na flex, aby se uplatnil flex-grow
                 startBtn.innerHTML = '💀 PLAY HARDCORE';
                 startBtn.style.background = '#e74c3c';
                 startBtn.style.boxShadow = '0 6px 0 #c0392b';
-                startBtn.style.color = 'white';
+                startBtn.style.color = '#fff';
+                startBtn.style.textShadow = '1px 1px 2px #000';
             } else if (mode === 'team') {
                 modPanel.style.display = 'none';
                 startBtn.innerHTML = '🔵 PLAY CO-OP';
                 startBtn.style.background = 'var(--info)';
                 startBtn.style.boxShadow = '0 6px 0 #2980b9';
-                startBtn.style.color = 'white';
+                startBtn.style.color = '#fff';
+                startBtn.style.textShadow = '1px 1px 2px #000';
             }
         }
         window.selectMode = selectMode;
@@ -1619,30 +1657,91 @@
         }
 
         // MENUS & UI
-        window.openLeaderboard = async () => {
+        window.openLeaderboard = () => {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('leaderboard-screen').style.display = 'flex';
-            document.getElementById('lb-content').innerHTML = '<p style="text-align: center; color: #aaa;">Fetching global ranks...</p>';
-            if (window.fetchLeaderboard) {
-                let data = await window.fetchLeaderboard();
-                let html = '<table class="stats-table" style="margin-bottom:0;"><tr><th>Rank</th><th>Player</th><th>Global Rank</th><th>Kills</th></tr>';
-                data.forEach((p, i) => {
-                    let gRank = getGlobalRankInfo(p.globalLevel || 1);
-                    html += `<tr>
-                        <td style="color:var(--primary);font-weight:bold;">#${i+1}</td>
-                        <td>${escapeHtml(p.nickname || 'Unknown')}</td>
-                        <td style="color:${gRank.color};font-weight:bold;text-shadow:1px 1px 2px #000;">Lv.${p.globalLevel || 1} ${gRank.stars}</td>
-                        <td>${p.kills}</td>
-                    </tr>`;
-                });
-                html += '</table>';
-                if (data.length === 0) html = '<p style="text-align: center; color: #aaa;">No data yet.</p>';
-                document.getElementById('lb-content').innerHTML = html;
-            }
+            window.switchLbTab('kills'); // Výchozí záložka při otevření
         };
+        
         window.closeLeaderboard = () => {
             document.getElementById('leaderboard-screen').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
+        };
+
+        window.switchLbTab = (tab) => {
+            // Update záložek UI
+            document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('active'));
+            let targetTab = document.querySelector(`.lb-tab[onclick*="('${tab}')"]`);
+            if (targetTab) targetTab.classList.add('active');
+
+            let tbody = document.getElementById('lb-table-body');
+            let header = document.getElementById('lb-header');
+            let currentBody = document.getElementById('lb-current-player');
+            
+            let isTime = tab === 'solo' || tab === 'hardcore' || tab === 'team';
+            header.innerHTML = `<th style="width: 10%;">Rank</th><th style="width: 25%; text-align: left;">Player</th><th style="width: 30%; text-align: left;">Level</th><th style="width: 15%;">Max Cat Lv.</th><th style="width: 20%; color: #00d4ff;">${isTime ? 'Time Survived ⏱️' : 'Total Kills ⚔️'}</th>`;
+            
+            let html = '';
+            const formatTime = ms => ms ? `${Math.floor(ms/60000)}:${Math.floor((ms%60000)/1000).toString().padStart(2,'0')}` : null;
+
+            // Generování Sandbox Mock dat pro Top 50
+            for(let i=1; i<=50; i++) {
+                let pName = i === 1 ? "DevPlayer" : (i === 2 ? "ProGamer99" : `Player_${Math.floor(Math.random()*9000)+1000}`);
+                let pRank = Math.max(1, 50 - Math.floor(i / 1.5));
+                let pMaxCat = Math.min(50, Math.floor(pRank * 1.2 + 5)); // Falešný max level kočky
+                let scoreStr = isTime ? `${Math.floor(25 - i*0.4)}:${(60 - i).toString().padStart(2, '0')}` : (250000 - i*4500).toLocaleString();
+                
+                // Předstíráme, že aktuální hráč je na 3. místě v Hardcore módu
+                let isMe = (tab === 'hardcore' && i === 3);
+                if (isMe) {
+                    pName = prog.nickname || 'Hero'; 
+                    pRank = prog.globalLevel || 1; 
+                    pMaxCat = prog.maxCatLevel || 1; 
+                    scoreStr = formatTime(prog.bestTimes?.hardcore) || "08:15";
+                }
+
+                let rankStyle = i <= 3 ? `color:var(--primary);font-weight:bold;font-size:18px;` : `color:#ccc;`;
+                let rowBg = isMe ? `background: rgba(243, 156, 18, 0.3); border: 1px solid var(--primary);` : ``;
+                
+                let rInfo = getGlobalRankInfo(pRank);
+                
+                html += `<tr style="${rowBg}">
+                    <td style="width: 10%; ${rankStyle}">#${i}</td>
+                    <td style="width: 25%; text-align: left; ${isMe ? 'color:var(--primary); font-weight:bold;' : ''}">${pName} ${isMe ? '(You)' : ''}</td>
+                    <td style="width: 30%; text-align: left;">
+                        <span style="font-size: 14px; color: #aaa;">Level ${pRank}</span>
+                        <span style="font-size: 16px; color: ${rInfo.color}; font-weight: bold; margin-left: 5px; letter-spacing: 1px;">${rInfo.stars}</span>
+                    </td>
+                    <td style="width: 15%; color:#aaa;">Lv. ${pMaxCat}</td>
+                    <td style="width: 20%; font-weight:bold; color: #fff; font-size: 16px;">${scoreStr}</td>
+                </tr>`;
+            }
+            tbody.innerHTML = html;
+
+            // Zobrazení pozice aktuálního hráče pod tabulkou
+            let myRank, myScore;
+            if (tab === 'hardcore') {
+                myRank = 3; myScore = formatTime(prog.bestTimes?.hardcore) || "08:15"; 
+            } else if (tab === 'solo') {
+                myRank = 142; myScore = formatTime(prog.bestTimes?.solo) || "12:34"; 
+            } else if (tab === 'team') {
+                myRank = 502; myScore = "10:45"; 
+            } else {
+                myRank = 856; myScore = (prog.totalKills || 0).toLocaleString(); 
+            }
+
+            let myRInfo = getGlobalRankInfo(prog.globalLevel || 1);
+
+            currentBody.innerHTML = `<tr>
+                <td style="width: 10%; color:var(--primary);font-weight:bold;">#${myRank}</td>
+                <td style="width: 25%; text-align: left; color:var(--primary); font-weight:bold;">${prog.nickname || 'Guest'} (You)</td>
+                <td style="width: 30%; text-align: left;">
+                    <span style="font-size: 14px; color: #aaa;">Level ${prog.globalLevel || 1}</span>
+                    <span style="font-size: 16px; color: ${myRInfo.color}; font-weight: bold; margin-left: 5px; letter-spacing: 1px;">${myRInfo.stars}</span>
+                </td>
+                <td style="width: 15%; color:#aaa;">Lv. ${prog.maxCatLevel || 1}</td>
+                <td style="width: 20%; font-weight:bold; color: #fff; font-size: 16px;">${myScore}</td>
+            </tr>`;
         };
 
         function goToMenu() { 
@@ -1668,6 +1767,14 @@
             
             let content = document.getElementById('enc-content');
             
+            if (tab === 'boosts') {
+                content.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">' +
+                                    '<span style="font-size: 80px; filter: drop-shadow(0 0 20px rgba(230,126,34,0.6)); margin-bottom: 20px;">🔥</span>' +
+                                    '<h3 style="margin-top:0; color:var(--primary); font-size: 32px;">Boosts (Coming Soon)</h3>' +
+                                    '<p style="color:#aaa; font-size: 18px; max-width: 400px;">Special effects and temporary buffs will be available here soon to help you conquer the dogs.</p></div>';
+                return;
+            }
+
             if (tab === 'quests') {
                 rollDailyQuestsIfNeeded();
                 content.innerHTML = '<h3 style="margin-top:0; color:#fff;">📜 Daily Quests</h3><p style="color:#aaa;font-size:14px; margin-bottom: 20px;">Complete quests to earn gems.</p>';
@@ -2781,7 +2888,81 @@
                 ctx.restore(); 
             });
             
-            chests.forEach(c => { if (c.x < camL - 250 || c.x > camR + 250 || c.y < camT - 250 || c.y > camB + 250) return; ctx.save(); ctx.translate(c.x, c.y); let cw = c.size, ch = c.size * 0.78; ctx.fillStyle = CHEST_TYPES[c.type].color; ctx.fillRect(-cw/2, -ch/2, cw, ch); ctx.strokeStyle = shade(CHEST_TYPES[c.type].color, -20); ctx.lineWidth = 3; for(let i = -ch/2 + 18; i < ch/2; i += 18) { ctx.beginPath(); ctx.moveTo(-cw/2, i); ctx.lineTo(cw/2, i); ctx.stroke(); } ctx.fillStyle = CHEST_TYPES[c.type].metal; ctx.fillRect(-cw/2, -ch/2, cw, 14); ctx.fillRect(-cw/2, ch/2 - 14, cw, 14); ctx.fillRect(-cw/2, -ch/2, 14, ch); ctx.fillRect(cw/2 - 14, -ch/2, 14, ch); ctx.fillStyle = c.type === 'diamond' ? '#fff' : '#f1c40f'; ctx.beginPath(); ctx.arc(0, -ch/2 + 7, 16, 0, Math.PI*2); ctx.fill(); ctx.restore(); if (c.hp < c.maxHp) { ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(c.x - cw/2, c.y - ch/2 - 25, cw, 7); ctx.fillStyle = CHEST_TYPES[c.type].color; ctx.fillRect(c.x - cw/2, c.y - ch/2 - 25, cw * (c.hp/c.maxHp), 7); } });
+            chests.forEach(c => { 
+                if (c.x < camL - 250 || c.x > camR + 250 || c.y < camT - 250 || c.y > camB + 250) return; 
+                ctx.save(); 
+                ctx.translate(c.x, c.y); 
+                
+                let cType = CHEST_TYPES[c.type];
+                let cw = c.size;
+                let ch = c.size * 0.78;
+                let topY = -ch/4;
+                let bodyH = ch*0.75;
+                let lidH = ch*0.4;
+                let t = Math.max(10, c.size * 0.08); // Zvolená střední varianta rámu
+
+                // 1. Základ dřeva
+                ctx.fillStyle = cType.color;
+                ctx.fillRect(-cw/2, topY, cw, bodyH);
+                ctx.beginPath(); ctx.ellipse(0, topY, cw/2, lidH, 0, Math.PI, 0); ctx.fill();
+                
+                // 2. Dřevěné rýhy (Textura)
+                ctx.strokeStyle = shade(cType.color, -20); ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(-cw/2, ch*0.1); ctx.lineTo(cw/2, ch*0.1); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-cw/2, ch*0.35); ctx.lineTo(cw/2, ch*0.35); ctx.stroke();
+                ctx.beginPath(); ctx.ellipse(0, topY, cw*0.45, lidH*0.5, 0, Math.PI, 0); ctx.stroke();
+
+                // 3. Centrální mezera
+                ctx.fillStyle = shade(cType.metal, -40);
+                ctx.fillRect(-cw/2, topY - 3, cw, 6);
+
+                // 4. ORÁMOVANÉ KOVÁNÍ (Frame style)
+                ctx.fillStyle = cType.metal;
+                ctx.fillRect(-cw/2, topY, t, bodyH);          // Levý
+                ctx.fillRect(cw/2 - t, topY, t, bodyH);       // Pravý
+                ctx.fillRect(-cw/2, topY + bodyH - t, cw, t); // Spodní
+                ctx.fillRect(-cw/2, topY - t/2, cw, t);       // Střední
+
+                ctx.beginPath(); 
+                ctx.ellipse(0, topY, cw/2 - t/2, lidH - t/2, 0, Math.PI, 0); 
+                ctx.lineWidth = t; ctx.strokeStyle = cType.metal; ctx.stroke();
+
+                // 5. Zámek a klíčová dírka
+                let lockColor = c.type === 'diamond' ? '#fff' : (c.type === 'wood' ? shade(cType.metal, 20) : '#f1c40f');
+                let lockR = Math.max(12, t * 0.7); 
+                
+                ctx.fillStyle = lockColor; ctx.beginPath(); ctx.arc(0, topY, lockR, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(0, topY - 2, lockR * 0.25, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillRect(-lockR*0.2, topY, lockR*0.4, lockR*0.6);
+
+                // 6. Nýty
+                const drawRivet = (x, y) => {
+                    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.arc(x-1, y-1, 1, 0, Math.PI*2); ctx.fill();
+                };
+                drawRivet(-cw/2 + t/2, topY + bodyH - t/2); 
+                drawRivet(cw/2 - t/2, topY + bodyH - t/2);  
+                drawRivet(-cw/2 + t/2, topY);               
+                drawRivet(cw/2 - t/2, topY);                
+                drawRivet(0, topY - lidH + t/2);            
+                drawRivet(-Math.cos(Math.PI/4)*(cw/2 - t/2), topY - Math.sin(Math.PI/4)*(lidH - t/2)); 
+                drawRivet(Math.cos(Math.PI/4)*(cw/2 - t/2), topY - Math.sin(Math.PI/4)*(lidH - t/2));  
+
+                // 7. GLOW EFEKT (Gold / Diamond)
+                if (c.type === 'gold' || c.type === 'diamond') {
+                    ctx.shadowColor = cType.color; ctx.shadowBlur = 25; ctx.strokeStyle = cType.color; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.ellipse(0, topY, cw/2+5, lidH+5, 0, Math.PI, 0); 
+                    ctx.rect(-cw/2-5, topY, cw+10, bodyH+5); ctx.stroke();
+                }
+
+                ctx.restore();
+
+                // 8. HP Bar
+                if (c.hp < c.maxHp) { 
+                    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(c.x - cw/2, c.y - ch/2 - 25, cw, 7); 
+                    ctx.fillStyle = cType.color; ctx.fillRect(c.x - cw/2, c.y - ch/2 - 25, cw * (c.hp/c.maxHp), 7); 
+                } 
+            });
             
             let time = Date.now() / 180;
             droppedGems.forEach(g => { if (g.x < camL - 50 || g.x > camR + 50 || g.y < camT - 50 || g.y > camB + 50) return; ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(time); ctx.fillStyle = g.color || '#00d4ff'; ctx.beginPath(); ctx.moveTo(0, -g.size); ctx.lineTo(g.size, 0); ctx.lineTo(0, g.size); ctx.lineTo(-g.size, 0); ctx.fill(); ctx.restore(); });
