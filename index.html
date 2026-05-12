@@ -335,19 +335,12 @@
                     </div>
 
                     <!-- BLOK 2: Modifikátory (Pod sebou) -->
-                    <div style="display: flex; flex-direction: column; gap: 3px; margin: 4px 0;">
-                        <label class="mod-label">
-                            <input type="checkbox" id="mod-fast-dogs" onchange="calcModMultiplier()">
-                            <span>Agile Dogs (+20% Gems)</span>
-                        </label>
-                        <label class="mod-label">
-                            <input type="checkbox" id="mod-tough-dogs" onchange="calcModMultiplier()">
-                            <span>Armored Dogs (+20% Gems)</span>
-                        </label>
-                        <label class="mod-label">
-                            <input type="checkbox" id="mod-no-regen" onchange="calcModMultiplier()">
-                            <span>No HP Regen (+30% Gems)</span>
-                        </label>
+                    <div style="display: flex; flex-direction: column; gap: 2px; text-align: left;">
+                        <label class="mod-label" style="font-size: 12px; padding: 2px 5px;"><input type="checkbox" id="mod-double-dmg" onchange="calcModMultiplier()"> 💀 Double Damage <span class="mod-bonus">+200%</span></label>
+                        <label class="mod-label" style="font-size: 12px; padding: 2px 5px;"><input type="checkbox" id="mod-fast" onchange="calcModMultiplier()"> ⚡ Fast Dogs <span class="mod-bonus">+50%</span></label>
+                        <label class="mod-label" style="font-size: 12px; padding: 2px 5px;"><input type="checkbox" id="mod-noheal" onchange="calcModMultiplier()"> 🚫 No Food Heal <span class="mod-bonus">+100%</span></label>
+                        <label class="mod-label" style="font-size: 12px; padding: 2px 5px;"><input type="checkbox" id="mod-nodash" onchange="calcModMultiplier()"> 🐢 No Dash <span class="mod-bonus">+50%</span></label>
+                        <label class="mod-label" style="font-size: 12px; padding: 2px 5px;"><input type="checkbox" id="mod-doubleboss" onchange="calcModMultiplier()"> 👹 Double Bosses <span class="mod-bonus">+100%</span></label>
                     </div>
 
                     <!-- BLOK 3: Competitive mód -->
