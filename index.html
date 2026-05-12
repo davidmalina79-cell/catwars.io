@@ -2776,6 +2776,30 @@
             let el = document.getElementById('combo-popup'); el.innerText = text; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 1000);
         }
 
+        /** Full kill rewards + removal when the player (direct hit or combo AoE) brings an enemy to 0 HP. Uses indexOf so splices stay correct if the array shifted mid-frame. */
+        function finalizePlayerDogKill(enemy) {
+            if (!enemy || enemy.hp > 0) return;
+            let idx = enemies.indexOf(enemy);
+            if (idx === -1) return;
+            player.xp += Math.floor(25 * Math.pow(1.20, enemy.level - 1));
+            updateLevel();
+            playerRunData.kills++; prog.totalKills++;
+            if (!enemy.isBoss && !enemy.isMiniBoss) prog.dogKills[enemy.name] = (prog.dogKills[enemy.name] || 0) + 1;
+            combo++; comboTimer = COMBO_WINDOW; if (combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if (combo > prog.bestCombo) prog.bestCombo = combo;
+            questProgress('combo', combo); questProgress('kills', 1);
+            if (enemy.isElite) questProgress('elite', 1);
+            if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
+            if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
+            if (enemy.isFinalBoss) triggerWin();
+            let eStats = evolutions[Math.min(enemy.level - 1, 49)];
+            let orbXp = Math.max(50, Math.floor(eStats.nextXp * 0.015));
+            if (enemy.isBoss) { dropGems(enemy.x, enemy.y, 100, 'boss', orbXp); questProgress('boss', 1); bossSpawnTimer = BOSS_RESPAWN_AFTER_KILL; playerRunData.bossKills++; }
+            else if (enemy.isMiniBoss) { dropGems(enemy.x, enemy.y, 30, 'boss', orbXp); playerRunData.bossKills++; }
+            else if (enemy.isElite) { dropGems(enemy.x, enemy.y, BALANCE.ELITE_GEM_BONUS + Math.floor(Math.random() * 3)); }
+            else if (enemy.level >= player.level + 1) dropGems(enemy.x, enemy.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(enemy.x, enemy.y, 1);
+            enemies.splice(idx, 1);
+        }
+
         let frameCounter = 0;
 
         function gameLoop(currentTime) {
@@ -3205,7 +3229,12 @@
                 for (let i = enemies.length - 1; i >= 0; i--) { if (!enemies[i].isBoss && !enemies[i].isMiniBoss && Math.hypot(player.x - enemies[i].x, player.y - enemies[i].y) > 3500) enemies.splice(i, 1); }
 
                 for (let i = enemies.length - 1; i >= 0; i--) {
-                    let e = enemies[i]; if (e.hp <= 0) continue;
+                    let e = enemies[i];
+                    if (e.hp <= 0) {
+                        if (e.playerDamaged) finalizePlayerDogKill(e);
+                        else { let zi = enemies.indexOf(e); if (zi > -1) enemies.splice(zi, 1); }
+                        continue;
+                    }
                     if (e.invuln > 0) e.invuln -= dt;
                     
                     let target = player;
@@ -3326,6 +3355,7 @@
                                     other.hp -= splash;
                                     other.playerDamaged = true;
                                     let d2 = getDmgNumber(); d2.x = other.x; d2.y = other.y - other.size; d2.val = formatNumber(splash); d2.color = '#ff8c00'; d2.life = 0.8; d2.vy = -160; damageNumbers.push(d2);
+                                    if (other.hp <= 0) finalizePlayerDogKill(other);
                                 }
                             // Visual AoE ring — 4 particles max to keep perf clean
                             for(let p=0; p<4; p++) {
@@ -3334,28 +3364,7 @@
                             }
                             }
                             
-                            if (e.hp <= 0) { 
-                                player.xp += Math.floor(25 * Math.pow(1.20, e.level - 1)); 
-                                updateLevel();
-                                playerRunData.kills++; prog.totalKills++; 
-                                if (!e.isBoss && !e.isMiniBoss) prog.dogKills[e.name] = (prog.dogKills[e.name] || 0) + 1;
-                                combo++; comboTimer = COMBO_WINDOW; if(combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if(combo > prog.bestCombo) prog.bestCombo = combo;
-                                questProgress('combo', combo); questProgress('kills', 1);
-                                if (e.isElite) questProgress('elite', 1);
-                                if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
-                                if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
-                                
-                                if (e.isFinalBoss) triggerWin();
-                                
-                                let eStats = evolutions[Math.min(e.level - 1, 49)];
-                                let orbXp = Math.max(50, Math.floor(eStats.nextXp * 0.015)); // Skálování: Boss dá cca 1.5 levelu (100 * 1.5%)
-                                
-                                if (e.isBoss) { dropGems(e.x, e.y, 100, 'boss', orbXp); questProgress('boss', 1); bossSpawnTimer = BOSS_RESPAWN_AFTER_KILL; playerRunData.bossKills++; } 
-                                else if (e.isMiniBoss) { dropGems(e.x, e.y, 30, 'boss', orbXp); playerRunData.bossKills++; }
-                                else if (e.isElite) { dropGems(e.x, e.y, BALANCE.ELITE_GEM_BONUS + Math.floor(Math.random() * 3)); }
-                                else if (e.level >= player.level + 1) dropGems(e.x, e.y, 3 + Math.floor(Math.random() * 4)); else if (Math.random() > 0.75) dropGems(e.x, e.y, 1); 
-                                enemies.splice(i, 1); continue; 
-                            } 
+                            if (e.hp <= 0) { finalizePlayerDogKill(e); continue; }
                         }
                     }
                     
@@ -3528,6 +3537,7 @@
 
             let bossAlive = null;
             enemies.forEach(e => { 
+                if (e.hp <= 0) return;
                 if (e.isBoss) bossAlive = e;
                 else if (e.isMiniBoss && !bossAlive) bossAlive = e; 
                 if (e.x < camL - e.size * 5 || e.x > camR + e.size * 5 || e.y < camT - e.size * 5 || e.y > camB + e.size * 5) return; 
@@ -3618,6 +3628,7 @@
             mmCtx.fillStyle = '#3498db'; for (let c of aiCats) { mmCtx.beginPath(); mmCtx.arc(c.x*scale, c.y*scale, 2, 0, Math.PI*2); mmCtx.fill(); }
 
             for (let e of enemies) {
+                if (e.hp <= 0) continue;
                 if (e.isBoss) { 
                     mmCtx.fillStyle = e.color; mmCtx.beginPath(); mmCtx.arc(e.x*scale, e.y*scale, 5, 0, Math.PI*2); mmCtx.fill(); mmCtx.strokeStyle='#fff'; mmCtx.stroke(); 
                 } else if (e.isMiniBoss) {
