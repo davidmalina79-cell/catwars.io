@@ -2000,27 +2000,28 @@
         function showTutorial() {
             let el = document.getElementById('tutorial');
             if (tutorialIdx >= tutorialSteps.length) { el.style.display = 'none'; tutorialActive = false; return; }
-            el.innerText = tutorialSteps[tutorialIdx].text; el.style.display = 'block';
+            el.innerText = tutorialSteps[tutorialIdx].text;
+            el.style.display = 'block';
             tutorialTimer = tutorialSteps[tutorialIdx].duration;
         }
 
         function startGame() {
-            initAudio(); document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
+            document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
             
             prog.nickname = document.getElementById('player-nickname').value.trim() || 'Hero';
             saveProgress();
 
             isHardcoreMode = (selectedGameMode === 'hardcore');
 
+            if (typeof gtag === 'function') {
+                gtag('event', 'game_start', {
+                    'event_category': 'gameplay',
+                    'event_label': selectedGameMode
+                });
+            }
+
             if (isHardcoreMode) {
                 activeMods.doubleDmg = document.getElementById('mod-double-dmg').checked;
-                activeMods.noHeal = document.getElementById('mod-noheal').checked;
-                activeMods.doubleBoss = document.getElementById('mod-doubleboss').checked;
-                activeMods.fast = document.getElementById('mod-fast').checked;
-                activeMods.noDash = document.getElementById('mod-nodash').checked;
-                currentGemMultiplier = calcModMultiplier();
-            } else {
-                activeMods = { doubleDmg: false, noHeal: false, doubleBoss: false, fast: false, noDash: false };
                 currentGemMultiplier = 1.0;
             }
 
@@ -3123,10 +3124,19 @@
             let subtitle = document.getElementById('ds-subtitle');
             let timeEl = document.getElementById('ds-time-text');
             let reviveGemBtn = document.getElementById('btn-revive-gem');
-            let reviveAdBtn = document.getElementById('btn-revive-ad');
-            
-            if (isVictory) {
-                panel.style.borderColor = '#f1c40f';
+        let reviveAdBtn = document.getElementById('btn-revive-ad');
+        
+        if (typeof gtag === 'function') {
+            gtag('event', 'game_end', {
+                'event_category': 'gameplay',
+                'event_label': isVictory ? 'victory' : 'death',
+                'value': playerRunData.kills,
+                'level': player.level
+            });
+        }
+
+        if (isVictory) {
+            panel.style.borderColor = '#f1c40f';
                 panel.style.boxShadow = '0 0 50px rgba(241, 196, 15, 0.5)';
                 title.innerText = "VICTORY!";
                 title.style.color = '#f1c40f';
