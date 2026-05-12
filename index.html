@@ -6,12 +6,18 @@
     <title>CatWars.io - Bosses & Hardcore Balance</title>
     
     <!-- Google tag (gtag.js) GA4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R74QC0ZMG5"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R74QC0ZMG5&v=2"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-R74QC0ZMG5');
+        
+        // ZAPNUTÍ DEBUG MODE A KONTROLY V KONZOLI
+        gtag('config', 'G-R74QC0ZMG5', {
+            'debug_mode': true,       // Vynutí okamžité odeslání a zobrazení v GA4 DebugView
+            'send_page_view': true    // Explicitně řekne, ať to pošle hned
+        });
+        console.log("[CatWars] Google Analytics INICIALIZOVÁNO s ID: G-R74QC0ZMG5");
     </script>
 
     <!-- Google AdSense Verification & Auto Ads -->
