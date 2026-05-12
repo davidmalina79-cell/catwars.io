@@ -312,28 +312,18 @@
                     <div class="mode-card locked" id="mode-ffa" onclick="selectMode('ffa')">
                         <div class="mode-icon">🔴</div>
                         <div class="mode-name">Deathmatch</div>
-                        <div class="mode-badge">            <div class="menu-col center">
-                <div class="game-art-banner" style="margin-bottom: 12px; flex-shrink: 0; width: 100%;">
-                    <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
-                </div> Coming Soon</div>
+                        <div class="mode-badge">AI Soon</div>
                     </div>
                 </div>
 
                 <!-- HARDCORE MODIFIERS PANEL (Skrytý by default) -->
-<!-- MODE DESCRIPTION PANEL (Pro Solo a Co-Op) -->
-                <div id="mode-desc-panel" style="display: flex; flex-direction: column; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; border: 2px solid var(--success); width: 100%; max-width: 400px; margin-bottom: 8px; box-sizing: border-box; flex-shrink: 0; align-items: center; justify-content: center; min-height: 185px;">
-                    <h3 id="mode-desc-title" style="margin: 0 0 10px 0; color: var(--success); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 2px #000;">🗡️ Solo Survival</h3>
-                    <p id="mode-desc-text" style="color: #ddd; font-size: 15px; margin: 0; font-weight: bold; line-height: 1.4; padding: 0 10px; text-align: center;">Survive endless waves of angry dogs! Eat food, level up your cat, and become the ultimate Cat God!</p>
-                </div>
-
-                <!-- HARDCORE MODIFIERS PANEL (Skrytý by default) -->
-                <div id="modifiers-panel" style="display: none; flex-direction: column; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 12px; border: 2px solid var(--danger); width: 100%; max-width: 400px; margin-bottom: 8px; box-sizing: border-box; gap: 2px; flex-shrink: 0; min-height: 185px;">
+                <div id="modifiers-panel" style="display: none; flex-direction: column; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 12px; border: 2px solid var(--danger); width: 100%; max-width: 400px; margin-bottom: 8px; box-sizing: border-box; gap: 2px; flex-shrink: 0;">
                     
                     <!-- BLOK 1: Hlavička a Násobič -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 4px;">
                         <h3 style="margin: 0; color: var(--danger); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">💀 Hardcore Mods</h3>
                         <div style="font-weight: bold; color: #f1c40f; font-size: 14px; text-shadow: 1px 1px 2px #000;">
-                            Gem Multiplier: <span id="mod-total-mult" style="font-size: 18px;">1.0</span>x
+                            Multiplier: <span id="mod-total-mult" style="font-size: 18px;">1.0</span>x
                         </div>
                     </div>
 
@@ -345,7 +335,7 @@
                         <label class="mod-label" style="font-size: 12px; padding: 2px 5px;"><input type="checkbox" id="mod-nodash" onchange="calcModMultiplier()"> 🐢 No Dash <span class="mod-bonus">+50%</span></label>
                         <label class="mod-label" style="font-size: 12px; padding: 2px 5px;"><input type="checkbox" id="mod-doubleboss" onchange="calcModMultiplier()"> 👹 Double Bosses <span class="mod-bonus">+100%</span></label>
                     </div>
-
+                    
                     <!-- BLOK 3: Competitive mód -->
                     <div style="border-top: 1px solid #444; padding-top: 6px; display: flex; justify-content: center;">
                         <label class="mod-label" style="padding: 4px 10px; background: rgba(231, 76, 60, 0.15); border-radius: 8px; border: 1px solid var(--danger); width: 100%; justify-content: center;">
@@ -355,7 +345,8 @@
                     </div>
                 </div>
                 
-                <button class="btn-main" id="btn-start-game" onclick="startGame()" style="font-size: 26px; padding: 15px 30px; width: 100%; max-width: 400px; margin-top: auto; margin-bottom: 5px; flex-shrink: 0; background: var(--success); box-shadow: 0 6px 0 #27ae60;">▶️ PLAY SOLO</button></div>
+                <button class="btn-main" id="btn-start-game" onclick="startGame()" style="font-size: 26px; padding: 15px 30px; width: 100%; max-width: 400px; margin-top: 2px; margin-bottom: auto; flex-shrink: 0; background: var(--success); box-shadow: 0 6px 0 #27ae60;">▶️ PLAY SOLO</button>
+            </div>
 
             <!-- RIGHT COLUMN: Upgrades -->
             <div class="menu-col side">
@@ -846,29 +837,19 @@
             
             let startBtn = document.getElementById('btn-start-game');
             let modPanel = document.getElementById('modifiers-panel');
-            let descPanel = document.getElementById('mode-desc-panel');
-            let descTitle = document.getElementById('mode-desc-title');
-            let descText = document.getElementById('mode-desc-text');
 
             if (mode === 'solo') {
                 modPanel.style.display = 'none';
-                if(descPanel) { descPanel.style.display = 'flex'; descPanel.style.borderColor = 'var(--success)'; }
-                if(descTitle) { descTitle.innerHTML = '🗡️ Solo Survival'; descTitle.style.color = 'var(--success)'; }
-                if(descText) descText.innerHTML = 'Survive endless waves of angry dogs! Eat food, level up your cat, and become the ultimate Cat God!';
                 startBtn.innerHTML = '🗡️ PLAY SOLO';
                 startBtn.style.background = 'var(--success)';
                 startBtn.style.boxShadow = '0 6px 0 #27ae60';
             } else if (mode === 'hardcore') {
-                modPanel.style.display = 'flex'; // Zobrazíme modifikátory
-                if(descPanel) descPanel.style.display = 'none'; // Skryjeme popisek
+                modPanel.style.display = 'flex'; // Změněno na flex, aby se uplatnil flex-grow
                 startBtn.innerHTML = '💀 PLAY HARDCORE';
                 startBtn.style.background = '#e74c3c';
                 startBtn.style.boxShadow = '0 6px 0 #c0392b';
             } else if (mode === 'team') {
                 modPanel.style.display = 'none';
-                if(descPanel) { descPanel.style.display = 'flex'; descPanel.style.borderColor = 'var(--info)'; }
-                if(descTitle) { descTitle.innerHTML = '🔵 Cats vs Dogs (Co-Op)'; descTitle.style.color = 'var(--info)'; }
-                if(descText) descText.innerHTML = 'Fight alongside AI cat friends! Team up, defeat massive dog bosses, and share the glory!';
                 startBtn.innerHTML = '🔵 PLAY CO-OP';
                 startBtn.style.background = 'var(--info)';
                 startBtn.style.boxShadow = '0 6px 0 #2980b9';
