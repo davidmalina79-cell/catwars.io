@@ -767,7 +767,8 @@
             lucky:    { icon: '💎', name: 'Lucky Paw',           cost: 550,  desc: '+50% gems from drops and chests.' },
             magnet:   { icon: '🧲', name: 'Magnet Collar',       cost: 350,  desc: 'Gem pickup radius increased ×2.4.' },
             nine:     { icon: '🐾', name: 'Nine Lives',           cost: 900,  desc: 'Auto-revive once per run at 50% HP.' },
-            hunter:   { icon: '🎯', name: "Hunter's Eye",         cost: 700,  desc: 'Combo never resets on hit. +1% damage per combo stack (caps +50%).' }
+            hunter:   { icon: '🎯', name: "Hunter's Eye",         cost: 700,  desc: 'Combo never resets on hit. +1% damage per combo stack (caps +50%).' },
+            regen:    { icon: '💚', name: 'Healing Purr',         cost: 600,  desc: 'Passively regenerate 1.5% max HP per second.' }
         };
         const BOOST_IDS = Object.keys(BOOSTS);
         const EQUIP_SLOTS = 3;
@@ -2479,6 +2480,7 @@
                 pickupRadius: activeBoosts.magnet ? BALANCE.GEM_PICKUP_RADIUS * 2.4 : BALANCE.GEM_PICKUP_RADIUS,
                 extraLives: activeBoosts.nine ? 1 : 0,
                 huntersEye: !!activeBoosts.hunter,
+                regenRate: activeBoosts.regen ? 0.015 : 0,
                 activeBoosts: activeBoosts
             };
             playerRunData = { kills: 0, teamKills: 0, gems: 0, totalRunGems: 0, chestsOpened: 0, bestCombo: 0, bossKills: 0 }; combo = 0; comboTimer = 0;
@@ -3051,17 +3053,15 @@
                 if (player.dashActive > 0) player.dashActive -= dt;
                 
                 let arch = getWeaponArchetype(stats.weaponType); let archStats = ARCH_STATS[arch];
-                let pHTier = prog.helmetUpgrades[player.level] || 0;
 
-                if (pHTier > 0 && player.hp < player.maxHp && !activeMods.noHeal) {
-                    let regenAmount = (player.maxHp * pHTier * 0.005) * dt;
+                if (player.regenRate > 0 && player.hp < player.maxHp && !activeMods.noHeal) {
+                    let regenAmount = (player.maxHp * player.regenRate) * dt;
                     player.hp = Math.min(player.maxHp, player.hp + regenAmount);
-                    // Show a floating indicator every 2s so the player knows what is healing them
                     if (!player._regenIndicatorTimer) player._regenIndicatorTimer = 0;
                     player._regenIndicatorTimer -= dt;
                     if (player._regenIndicatorTimer <= 0) {
                         player._regenIndicatorTimer = 2.0;
-                        let healShown = Math.round(player.maxHp * pHTier * 0.005 * 2.0);
+                        let healShown = Math.round(player.maxHp * player.regenRate * 2.0);
                         if (healShown > 0) {
                             let d = getDmgNumber(); d.x = player.x + 30; d.y = player.y - pSize - 10;
                             d.val = '♥ +' + healShown; d.color = '#2ecc71'; d.life = 1.2; d.vy = -80; damageNumbers.push(d);
