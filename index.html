@@ -2448,7 +2448,17 @@
 
             if (isHardcoreMode) {
                 activeMods.doubleDmg = document.getElementById('mod-double-dmg').checked;
+                activeMods.noHeal = document.getElementById('mod-noheal').checked;
+                activeMods.doubleBoss = document.getElementById('mod-doubleboss').checked;
+                activeMods.fast = document.getElementById('mod-fast').checked;
+                activeMods.noDash = document.getElementById('mod-nodash').checked;
                 currentGemMultiplier = 1.0;
+            } else {
+                activeMods.doubleDmg = false;
+                activeMods.noHeal = false;
+                activeMods.doubleBoss = false;
+                activeMods.fast = false;
+                activeMods.noDash = false;
             }
 
             if (activeMods.noDash) {
