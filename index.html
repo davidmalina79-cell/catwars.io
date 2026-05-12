@@ -1419,7 +1419,19 @@
         
         const particlePool = [];
         const dmgNumberPool = [];
-        function getParticle() { let p = particlePool.pop(); if (p) { p.size = 6; return p; } return { x:0, y:0, vx:0, vy:0, life:0, color:'#fff', size:6 }; }
+        const MAX_PARTICLES = 250;
+        function getParticle() {
+            if (particles.length >= MAX_PARTICLES) return null;
+            let p = particlePool.pop();
+            if (p) { p.size = 6; return p; }
+            return { x:0, y:0, vx:0, vy:0, life:0, color:'#fff', size:6 };
+        }
+        // Safe helper: spawn a particle only if the cap allows it
+        function spawnParticle(x, y, vx, vy, color, size, life) {
+            let p = getParticle(); if (!p) return;
+            p.x=x; p.y=y; p.vx=vx; p.vy=vy; p.color=color; p.size=size; p.life=life;
+            particles.push(p);
+        }
         function releaseParticle(p) { particlePool.push(p); }
         function getDmgNumber() { return dmgNumberPool.pop() || { x:0, y:0, vy:0, val:0, life:0, color:'#fff' }; }
         function releaseDmgNumber(d) { dmgNumberPool.push(d); }
@@ -2631,7 +2643,7 @@
             }
             
             // Masivní exploze a ohňostroje
-            for(let p=0; p<150; p++) { let pt = getParticle(); pt.x=player.x+(Math.random()-0.5)*1000; pt.y=player.y+(Math.random()-0.5)*1000; pt.vx=(Math.random()-0.5)*1500; pt.vy=(Math.random()-0.5)*1500; pt.life=2.0; pt.color=['#f1c40f','#e74c3c','#3498db','#2ecc71'][Math.floor(Math.random()*4)]; pt.size = 15; particles.push(pt); }
+            for(let p=0; p<150; p++) { let pt = getParticle(); if(!pt) break; pt.x=player.x+(Math.random()-0.5)*1000; pt.y=player.y+(Math.random()-0.5)*1000; pt.vx=(Math.random()-0.5)*1500; pt.vy=(Math.random()-0.5)*1500; pt.life=2.0; pt.color=['#f1c40f','#e74c3c','#3498db','#2ecc71'][Math.floor(Math.random()*4)]; pt.size = 15; particles.push(pt); }
             
             setTimeout(() => showDeathScreen(true, timeStr, isCompHardcore), 2000);
         }
@@ -2692,7 +2704,7 @@
                 player.maxHp = currentStats.maxHp * pHpMult * (player.hpBoostMult || 1.0);
                 player.hp = player.maxHp; 
                 
-                leveledUp = true; for(let i=0; i<50; i++) { let p = getParticle(); p.x = player.x; p.y = player.y; p.vx = (Math.random() - 0.5) * 1200; p.vy = (Math.random() - 0.5) * 1200; p.life = 1.0; p.color = '#f1c40f'; particles.push(p); } questProgress('level', player.level); 
+                leveledUp = true; for(let i=0; i<50; i++) { let p = getParticle(); if(!p) break; p.x = player.x; p.y = player.y; p.vx = (Math.random() - 0.5) * 1200; p.vy = (Math.random() - 0.5) * 1200; p.life = 1.0; p.color = '#f1c40f'; particles.push(p); } questProgress('level', player.level); 
             }
             if (leveledUp) { player.invuln = 1.5; triggerLevelUpEffect(currentStats.catName); if (player.level > prog.maxCatLevel) { prog.maxCatLevel = player.level; saveProgress(); } } updateUI();
         }
@@ -2849,7 +2861,7 @@
                         // SPAWN HROBEČKU A DUŠIČEK
                         decorations.push({ x: c.x, y: c.y, type: 'tombstone', size: 1.2, rotation: 0, name: c.name, life: 45 });
                         for(let p=0; p<8; p++) {
-                            let pt = getParticle(); pt.x = c.x; pt.y = c.y; pt.vx = (Math.random()-0.5)*80; pt.vy = -100 - Math.random()*150; pt.life = 2.5; pt.color = 'rgba(255, 255, 255, 0.6)'; pt.size = 12; particles.push(pt);
+                            let pt = getParticle(); if(pt) { pt.x = c.x; pt.y = c.y; pt.vx = (Math.random()-0.5)*80; pt.vy = -100 - Math.random()*150; pt.life = 2.5; pt.color = 'rgba(255, 255, 255, 0.6)'; pt.size = 12; particles.push(pt); }
                         }
 
                         aiCats.splice(i, 1);
@@ -3008,7 +3020,7 @@
                                     c.level++; c.xp = 0;
                                     let newStats = evolutions[Math.min(c.level - 1, 49)];
                                     c.maxHp = newStats.maxHp * HELMET_HP_MULT[c.hTier]; c.hp = c.maxHp; c.size = newStats.baseSize;
-                                    for(let p=0; p<15; p++) { let pt = getParticle(); pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
+                                    for(let p=0; p<15; p++) { let pt = getParticle(); if(!pt) break; pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
                                 }
                             }
                             spawnFood();
@@ -3027,7 +3039,7 @@
                                     c.level++; c.xp -= cStats.nextXp;
                                     cStats = evolutions[Math.min(c.level - 1, 49)];
                                     c.maxHp = cStats.maxHp * HELMET_HP_MULT[c.hTier]; c.hp = c.maxHp; c.size = cStats.baseSize;
-                                    for(let p=0; p<15; p++) { let pt = getParticle(); pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
+                                    for(let p=0; p<15; p++) { let pt = getParticle(); if(!pt) break; pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
                                 }
                             }
                         }
@@ -3042,7 +3054,19 @@
                 let pHTier = prog.helmetUpgrades[player.level] || 0;
 
                 if (pHTier > 0 && player.hp < player.maxHp && !activeMods.noHeal) {
-                    player.hp = Math.min(player.maxHp, player.hp + (player.maxHp * pHTier * 0.005) * dt);
+                    let regenAmount = (player.maxHp * pHTier * 0.005) * dt;
+                    player.hp = Math.min(player.maxHp, player.hp + regenAmount);
+                    // Show a floating indicator every 2s so the player knows what is healing them
+                    if (!player._regenIndicatorTimer) player._regenIndicatorTimer = 0;
+                    player._regenIndicatorTimer -= dt;
+                    if (player._regenIndicatorTimer <= 0) {
+                        player._regenIndicatorTimer = 2.0;
+                        let healShown = Math.round(player.maxHp * pHTier * 0.005 * 2.0);
+                        if (healShown > 0) {
+                            let d = getDmgNumber(); d.x = player.x + 30; d.y = player.y - pSize - 10;
+                            d.val = '♥ +' + healShown; d.color = '#2ecc71'; d.life = 1.2; d.vy = -80; damageNumbers.push(d);
+                        }
+                    }
                 }
                 
                 if (player.attackTimer > 0) { player.attackTimer -= dt; player.attackProgress = 1 - (player.attackTimer / player.attackCooldown); } 
@@ -3063,9 +3087,9 @@
                 let pCurrentSpeed = player.attackTimer > 0 ? stats.speed * 0.55 : stats.speed;
                 if (combo >= COMBO_BUFF_THRESHOLD) {
                     pCurrentSpeed *= 1.25;
-                    // Přidání vizuálního efektu pro combo speed buff
-                    if (Math.random() > 0.8) {
-                        let p = getParticle(); p.x=player.x; p.y=player.y; p.vx=0; p.vy=0; p.color='rgba(241,196,15,0.5)'; p.size=6; p.life=0.4; particles.push(p);
+                    // Trail particle throttled to ~4/s
+                    if (frameCounter % 15 === 0) {
+                        spawnParticle(player.x, player.y, 0, 0, 'rgba(241,196,15,0.5)', 6, 0.4);
                     }
                 }
                 
@@ -3079,7 +3103,7 @@
                 if (player.dashActive > 0) { 
                     pCurrentSpeed *= 3.5; 
                     player.x += player.dashForceX * pCurrentSpeed * dt; player.y += player.dashForceY * pCurrentSpeed * dt;
-                    if(Math.random() > 0.5) { let p = getParticle(); p.x=player.x; p.y=player.y; p.vx=0; p.vy=0; p.color='rgba(0,212,255,0.4)'; p.size=8; p.life=0.5; particles.push(p); } 
+                    if(Math.random() > 0.5) { spawnParticle(player.x, player.y, 0, 0, 'rgba(0,212,255,0.4)', 8, 0.5); } 
                 }
                 else if (distToMouse > pSize * 0.5) { 
                     player.angle = Math.atan2(dy, dx); 
@@ -3164,7 +3188,7 @@
                         if (aDiff < archStats.sweepAngle) { 
                             let dmg = stats.playerDamage * pDmgMult; c.hp -= dmg; chestHit = true; 
                             let d = getDmgNumber(); d.x=c.x; d.y=c.y-c.size; d.val=formatNumber(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                            for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=c.x; pt.y=c.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color=CHEST_TYPES[c.type].color; particles.push(pt); }
+                                    for(let p=0; p<10; p++) { let pt = getParticle(); if(!pt) break; pt.x=c.x; pt.y=c.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color=CHEST_TYPES[c.type].color; particles.push(pt); }
                             if (c.hp <= 0) { 
                                 let baseGems = Math.floor(Math.random() * (CHEST_TYPES[c.type].gems[1] - CHEST_TYPES[c.type].gems[0])) + CHEST_TYPES[c.type].gems[0];
                                 let pGemMult = player.gemMult || 1.0;
@@ -3231,7 +3255,7 @@
                                 e.castProgress += dt / 1.5; 
                                 if (e.castProgress >= 1) {
                                     if (Math.hypot(player.x - e.x, player.y - e.y) < viewRadius) playSound('hit');
-                                    for(let p=0; p<30; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.8; pt.color='#e74c3c'; particles.push(pt); }
+                                    for(let p=0; p<30; p++) { let pt = getParticle(); if(!pt) break; pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.8; pt.color='#e74c3c'; particles.push(pt); }
                                     
                                     let allTargets = [player, ...aiCats];
                                     for (let t of allTargets) {
@@ -3290,7 +3314,7 @@
                             let dmgColor = comboCrit ? '#f1c40f' : '#fff';
                             let dmgLabel = comboCrit ? ('CRIT ' + formatNumber(dmg)) : formatNumber(dmg);
                             let d = getDmgNumber(); d.x=e.x; d.y=e.y-e.size; d.val=dmgLabel; d.color=dmgColor; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                            for(let p=0; p<10; p++) { let pt = getParticle(); pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : (comboCrit ? '#f1c40f' : '#ff2a2a'); particles.push(pt); } 
+                            for(let p=0; p<10; p++) { let pt = getParticle(); if(!pt) break; pt.x=e.x; pt.y=e.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color=e.isBoss ? '#ffd700' : (comboCrit ? '#f1c40f' : '#ff2a2a'); particles.push(pt); } 
 
                             // COMBO AOE (tier 20+) — splash adjacent enemies for COMBO_AOE_RATIO of the hit
                             if (combo >= BALANCE.COMBO_TIER_AOE) {
@@ -3303,8 +3327,11 @@
                                     other.playerDamaged = true;
                                     let d2 = getDmgNumber(); d2.x = other.x; d2.y = other.y - other.size; d2.val = formatNumber(splash); d2.color = '#ff8c00'; d2.life = 0.8; d2.vy = -160; damageNumbers.push(d2);
                                 }
-                                // Visual AoE ring
-                                for(let p=0; p<10; p++) { let pt = getParticle(); pt.x = e.x + (Math.random()-0.5)*BALANCE.COMBO_AOE_RADIUS; pt.y = e.y + (Math.random()-0.5)*BALANCE.COMBO_AOE_RADIUS; pt.vx = 0; pt.vy = 0; pt.color = 'rgba(255,140,0,0.7)'; pt.size = 7; pt.life = 0.45; particles.push(pt); }
+                            // Visual AoE ring — 4 particles max to keep perf clean
+                            for(let p=0; p<4; p++) {
+                                let ang = (p/4)*Math.PI*2;
+                                spawnParticle(e.x + Math.cos(ang)*BALANCE.COMBO_AOE_RADIUS*0.7, e.y + Math.sin(ang)*BALANCE.COMBO_AOE_RADIUS*0.7, 0, 0, 'rgba(255,140,0,0.75)', 7, 0.4);
+                            }
                             }
                             
                             if (e.hp <= 0) { 
@@ -3357,7 +3384,7 @@
                                     }
                                     
                                     let d = getDmgNumber(); d.x=target.x; d.y=target.y-targetSize; d.val=formatNumber(dmgTaken); d.color='#ff3333'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
-                                    for(let p=0; p<12; p++) { let pt = getParticle(); pt.x=target.x; pt.y=target.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
+                                    for(let p=0; p<12; p++) { let pt = getParticle(); if(!pt) break; pt.x=target.x; pt.y=target.y; pt.vx=(Math.random()-0.5)*800; pt.vy=(Math.random()-0.5)*800; pt.life=0.5; pt.color='#ff2a2a'; particles.push(pt); } 
                                 } 
                             }
                         }
@@ -3505,10 +3532,14 @@
                 else if (e.isMiniBoss && !bossAlive) bossAlive = e; 
                 if (e.x < camL - e.size * 5 || e.x > camR + e.size * 5 || e.y < camT - e.size * 5 || e.y > camB + e.size * 5) return; 
                 
+                // Draw elite glow ring BEFORE save/translate so it uses world coords and zero shadowBlur
+                if (e.isElite) {
+                    ctx.strokeStyle = '#9b59b6'; ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.arc(e.x, e.y, e.size * 1.35, 0, Math.PI * 2); ctx.stroke();
+                }
                 ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle); 
                 if (e.isBoss && !e.aura) { ctx.shadowColor = e.color; ctx.shadowBlur = 30; } // Fallback
                 else if (e.isMiniBoss && !e.aura) { ctx.shadowColor = '#e67e22'; ctx.shadowBlur = 15; }
-                else if (e.isElite) { ctx.shadowColor = '#9b59b6'; ctx.shadowBlur = 18; }
                 
                 if (e.isBoss && e.specialPhase === 1) {
                     if (e.ability === 'stomp') {
@@ -3626,7 +3657,7 @@
                 player.invuln = 3.0;
                 // Clear nearby enemies and play feedback
                 enemies = enemies.filter(e => e.isBoss || Math.hypot(e.x - player.x, e.y - player.y) > 800); 
-                for(let p=0; p<60; p++) { let pt = getParticle(); pt.x = player.x; pt.y = player.y; pt.vx = (Math.random()-0.5)*1500; pt.vy = (Math.random()-0.5)*1500; pt.life = 1.2; pt.color = '#f1c40f'; pt.size = 10; particles.push(pt); }
+                for(let p=0; p<60; p++) { let pt = getParticle(); if(!pt) break; pt.x = player.x; pt.y = player.y; pt.vx = (Math.random()-0.5)*1500; pt.vy = (Math.random()-0.5)*1500; pt.life = 1.2; pt.color = '#f1c40f'; pt.size = 10; particles.push(pt); }
                 playSound('meow');
                 let alert = document.getElementById('boss-alert');
                 alert.innerHTML = '🐾 NINE LIVES — REVIVED!';
