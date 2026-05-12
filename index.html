@@ -2354,9 +2354,13 @@
                             updateLevel();
                             let d = getDmgNumber(); d.x=player.x + (Math.random()-0.5)*60; d.y=player.y - pSize - 20; d.val="+" + formatNumber(g.xpVal) + " XP"; d.color='#f1c40f'; d.life=0.9; d.vy=-150 - Math.random()*100; damageNumbers.push(d);
                         }
-                        let val = g.size > 15 ? 10 : 1; 
-                        let gemScale = 1 + (player.level - 1) * 0.15;
+                        
+                        // BALANCING: Snížení inflace gemů v Hardcore
+                        // Boss krystal = základní hodnota 4 (místo 10). Škálování podle levelu +5% (místo +15%)
+                        let val = g.size > 15 ? 4 : 1; 
+                        let gemScale = 1 + (player.level - 1) * 0.05;
                         val = Math.floor(val * currentGemMultiplier * gemScale);
+                        
                         playerRunData.gems += val; playerRunData.totalRunGems += val; playSound('gem'); updateUI(); 
                     } 
                     else if (g.life <= 0) droppedGems.splice(i, 1); 
