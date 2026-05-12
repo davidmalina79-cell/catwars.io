@@ -116,71 +116,7 @@
         
         .panel { background: var(--panel-bg); border: 4px solid var(--primary); border-radius: 20px; padding: clamp(15px, 4vw, 30px); text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); max-width: 600px; width: 100%; max-height: 95vh; overflow-y: auto; box-sizing: border-box; }
 
-        button.btn-main {
-            box-sizing: border-box;
-            display: block;
-            margin: 8px auto;
-            padding: 15px 30px;
-            font-size: clamp(16px, 4vw, 22px);
-            cursor: pointer;
-            background: var(--primary);
-            color: #ffffff;
-            text-shadow: 1px 1px 2px #000;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            box-shadow: 0 4px 0 var(--primary-active);
-            transition: all 0.1s;
-            width: 100%;
-            max-width: 400px;
-            text-transform: uppercase;
-        }
-        button.btn-main.menu-btn-row__btn {
-            margin: 0;
-            max-width: none;
-            width: auto;
-            flex: 1 1 0;
-            min-width: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .menu-col.side .btn-main {
-            max-width: none;
-            margin-left: 0;
-            margin-right: 0;
-        }
-        .menu-col.center > .game-art-banner,
-        .menu-col.center > #player-nickname,
-        .menu-col.center > .modes-grid,
-        .menu-col.center > #modifiers-panel,
-        .menu-col.center > #solo-panel,
-        .menu-col.center > #team-panel,
-        .menu-col.center > #btn-start-game {
-            max-width: 400px;
-            width: 100%;
-            align-self: center;
-            box-sizing: border-box;
-        }
-        .menu-btn-row {
-            display: flex;
-            flex-direction: row;
-            gap: 10px;
-            width: 100%;
-            max-width: 420px;
-            margin: 15px auto 0;
-            box-sizing: border-box;
-            align-items: stretch;
-        }
-        .login-panel .login-panel__field {
-            width: 100%;
-            max-width: 420px;
-            display: block;
-            box-sizing: border-box;
-        }
-        .login-panel .btn-main {
-            max-width: 420px;
-        }
+        button.btn-main { margin: 10px 5px; padding: 15px 30px; font-size: clamp(16px, 4vw, 22px); cursor: pointer; background: var(--primary); color: #ffffff; text-shadow: 1px 1px 2px #000; border: none; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 0 var(--primary-active); transition: all 0.1s; width: calc(100% - 10px); max-width: 400px; text-transform: uppercase; }
         button.btn-main:hover { background: var(--primary-hover); transform: translateY(2px); box-shadow: 0 2px 0 var(--primary-active); }
         button.btn-main:active { transform: translateY(4px); box-shadow: none; }
         button.btn-main:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: 0 4px 0 #333; }
@@ -188,33 +124,24 @@
         #encyclopedia { position: absolute; top: 5%; left: 5%; width: 90%; height: 90%; background: var(--panel-light); border: 4px solid var(--primary); border-radius: 20px; display: none; flex-direction: column; z-index: 200; pointer-events: auto; box-shadow: 0 0 50px rgba(0,0,0,0.8); overflow: hidden; }
         .enc-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 20px; background: rgba(0,0,0,0.3); gap: 10px;}
         .enc-header h2 { margin: 0; color: white; font-size: clamp(20px, 5vw, 30px); }
-        .enc-tabs {
+        .enc-tabs { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; align-items: center; justify-content: center;}
+        .enc-tab { padding: 10px 15px; background: #34495e; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; flex: 1; min-width: 80px;}
+        /* Leaderboard only: equal-width tabs, no flex-grow inside overlay panel */
+        .enc-tabs.lb-tabs {
             display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 6px;
+            flex: 0 0 auto;
+            width: 100%;
             min-width: 0;
             align-items: stretch;
-            flex-shrink: 0;
-            /* default: encyclopedia has 5 tabs */
-            grid-template-columns: repeat(5, 1fr);
         }
-        /* only grow when inside the encyclopedia header flex row */
-        .enc-header .enc-tabs {
-            flex: 1 1 220px;
-        }
-        .enc-tabs.lb-tabs {
-            /* leaderboard has 4 tabs */
-            grid-template-columns: repeat(4, 1fr);
-        }
-        .enc-tab {
-            padding: 10px 8px;
-            background: #34495e;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: clamp(11px, 1.4vw, 14px);
+        .enc-tabs.lb-tabs .enc-tab {
+            flex: none;
             width: 100%;
+            min-width: 0;
+            padding: 10px 8px;
+            font-size: clamp(11px, 1.4vw, 14px);
             min-height: 42px;
             box-sizing: border-box;
             text-align: center;
@@ -226,22 +153,13 @@
         .close-btn { background: var(--danger); color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
         
         .enc-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; align-items: start; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         
-        .card { background: #34495e; border: 2px solid #555; border-radius: 12px; padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: stretch; color: white; transition: transform 0.2s; position: relative;}
+        .card { background: #34495e; border: 2px solid #555; border-radius: 12px; padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: center; color: white; transition: transform 0.2s; position: relative;}
         .card:hover { transform: scale(1.02); }
-        .card img { width: 140px; height: 140px; object-fit: contain; margin: 0 auto 10px; display: block; }
-        .card h3 { margin: 0 0 5px 0; font-size: 18px; text-align: center; }
-        .card p { margin: 0; font-size: 14px; color: #aaa; text-align: center; }
-        .card-btn-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            width: 100%;
-            margin-top: auto;
-            padding-top: 8px;
-        }
-        .card-btn-row .upgrade-btn { margin-top: 0; }
+        .card img { width: 140px; height: 140px; object-fit: contain; margin-bottom: 10px; }
+        .card h3 { margin: 0 0 5px 0; font-size: 18px; }
+        .card p { margin: 0; font-size: 14px; color: #aaa; }
         .card.locked { background: var(--panel-bg); border-color: var(--panel-light); }
         .card.locked img { filter: brightness(0.2) grayscale(0.8); opacity: 0.7; }
         
@@ -271,7 +189,7 @@
         .game-art-banner img { width: 100%; display: block; filter: drop-shadow(0 0 10px rgba(243, 156, 18, 0.3)); }
         
         .controls-hint { text-align: center; font-size: 14px; opacity: 0.8; font-weight: normal; margin-top: auto; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; pointer-events: none; }
-        @media (max-width: 600px) { .stats-bar { top: 10px; left: 10px; flex-direction: column; gap: 5px; } .stat-box { font-size: 14px; padding: 5px 10px; } .controls-hint { font-size: 12px; } #minimap { width: 120px; height: 120px; } .enc-tab { padding: 8px 4px; } .enc-tabs { gap: 4px; } }
+        @media (max-width: 600px) { .stats-bar { top: 10px; left: 10px; flex-direction: column; gap: 5px; } .stat-box { font-size: 14px; padding: 5px 10px; } .controls-hint { font-size: 12px; } #minimap { width: 120px; height: 120px; } .enc-tab { font-size: 12px; padding: 8px; } }
 
         /* VLASTNÍ HERNÍ POSUVNÍKY (Odstraní hnusné šedé pruhy) */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -291,7 +209,7 @@
             box-sizing: border-box;
         }
         .menu-col.side { flex: 1; min-width: 200px; max-width: 320px; }
-        .menu-col.center { flex: 2; min-width: 300px; align-items: stretch; justify-content: flex-start; }
+        .menu-col.center { flex: 2; min-width: 300px; align-items: center; justify-content: flex-start; }
 
         /* PRAVIDLO PRO MENŠÍ OBRAZOVKY (Přeskládá sloupce pod sebe) */
         @media (max-width: 850px) {
@@ -313,7 +231,6 @@
         .mode-card {
             background: rgba(0,0,0,0.4); border: 3px solid #444; border-radius: 12px; padding: 8px 5px;
             cursor: pointer; transition: all 0.2s; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 78px; box-sizing: border-box;
         }
         .mode-card:hover:not(.locked) { border-color: var(--primary-hover); background: rgba(243, 156, 18, 0.1); transform: translateY(-2px); }
         .mode-card.active { border-color: var(--primary); background: rgba(243, 156, 18, 0.2); box-shadow: 0 0 15px rgba(243, 156, 18, 0.4); }
@@ -350,7 +267,7 @@
 
     <!-- LOGIN SCREEN -->
     <div id="login-screen" class="overlay" style="display: none; z-index: 300;">
-        <div class="panel login-panel" style="padding: 25px; max-width: 500px;">
+        <div class="panel" style="padding: 25px; max-width: 500px;">
             <div class="game-art-banner">
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
@@ -359,18 +276,18 @@
             
             <div id="login-error" style="color: #e74c3c; font-weight: bold; margin-bottom: 10px; min-height: 24px; font-size: 14px;"></div>
             
-            <input type="text" id="login-nick" placeholder="Nickname (for login)" autocomplete="off" class="login-panel__field" style="margin: 6px auto; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
-            <input type="password" id="login-pass" placeholder="Password" class="login-panel__field" style="margin: 6px auto; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
+            <input type="text" id="login-nick" placeholder="Nickname (for login)" autocomplete="off" style="width: 85%; margin: 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
+            <input type="password" id="login-pass" placeholder="Password" style="width: 85%; margin: 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
             
-            <div class="menu-btn-row">
-                <button class="btn-main menu-btn-row__btn" onclick="window.loginWithPassword()" style="font-size: 18px; padding: 12px 25px;">Login</button>
-                <button class="btn-main menu-btn-row__btn" onclick="window.registerWithPassword()" style="font-size: 18px; padding: 12px 25px; background: var(--info); box-shadow: 0 4px 0 #2980b9;">Register</button>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                <button class="btn-main" onclick="window.loginWithPassword()" style="font-size: 18px; padding: 12px 25px; margin: 5px;">Login</button>
+                <button class="btn-main" onclick="window.registerWithPassword()" style="font-size: 18px; padding: 12px 25px; margin: 5px; background: var(--info); box-shadow: 0 4px 0 #2980b9;">Register</button>
             </div>
             
             <div style="color: #555; margin: 25px 0; font-weight: bold; font-size: 14px;">──────── OR ────────</div>
             
-            <button class="btn-main" onclick="window.loginWithGoogle()" style="font-size: 18px; background: #e74c3c; box-shadow: 0 4px 0 #c0392b;">🔴 Login with Google</button>
-            <button class="btn-main" onclick="window.loginAsGuest()" style="font-size: 18px; background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d;">👤 Play as Guest</button>
+            <button class="btn-main" onclick="window.loginWithGoogle()" style="font-size: 18px; background: #e74c3c; box-shadow: 0 4px 0 #c0392b; width: 90%; margin: 5px auto; display: block;">🔴 Login with Google</button>
+            <button class="btn-main" onclick="window.loginAsGuest()" style="font-size: 18px; background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; width: 90%; margin: 5px auto; display: block;">👤 Play as Guest</button>
         </div>
     </div>
 
@@ -397,13 +314,9 @@
                 <div id="global-xp-text" style="font-size: 13px; color: #fff; margin-top: 5px; margin-bottom: 25px; font-weight: bold;">0 / 1000 XP</div>
                 <!-- KONEC GLOBÁLNÍHO RANKU -->
 
-                <div style="font-size: 14px; color: #aaa; margin-bottom: 12px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 10px 10px; border-radius: 8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px;">
-                        <span>⏱️ Best Solo:</span><span id="mm-best-solo" style="color: #fff;">--:--</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                        <span>💀 Best Hardcore:</span><span id="mm-best-hardcore" style="color: #fff;">--:--</span>
-                    </div>
+                <div style="font-size: 14px; color: #aaa; margin-bottom: 12px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 8px; text-align: left;">
+                    ⏱️ Best Solo: <span id="mm-best-solo" style="color: #fff; float: right;">--:--</span><br>
+                    💀 Best Hardcore: <span id="mm-best-hardcore" style="color: #fff; float: right;">--:--</span>
                 </div>
 
                 <div class="stat-box" style="margin-bottom: 12px; font-size: 16px;">Kills: <span id="mm-kills">0</span></div>
@@ -1325,18 +1238,18 @@
             </div>`;
 
             // Equipped slots row
-            html += `<div style="display:grid; grid-template-columns: repeat(${EQUIP_SLOTS}, 1fr); gap:10px; width:100%; max-width:640px; margin:0 auto 18px; box-sizing:border-box;">`;
+            html += `<div style="display:flex; gap:10px; justify-content:center; margin-bottom:18px;">`;
             for (let i = 0; i < EQUIP_SLOTS; i++) {
                 let id = prog.equippedBoosts[i];
                 if (id && BOOSTS[id]) {
                     let b = BOOSTS[id];
-                    html += `<div onclick="unequipSlot(${i})" style="cursor:pointer; min-width:0; background: rgba(46, 204, 113, 0.12); border:3px solid var(--success); border-radius:14px; padding:12px; text-align:center;">
+                    html += `<div onclick="unequipSlot(${i})" style="cursor:pointer; flex:1; max-width:200px; background: rgba(46, 204, 113, 0.12); border:3px solid var(--success); border-radius:14px; padding:12px; text-align:center;">
                         <div style="font-size:36px; line-height:1;">${b.icon}</div>
                         <div style="font-weight:bold; color:#fff; margin-top:6px; font-size:14px;">${b.name}</div>
                         <div style="color:#2ecc71; font-size:11px; margin-top:4px;">Click to unequip</div>
                     </div>`;
                 } else {
-                    html += `<div style="min-width:0; background: rgba(0,0,0,0.35); border:3px dashed #555; border-radius:14px; padding:12px; text-align:center; color:#777;">
+                    html += `<div style="flex:1; max-width:200px; background: rgba(0,0,0,0.35); border:3px dashed #555; border-radius:14px; padding:12px; text-align:center; color:#777;">
                         <div style="font-size:36px; line-height:1;">＋</div>
                         <div style="font-weight:bold; margin-top:6px; font-size:14px;">Empty slot</div>
                         <div style="font-size:11px; margin-top:4px;">Click an owned boost below</div>
@@ -1350,10 +1263,10 @@
             let adRemaining = (BALANCE.AD_BOOST_COOLDOWN_MS - (now - (prog.lastAdBoostAt || 0)));
             let adReady = adRemaining <= 0;
             html += `<div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px; align-items:stretch;">
-                <button id="ad-boost-btn" class="btn-main" onclick="adWatchForBoost()" ${adReady ? '' : 'disabled'} style="flex:1 1 0; min-width:0; margin:0; max-width:none; background: ${adReady ? 'var(--success)' : '#555'}; box-shadow: 0 4px 0 ${adReady ? '#27ae60' : '#333'}; font-size:16px; padding:14px;">
+                <button id="ad-boost-btn" class="btn-main" onclick="adWatchForBoost()" ${adReady ? '' : 'disabled'} style="flex:1; min-width:240px; margin:0; background: ${adReady ? 'var(--success)' : '#555'}; box-shadow: 0 4px 0 ${adReady ? '#27ae60' : '#333'}; font-size:16px; padding:14px;">
                     📺 ${adReady ? 'Watch Ad for Random Boost' : 'Next free boost in ' + formatCooldown(adRemaining)}
                 </button>
-                <div id="boost-toast" style="opacity:0; transition: opacity .3s; flex:1 1 0; min-width:0; padding:14px; background: rgba(0,0,0,0.35); border-radius:12px; border:2px solid var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold;"></div>
+                <div id="boost-toast" style="opacity:0; transition: opacity .3s; flex:1; min-width:240px; padding:14px; background: rgba(0,0,0,0.35); border-radius:12px; border:2px solid var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold;"></div>
             </div>`;
 
             // Boost cards
@@ -1390,15 +1303,14 @@
                     equipBtn.innerHTML = `Equip (${owned})`;
                     equipBtn.onclick = () => equipBoost(id);
                 }
+                card.appendChild(equipBtn);
+
                 let buyBtn = document.createElement('button');
                 buyBtn.className = 'upgrade-btn';
                 buyBtn.innerHTML = `<strong>Buy</strong><br><span style="font-size:13px; color:#111; font-weight:900;">💎 ${b.cost}</span>`;
                 if (!canAfford) buyBtn.disabled = true;
                 buyBtn.onclick = () => buyBoost(id);
-
-                let boostBtnRow = document.createElement('div'); boostBtnRow.className = 'card-btn-row';
-                boostBtnRow.appendChild(equipBtn); boostBtnRow.appendChild(buyBtn);
-                card.appendChild(boostBtnRow);
+                card.appendChild(buyBtn);
                 grid.appendChild(card);
             });
         }
@@ -2419,6 +2331,7 @@
                             if (prog.gems < wCost) wBtn.disabled = true; 
                             wBtn.onclick = () => buyUpgrade('weapon', i, wCost, wTier + 1); 
                         }
+                        card.appendChild(wBtn);
 
                         let hBtn = document.createElement('button'); hBtn.className = 'upgrade-btn helmet-btn';
                         if (hTier >= 5) { 
@@ -2430,9 +2343,7 @@
                             if (prog.gems < hCost) hBtn.disabled = true; 
                             hBtn.onclick = () => buyUpgrade('helmet', i, hCost, hTier + 1); 
                         }
-                        let catBtnRow = document.createElement('div'); catBtnRow.className = 'card-btn-row';
-                        catBtnRow.appendChild(wBtn); catBtnRow.appendChild(hBtn);
-                        card.appendChild(catBtnRow);
+                        card.appendChild(hBtn);
                     } else { 
                         card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
                         card.innerHTML += `<img src="${getSpriteDataURL('cats', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
