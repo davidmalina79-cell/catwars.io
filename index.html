@@ -191,11 +191,15 @@
         .enc-tabs {
             display: grid;
             gap: 6px;
-            flex: 1 1 220px;
             min-width: 0;
             align-items: stretch;
+            flex-shrink: 0;
             /* default: encyclopedia has 5 tabs */
             grid-template-columns: repeat(5, 1fr);
+        }
+        /* only grow when inside the encyclopedia header flex row */
+        .enc-header .enc-tabs {
+            flex: 1 1 220px;
         }
         .enc-tabs.lb-tabs {
             /* leaderboard has 4 tabs */
@@ -222,13 +226,22 @@
         .close-btn { background: var(--danger); color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
         
         .enc-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; align-items: start; }
         
-        .card { background: #34495e; border: 2px solid #555; border-radius: 12px; padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: center; color: white; transition: transform 0.2s; position: relative;}
+        .card { background: #34495e; border: 2px solid #555; border-radius: 12px; padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: stretch; color: white; transition: transform 0.2s; position: relative;}
         .card:hover { transform: scale(1.02); }
-        .card img { width: 140px; height: 140px; object-fit: contain; margin-bottom: 10px; }
-        .card h3 { margin: 0 0 5px 0; font-size: 18px; }
-        .card p { margin: 0; font-size: 14px; color: #aaa; }
+        .card img { width: 140px; height: 140px; object-fit: contain; margin: 0 auto 10px; display: block; }
+        .card h3 { margin: 0 0 5px 0; font-size: 18px; text-align: center; }
+        .card p { margin: 0; font-size: 14px; color: #aaa; text-align: center; }
+        .card-btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            width: 100%;
+            margin-top: auto;
+            padding-top: 8px;
+        }
+        .card-btn-row .upgrade-btn { margin-top: 0; }
         .card.locked { background: var(--panel-bg); border-color: var(--panel-light); }
         .card.locked img { filter: brightness(0.2) grayscale(0.8); opacity: 0.7; }
         
@@ -1377,14 +1390,15 @@
                     equipBtn.innerHTML = `Equip (${owned})`;
                     equipBtn.onclick = () => equipBoost(id);
                 }
-                card.appendChild(equipBtn);
-
                 let buyBtn = document.createElement('button');
                 buyBtn.className = 'upgrade-btn';
                 buyBtn.innerHTML = `<strong>Buy</strong><br><span style="font-size:13px; color:#111; font-weight:900;">💎 ${b.cost}</span>`;
                 if (!canAfford) buyBtn.disabled = true;
                 buyBtn.onclick = () => buyBoost(id);
-                card.appendChild(buyBtn);
+
+                let boostBtnRow = document.createElement('div'); boostBtnRow.className = 'card-btn-row';
+                boostBtnRow.appendChild(equipBtn); boostBtnRow.appendChild(buyBtn);
+                card.appendChild(boostBtnRow);
                 grid.appendChild(card);
             });
         }
@@ -2405,7 +2419,6 @@
                             if (prog.gems < wCost) wBtn.disabled = true; 
                             wBtn.onclick = () => buyUpgrade('weapon', i, wCost, wTier + 1); 
                         }
-                        card.appendChild(wBtn);
 
                         let hBtn = document.createElement('button'); hBtn.className = 'upgrade-btn helmet-btn';
                         if (hTier >= 5) { 
@@ -2417,7 +2430,9 @@
                             if (prog.gems < hCost) hBtn.disabled = true; 
                             hBtn.onclick = () => buyUpgrade('helmet', i, hCost, hTier + 1); 
                         }
-                        card.appendChild(hBtn);
+                        let catBtnRow = document.createElement('div'); catBtnRow.className = 'card-btn-row';
+                        catBtnRow.appendChild(wBtn); catBtnRow.appendChild(hBtn);
+                        card.appendChild(catBtnRow);
                     } else { 
                         card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
                         card.innerHTML += `<img src="${getSpriteDataURL('cats', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
