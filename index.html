@@ -1546,12 +1546,36 @@
         // }
         window.showRewardedAd = function (opts) {
             opts = opts || {};
-            if (typeof window.adBreak !== 'function') {
+
+            // If the real adsbygoogle script hasn't loaded yet (site pending approval,
+            // network blocked, etc.) the stub just enqueues and adBreakDone never fires,
+            // leaving the button stuck on "Loading Ad…". Detect this and bail out early.
+            if (!window.__adsenseLoaded) {
                 if (opts.onUnavailable) opts.onUnavailable('not_loaded');
                 return;
             }
+
             let rewardGranted = false;
             let adShown = false;
+            let settled = false;
+
+            const settle = (fn) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(fallbackTimer);
+                if (fn) fn();
+            };
+
+            // Safety net: if adBreakDone never fires within 6 s (e.g. real API loaded
+            // but no fill and the callback was dropped), treat it as unavailable.
+            const fallbackTimer = setTimeout(() => {
+                settle(() => {
+                    console.warn('[CatWars] adBreakDone timeout — treating as unavailable');
+                    window.updateRewardedAdUI(false);
+                    if (opts.onUnavailable) opts.onUnavailable('timeout');
+                });
+            }, 6000);
+
             try {
                 window.adBreak({
                     type: 'reward',
@@ -1564,27 +1588,33 @@
                     afterAd: () => { window.__adActive = false; },
                     adViewed: () => {
                         rewardGranted = true;
-                        if (opts.onReward) opts.onReward();
+                        settle(() => {
+                            window.updateRewardedAdUI(true);
+                            if (opts.onReward) opts.onReward();
+                        });
                     },
                     adDismissed: () => {
-                        if (opts.onSkip) opts.onSkip();
+                        settle(() => {
+                            if (opts.onSkip) opts.onSkip();
+                        });
                     },
                     adBreakDone: (placementInfo) => {
                         const status = (placementInfo && placementInfo.breakStatus) || '';
-                        if (rewardGranted) {
-                            // Viewed successfully — preload the next one in the background.
-                            window.updateRewardedAdUI(true);
-                        } else if (!adShown) {
-                            // No ad was available at all.
-                            const unavailable = AD_NO_FILL_STATUSES.has(status);
-                            if (unavailable) window.updateRewardedAdUI(false);
-                            if (opts.onUnavailable) opts.onUnavailable(status);
-                        }
+                        settle(() => {
+                            if (rewardGranted) {
+                                window.updateRewardedAdUI(true);
+                            } else if (!adShown) {
+                                if (AD_NO_FILL_STATUSES.has(status)) window.updateRewardedAdUI(false);
+                                if (opts.onUnavailable) opts.onUnavailable(status);
+                            }
+                        });
                     }
                 });
             } catch (e) {
                 console.warn('[CatWars] showRewardedAd error:', e);
-                if (opts.onUnavailable) opts.onUnavailable('error');
+                settle(() => {
+                    if (opts.onUnavailable) opts.onUnavailable('error');
+                });
             }
         };
 
@@ -4196,7 +4226,7 @@
                 subtitle.style.fontWeight = 'normal';
                 timeEl.style.display = 'none';
                 reviveGemBtn.style.display = 'block';
-                reviveAdBtn.style.display = 'block';
+                reviveAdBtn.style.display = window.__rewardedAdsAvailable ? 'block' : 'none';
             }
 
             document.getElementById('ds-final-gems').innerText = String(playerRunData.totalRunGems);
