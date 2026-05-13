@@ -14,20 +14,34 @@
         gtag('config', 'G-R74QC0ZMG5', { send_page_view: true });
     </script>
 
-    <!-- Google AdSense (Auto Ads) — deferred.
+    <!-- Google AdSense + H5 Games Ads (Ad Placement API) — deferred.
          The verification meta tag stays in <head> so Google's crawler can match the
          site to the publisher account even before the script loads. The adsbygoogle.js
          loader is only injected once the player reaches the main menu (publisher
          content on screen), to comply with the AdSense policy
-         "Google-served ads on screens without publisher-content". -->
+         "Google-served ads on screens without publisher-content".
+
+         We still initialize the adsbygoogle queue + adBreak/adConfig helpers
+         immediately, so any rewarded ad calls made later (e.g. in the Codex /
+         on the death screen) are queued and replayed once the script loads. -->
     <meta name="google-adsense-account" content="ca-pub-8480814290653565">
     <script>
+        window.adsbygoogle = window.adsbygoogle || [];
+        window.adBreak = window.adBreak || function (o) { window.adsbygoogle.push(o); };
+        window.adConfig = window.adConfig || function (o) { window.adsbygoogle.push(o); };
+        // Pre-fetch rewarded / interstitial ads in the background so the rewarded
+        // flow doesn't stall on a network round-trip when the player clicks.
+        window.adConfig({ preloadAdBreaks: 'on', sound: 'on' });
+
         window.loadAdsense = function () {
             if (window.__adsenseLoaded) return;
             window.__adsenseLoaded = true;
             var s = document.createElement('script');
             s.async = true;
             s.crossOrigin = 'anonymous';
+            // To smoke-test ads locally before AdSense approves the site, add
+            //   s.setAttribute('data-adbreak-test', 'on');
+            // here. REMOVE before deploying to production.
             s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8480814290653565';
             document.head.appendChild(s);
         };
@@ -1470,24 +1484,93 @@
             return id;
         }
 
+        // Generic AdSense H5 Games rewarded ad wrapper.
+        // Must be triggered from a real user click — otherwise the browser may
+        // block the ad iframe and the placement is silently aborted.
+        //
+        // opts: {
+        //   name:           string identifier of the placement (sent to AdSense)
+        //   onReward():     called only when the user finishes watching the ad
+        //   onSkip():       called when the user dismissed the ad before finishing
+        //   onUnavailable(status): no ad was served (no fill / blocked / error)
+        // }
+        window.showRewardedAd = function (opts) {
+            opts = opts || {};
+            if (typeof window.adBreak !== 'function') {
+                if (opts.onUnavailable) opts.onUnavailable('not_loaded');
+                return;
+            }
+            let rewardGranted = false;
+            let adShown = false;
+            try {
+                window.adBreak({
+                    type: 'reward',
+                    name: opts.name || 'reward',
+                    beforeReward: (showAdFn) => {
+                        adShown = true;
+                        try { showAdFn(); } catch (e) { console.warn('[CatWars] showAdFn failed:', e); }
+                    },
+                    beforeAd: () => { window.__adActive = true; },
+                    afterAd: () => { window.__adActive = false; },
+                    adViewed: () => {
+                        rewardGranted = true;
+                        if (opts.onReward) opts.onReward();
+                    },
+                    adDismissed: () => {
+                        if (opts.onSkip) opts.onSkip();
+                    },
+                    adBreakDone: (placementInfo) => {
+                        if (!adShown && !rewardGranted && opts.onUnavailable) {
+                            const status = (placementInfo && placementInfo.breakStatus) || 'unknown';
+                            opts.onUnavailable(status);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn('[CatWars] showRewardedAd error:', e);
+                if (opts.onUnavailable) opts.onUnavailable('error');
+            }
+        };
+
         function adWatchForBoost() {
             let now = Date.now();
             if (now - (prog.lastAdBoostAt || 0) < BALANCE.AD_BOOST_COOLDOWN_MS) return;
-            let btn = document.getElementById('ad-boost-btn');
-            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Playing Ad...'; }
-            setTimeout(() => {
-                let id = grantRandomBoost(1);
-                prog.lastAdBoostAt = Date.now();
-                playSound('gem');
-                forceSaveNow();
-                switchTab('boosts');
-                let toast = document.getElementById('boost-toast');
-                if (toast) {
-                    toast.innerHTML = `${BOOSTS[id].icon} You got <b>${BOOSTS[id].name}</b>!`;
-                    toast.style.opacity = '1';
-                    setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+
+            const btn = document.getElementById('ad-boost-btn');
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Loading Ad...'; }
+
+            const toast = document.getElementById('boost-toast');
+            const showToast = (html, duration = 2800) => {
+                if (!toast) return;
+                toast.innerHTML = html;
+                toast.style.opacity = '1';
+                setTimeout(() => { toast.style.opacity = '0'; }, duration);
+            };
+            const restoreBtn = () => {
+                if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+            };
+
+            window.showRewardedAd({
+                name: 'boost-reward',
+                onReward: () => {
+                    const id = grantRandomBoost(1);
+                    prog.lastAdBoostAt = Date.now();
+                    playSound('gem');
+                    forceSaveNow();
+                    switchTab('boosts'); // re-renders the panel, which also resets the cooldown timer button
+                    showToast(`${BOOSTS[id].icon} You got <b>${BOOSTS[id].name}</b>!`);
+                },
+                onSkip: () => {
+                    showToast('⚠️ Reward skipped — finish the ad next time to earn a boost.');
+                    restoreBtn();
+                },
+                onUnavailable: (status) => {
+                    console.warn('[CatWars] Boost ad unavailable:', status);
+                    showToast('⚠️ No ads available right now. Please try again in a few minutes.');
+                    restoreBtn();
                 }
-            }, 1800);
+            });
         }
         window.adWatchForBoost = adWatchForBoost;
 
@@ -4116,11 +4199,36 @@
             playSound('gem'); executeRevive(); 
         } window.reviveWithGems = reviveWithGems;
 
-        function reviveWithAd() { 
-            let adBtn = document.getElementById('btn-revive-ad'); let originalText = adBtn.innerHTML; 
-            adBtn.innerHTML = "⏳ Playing Ad..."; adBtn.disabled = true; 
-            setTimeout(() => { adBtn.innerHTML = originalText; adBtn.disabled = false; playSound('meow'); executeRevive(); }, 2000); 
-        } window.reviveWithAd = reviveWithAd;
+        function reviveWithAd() {
+            const adBtn = document.getElementById('btn-revive-ad');
+            if (!adBtn) return;
+            const originalText = adBtn.innerHTML;
+            adBtn.innerHTML = '⏳ Loading Ad...';
+            adBtn.disabled = true;
+
+            const restoreBtn = () => {
+                adBtn.innerHTML = originalText;
+                adBtn.disabled = false;
+            };
+            const showError = (msg) => {
+                adBtn.innerHTML = msg;
+                setTimeout(restoreBtn, 2200);
+            };
+
+            window.showRewardedAd({
+                name: 'revive-reward',
+                onReward: () => {
+                    playSound('meow');
+                    executeRevive();
+                },
+                onSkip: () => showError('⚠️ Watch the full ad to revive'),
+                onUnavailable: (status) => {
+                    console.warn('[CatWars] Revive ad unavailable:', status);
+                    showError('⚠️ No ads available — try gems');
+                }
+            });
+        }
+        window.reviveWithAd = reviveWithAd;
 
         async function bankEndedRunToMeta() {
             prog.gems += playerRunData.gems;
