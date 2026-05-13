@@ -14,9 +14,24 @@
         gtag('config', 'G-R74QC0ZMG5', { send_page_view: true });
     </script>
 
-    <!-- Google AdSense Verification & Auto Ads -->
-    <!-- POZOR: Změň "ca-pub-XXXXXXXXXXXXXXXX" na tvé reálné Publisher ID z AdSense! -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8480814290653565" crossorigin="anonymous"></script>
+    <!-- Google AdSense (Auto Ads) — deferred.
+         The verification meta tag stays in <head> so Google's crawler can match the
+         site to the publisher account even before the script loads. The adsbygoogle.js
+         loader is only injected once the player reaches the main menu (publisher
+         content on screen), to comply with the AdSense policy
+         "Google-served ads on screens without publisher-content". -->
+    <meta name="google-adsense-account" content="ca-pub-8480814290653565">
+    <script>
+        window.loadAdsense = function () {
+            if (window.__adsenseLoaded) return;
+            window.__adsenseLoaded = true;
+            var s = document.createElement('script');
+            s.async = true;
+            s.crossOrigin = 'anonymous';
+            s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8480814290653565';
+            document.head.appendChild(s);
+        };
+    </script>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐱</text></svg>">
     
@@ -233,6 +248,15 @@
         .mode-name { font-size: 13px; font-weight: bold; color: white; text-align: center; }
         .mode-badge { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; font-size: 10px; padding: 3px 6px; border-radius: 8px; font-weight: bold; border: 2px solid #111; letter-spacing: 0.5px; text-transform: uppercase; }
 
+        /* Privacy/About overlay tabs */
+        .priv-tab { background: rgba(0,0,0,0.45); color: #ddd; border: 2px solid #444; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+        .priv-tab:hover { border-color: var(--primary-hover); color: #fff; }
+        .priv-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; text-shadow: 1px 1px 2px #000; }
+        #privacy-screen h2 { font-size: 22px; margin: 18px 0 10px 0; }
+        #privacy-screen h3 { font-size: 16px; margin: 14px 0 6px 0; }
+        #privacy-screen p, #privacy-screen li { font-size: 15px; }
+        #privacy-screen code { background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+
         /* CSS PRO MODIFIKÁTORY */
         .mod-label { color: white; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 8px; transition: background 0.2s; }
         .mod-label:hover { background: rgba(255,255,255,0.1); }
@@ -256,19 +280,32 @@
             </div>
             
             <div id="loading-status-text" style="font-size: 16px; color: #aaa; font-weight: bold;">Connecting to servers...</div>
+
+            <div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #333; text-align: left; color: #ccc; font-size: 13px; line-height: 1.55;">
+                <p style="margin: 0 0 8px 0;">
+                    <b style="color: var(--primary-hover);">CatWars.io</b> is a free browser-based 2D top-down survival action game.
+                    You play a brave little cat who hunts food, levels up through <b>50 evolutions</b>
+                    — from Kitten to God Cat — and fights endless waves of dogs.
+                </p>
+                <p style="margin: 0;">
+                    Three modes: <b>Solo Survival</b>, <b>Hardcore</b> with stackable difficulty
+                    modifiers, and an 8‑bot <b>Cats vs Dogs (Co‑Op)</b>. Sign in to save your
+                    progress and climb the public leaderboards.
+                </p>
+            </div>
         </div>
     </div>
 
-    <!-- LOGIN SCREEN -->
+    <!-- SIGN IN / REGISTER MODAL (opened from main menu; not shown automatically) -->
     <div id="login-screen" class="overlay" style="display: none; z-index: 300;">
-        <div class="panel" style="padding: 25px; max-width: 500px;">
-            <div class="game-art-banner">
-                <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
-            </div>
+        <div class="panel" style="padding: 25px 30px; max-width: 460px; position: relative;" onclick="event.stopPropagation();">
+            <button onclick="window.closeLoginModal()" aria-label="Close" style="position: absolute; top: 10px; right: 10px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 34px; height: 34px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #c0392b;">✕</button>
 
-            <button class="btn-main" onclick="window.loginAsGuest()" style="font-size: 18px; background: var(--success); box-shadow: 0 6px 0 #27ae60; width: 90%; margin: 0 auto 32px auto; display: block;">👤 Play as Guest</button>
-
-            <p style="color: #aaa; font-size: 18px; margin: 0 0 10px 0; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Game Login</p>
+            <h2 style="color: var(--primary); margin: 0 0 6px 0; font-size: 24px; text-shadow: 2px 2px 0 #000;">Sign In / Register</h2>
+            <p style="color: #aaa; font-size: 13px; margin: 0 0 18px 0; line-height: 1.45;">
+                Save your progress to the cloud, sync across devices and appear on the
+                public leaderboards. You can keep playing as a guest at any time.
+            </p>
 
             <input type="text" id="login-nick" placeholder="Nickname (for login)" autocomplete="off" style="width: 85%; margin: 0 auto 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
             <input type="password" id="login-pass" placeholder="Password" style="width: 85%; margin: 0 auto 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
@@ -279,18 +316,242 @@
                 <button class="btn-main" onclick="window.loginWithPassword()" style="font-size: 18px; padding: 12px 25px; margin: 5px;">Login</button>
                 <button class="btn-main" onclick="window.registerWithPassword()" style="font-size: 18px; padding: 12px 25px; margin: 5px; background: var(--info); box-shadow: 0 4px 0 #2980b9;">Register</button>
             </div>
-            
-            <div style="color: #555; margin: 25px 0; font-weight: bold; font-size: 14px;">──────── OR ────────</div>
-            
+
+            <div style="color: #555; margin: 20px 0 15px 0; font-weight: bold; font-size: 13px;">──────── OR ────────</div>
+
             <button class="btn-main" onclick="window.loginWithGoogle()" style="font-size: 18px; background: #e74c3c; box-shadow: 0 4px 0 #c0392b; width: 90%; margin: 5px auto; display: block;">🔴 Login with Google</button>
+
+            <div style="margin-top: 18px; font-size: 11px; color: #888; line-height: 1.5; text-align: center;">
+                By creating an account you agree to our
+                <a href="#" onclick="window.openPrivacy('privacy'); return false;" style="color: #f1c40f; font-weight: bold; text-decoration: none;">Privacy Policy</a>
+                &amp; <a href="#" onclick="window.openPrivacy('cookies'); return false;" style="color: #f1c40f; font-weight: bold; text-decoration: none;">Cookies &amp; Ads</a> notice.
+            </div>
+        </div>
+    </div>
+
+    <!-- PRIVACY / ABOUT / HOW TO PLAY OVERLAY (publisher content for AdSense compliance) -->
+    <div id="privacy-screen" class="overlay" style="display: none; z-index: 350; padding: 30px 15px;">
+        <div class="panel" style="max-width: 820px; width: 100%; padding: 25px 30px; max-height: 90vh; overflow-y: auto; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid #444; padding-bottom: 12px; margin-bottom: 18px;">
+                <h1 style="margin: 0; color: var(--primary); font-size: 26px; text-align: left;">CatWars.io — Info, Privacy &amp; Ads</h1>
+                <button class="btn-main" onclick="window.closePrivacy()" style="margin: 0; padding: 8px 18px; font-size: 14px; width: auto; background: var(--danger); box-shadow: 0 4px 0 #c0392b;">✕ Close</button>
+            </div>
+
+            <div class="enc-tabs" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px;">
+                <button class="enc-tab priv-tab active" data-tab="about" onclick="window.openPrivacy('about')">🐱 About</button>
+                <button class="enc-tab priv-tab" data-tab="howto" onclick="window.openPrivacy('howto')">🎮 How to Play</button>
+                <button class="enc-tab priv-tab" data-tab="privacy" onclick="window.openPrivacy('privacy')">🔒 Privacy Policy</button>
+                <button class="enc-tab priv-tab" data-tab="cookies" onclick="window.openPrivacy('cookies')">🍪 Cookies &amp; Ads</button>
+                <button class="enc-tab priv-tab" data-tab="contact" onclick="window.openPrivacy('contact')">✉️ Contact</button>
+            </div>
+
+            <section id="priv-about" class="priv-section" style="color: #ddd; line-height: 1.65; font-size: 15px;">
+                <h2 style="color: var(--primary-hover); margin-top: 0;">About CatWars.io</h2>
+                <p>
+                    <b>CatWars.io</b> is a free browser-based 2D top-down survival action game.
+                    You play a brave little cat fighting endless waves of dogs across an open
+                    map. Hunt food to gain experience, evolve through <b>50 distinct levels</b>
+                    (from a tiny Kitten all the way up to a mythical God Cat), unlock weapons
+                    and helmets in the Codex, and survive as long as you can.
+                </p>
+                <p>
+                    The game runs entirely in your browser — there is nothing to install. You
+                    can play instantly as a <b>guest</b>, or sign in with an account (e‑mail
+                    or Google) to <b>save your progress to the cloud</b> and appear on the
+                    public leaderboards.
+                </p>
+                <h3 style="color: var(--primary-hover);">Game modes</h3>
+                <ul>
+                    <li><b>Solo Survival</b> — the classic mode. Survive against waves of dogs,
+                        evolve your cat and beat the Omega Boss.</li>
+                    <li><b>Hardcore</b> — stack difficulty modifiers (double damage, fast dogs,
+                        no healing, double bosses, no dash) for a much higher gem multiplier
+                        and a special <b>Competitive Hardcore</b> leaderboard.</li>
+                    <li><b>Cats vs Dogs (Co‑Op)</b> — fight alongside eight AI‑controlled cat
+                        allies that level up, steal food and battle the hordes with you.</li>
+                </ul>
+                <h3 style="color: var(--primary-hover);">Meta‑progression</h3>
+                <p>
+                    Gems are CatWars' permanent currency. You spend them in the <b>Codex</b>
+                    (Encyclopedia) on permanent weapon upgrades, helmet bonuses, daily quests
+                    and active boosts. Boosts can be equipped before a run for in‑match
+                    bonuses such as extra damage, faster pickup, more gems or a shield.
+                </p>
+                <p>
+                    The Daily Spin gives you a free reward every 24 hours, and chests scattered
+                    across the map drop additional gems and food. There is no pay‑to‑win — all
+                    progression is earned through play.
+                </p>
+            </section>
+
+            <section id="priv-howto" class="priv-section" style="display: none; color: #ddd; line-height: 1.65; font-size: 15px;">
+                <h2 style="color: var(--primary-hover); margin-top: 0;">How to Play</h2>
+                <h3 style="color: var(--primary-hover);">Controls</h3>
+                <ul>
+                    <li><b>Move</b> — your cat follows the mouse cursor.</li>
+                    <li><b>Attack</b> — <b>Left Click</b> swings your weapon in front of you.</li>
+                    <li><b>Dash</b> — <b>Space</b> or <b>Right Click</b> performs a short dash
+                        with brief invulnerability. Dash has a cooldown shown at the bottom of
+                        the screen.</li>
+                    <li><b>Pause</b> — <b>Esc</b> or the pause button in the corner.</li>
+                </ul>
+                <h3 style="color: var(--primary-hover);">Basic loop</h3>
+                <ol>
+                    <li>Hunt food (fish, mice, etc.) — each pickup gives XP and small healing.</li>
+                    <li>Level up to choose a perk (more damage, projectiles, life‑steal …).</li>
+                    <li>Fight increasingly tougher dogs and minibosses to earn gems.</li>
+                    <li>Defeat the Omega Boss to win the run — or push for a high score.</li>
+                </ol>
+                <h3 style="color: var(--primary-hover);">Tips for new players</h3>
+                <ul>
+                    <li>Always pick up <b>food</b> before chasing kills — XP is the main driver
+                        of your power.</li>
+                    <li>Use <b>dash</b> through dog groups, not away from them — the invuln
+                        frames are short.</li>
+                    <li>In Hardcore, stack modifiers <b>gradually</b>. The gem multiplier scales,
+                        but a bad combination (e.g. No Dash + Fast Dogs) is brutal at low level.</li>
+                    <li>In Co‑Op, allied cats <b>steal kills and food</b>. Stay on the edge of
+                        the pack and use them to soak boss aggro.</li>
+                    <li>Spend gems on permanent <b>weapon upgrades</b> first — they compound
+                        across every run.</li>
+                </ul>
+            </section>
+
+            <section id="priv-privacy" class="priv-section" style="display: none; color: #ddd; line-height: 1.65; font-size: 15px;">
+                <h2 style="color: var(--primary-hover); margin-top: 0;">Privacy Policy</h2>
+                <p>
+                    This policy explains what CatWars.io collects, why, and what your rights
+                    are under the EU General Data Protection Regulation (GDPR) and the UK
+                    GDPR. CatWars.io is operated as a hobby project; the data controller is
+                    the operator listed in the <i>Contact</i> tab.
+                </p>
+                <h3 style="color: var(--primary-hover);">1. What we collect</h3>
+                <ul>
+                    <li><b>Account data</b> (only if you register or sign in with Google):
+                        a nickname and an authentication identifier provided by Firebase
+                        Authentication. Passwords are <b>never</b> stored by us in plain text —
+                        Firebase handles them.</li>
+                    <li><b>Game progress</b>: level, kills, gems, equipped boosts, daily quest
+                        progress and best times. Saved to Firebase Firestore so you can play
+                        across devices. Guests are stored only in your browser's
+                        <code>localStorage</code>.</li>
+                    <li><b>Leaderboard entries</b>: your chosen nickname, level and score are
+                        visible to other players on the public leaderboard.</li>
+                    <li><b>Technical &amp; analytics data</b>: pages viewed, approximate region,
+                        device type, browser and basic event data (e.g. game start / game end)
+                        via Google Analytics 4. No raw IP is stored by us.</li>
+                    <li><b>Advertising data</b>: handled by Google AdSense to show ads — see
+                        the <i>Cookies &amp; Ads</i> tab.</li>
+                </ul>
+                <h3 style="color: var(--primary-hover);">2. Why we use it (legal basis)</h3>
+                <ul>
+                    <li><b>Contract / service</b> — to give you the game, save progress and
+                        run the leaderboard (Art. 6(1)(b) GDPR).</li>
+                    <li><b>Legitimate interest</b> — basic security, anti‑cheat and
+                        aggregated analytics (Art. 6(1)(f) GDPR).</li>
+                    <li><b>Consent</b> — personalised advertising and non‑essential cookies in
+                        the EEA / UK (Art. 6(1)(a) GDPR). Consent is collected through
+                        Google's Consent Management Platform.</li>
+                </ul>
+                <h3 style="color: var(--primary-hover);">3. Who we share with</h3>
+                <p>
+                    We use the following processors / third parties:
+                </p>
+                <ul>
+                    <li><b>Google Firebase</b> (Authentication, Firestore) — account and progress.</li>
+                    <li><b>Google Analytics 4</b> — usage statistics.</li>
+                    <li><b>Google AdSense</b> — advertising.</li>
+                </ul>
+                <p>
+                    These services may transfer data outside the EEA under Google's Standard
+                    Contractual Clauses. We do not sell personal data to anyone.
+                </p>
+                <h3 style="color: var(--primary-hover);">4. How long we keep it</h3>
+                <p>
+                    Account data and progress are kept while your account exists. You can
+                    delete your account at any time (see Contact). Anonymous / guest data
+                    lives only in your browser and is removed when you clear it.
+                </p>
+                <h3 style="color: var(--primary-hover);">5. Your rights</h3>
+                <p>
+                    You have the right to <b>access</b>, <b>correct</b>, <b>delete</b>, <b>port</b>
+                    and <b>object</b> to the processing of your data, and to <b>withdraw
+                    consent</b> at any time. You can also lodge a complaint with your national
+                    data protection authority.
+                </p>
+                <h3 style="color: var(--primary-hover);">6. Children</h3>
+                <p>
+                    CatWars.io is suitable for general audiences but is not directed at
+                    children under 13 (or under 16 where required by local law). If you
+                    believe a child has provided personal data, contact us and we will
+                    delete it.
+                </p>
+            </section>
+
+            <section id="priv-cookies" class="priv-section" style="display: none; color: #ddd; line-height: 1.65; font-size: 15px;">
+                <h2 style="color: var(--primary-hover); margin-top: 0;">Cookies &amp; Ads</h2>
+                <p>
+                    CatWars.io is free to play and is funded by advertising. To keep the game
+                    running we use a small number of cookies and similar technologies.
+                </p>
+                <h3 style="color: var(--primary-hover);">Essential</h3>
+                <ul>
+                    <li><b>Firebase Authentication</b> — keeps you signed in.</li>
+                    <li><b>localStorage</b> — stores your offline / guest progress and audio
+                        settings on your own device.</li>
+                </ul>
+                <h3 style="color: var(--primary-hover);">Analytics</h3>
+                <ul>
+                    <li><b>Google Analytics 4</b> (<code>_ga</code>, <code>_ga_*</code>)
+                        — measures usage so we can balance the game.</li>
+                </ul>
+                <h3 style="color: var(--primary-hover);">Advertising</h3>
+                <ul>
+                    <li><b>Google AdSense</b> — shows ads on the menu and in‑game screens.
+                        For visitors from the <b>EEA, the UK and Switzerland</b>, Google's
+                        Consent Management Platform (CMP) asks for your consent before any
+                        personalised advertising or measurement cookies are set. You can
+                        choose <b>Consent</b> or <b>Manage options</b> to reject
+                        personalisation, in which case only non‑personalised ads are shown.</li>
+                </ul>
+                <p>
+                    You can withdraw or change your consent at any time by clearing site data
+                    in your browser, or via Google's
+                    <a href="https://adssettings.google.com" target="_blank" rel="noopener" style="color: #f1c40f;">Ads Settings</a>.
+                    More info: Google's
+                    <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener" style="color: #f1c40f;">advertising policy</a>
+                    and
+                    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style="color: #f1c40f;">privacy policy</a>.
+                </p>
+            </section>
+
+            <section id="priv-contact" class="priv-section" style="display: none; color: #ddd; line-height: 1.65; font-size: 15px;">
+                <h2 style="color: var(--primary-hover); margin-top: 0;">Contact</h2>
+                <p>
+                    Questions, takedown requests, account deletion requests, or just feedback?
+                    Reach out to the developer at:
+                </p>
+                <p style="background: rgba(0,0,0,0.4); padding: 12px 16px; border-radius: 10px; font-size: 16px;">
+                    <b>📧 davidmalina79@gmail.com</b>
+                </p>
+                <p>
+                    Please include the nickname you play under so we can locate your data.
+                </p>
+            </section>
         </div>
     </div>
 
     <!-- MAIN MENU (COMPLETELY REDESIGNED FOR 16:9) -->
     <div id="main-menu" class="overlay" style="display: none;">
         <div style="position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; z-index: 10;">
-            <div id="auth-status-text" style="color: #aaa; font-size: 14px; margin-bottom: 5px; font-weight: bold; text-shadow: 1px 1px 2px black;">Playing as: ...</div>
-            <button class="btn-main" onclick="window.logout()" style="font-size: 14px; padding: 8px 16px; margin: 0; background: #e74c3c; box-shadow: 0 4px 0 #c0392b;">🚪 Logout</button>
+            <div id="auth-status-text" style="color: #aaa; font-size: 14px; margin-bottom: 5px; font-weight: bold; text-shadow: 1px 1px 2px black;">Playing as: Guest</div>
+            <button id="auth-action-btn" class="btn-main" onclick="window.handleAuthAction()" style="font-size: 14px; padding: 8px 16px; margin: 0; background: var(--success); box-shadow: 0 4px 0 #27ae60;">🔑 Sign In to Save</button>
+            <div style="margin-top: 8px; font-size: 11px; color: #999; text-align: right; line-height: 1.5;">
+                <a href="#" onclick="window.openPrivacy('about'); return false;" style="color: #ccc; text-decoration: none;">About</a> ·
+                <a href="#" onclick="window.openPrivacy('howto'); return false;" style="color: #ccc; text-decoration: none;">How to play</a> ·
+                <a href="#" onclick="window.openPrivacy('privacy'); return false;" style="color: #ccc; text-decoration: none;">Privacy</a> ·
+                <a href="#" onclick="window.openPrivacy('cookies'); return false;" style="color: #ccc; text-decoration: none;">Cookies &amp; Ads</a>
+            </div>
         </div>
 
         <div class="menu-container">
@@ -441,6 +702,14 @@
                 </div>
             </div>
         </div>
+
+        <!-- About footer (always visible publisher content for AdSense) -->
+        <footer style="max-width: 1200px; width: 95%; margin: 12px auto 0; padding: 10px 20px; color: #888; font-size: 12px; line-height: 1.55; text-align: center;">
+            <b style="color: #ccc;">CatWars.io</b> — a free browser‑based 2D top‑down survival action game.
+            Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
+            Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
+            Built as a hobby project — no install, no pay‑to‑win.
+        </footer>
     </div>
 
     <!-- LEADERBOARD SCREEN -->
@@ -2216,6 +2485,24 @@
         function closeEncyclopedia() { document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('main-menu').style.display = 'flex'; updateMenuStats(); }
         window.closeEncyclopedia = closeEncyclopedia;
 
+        function openPrivacy(tab = 'about') {
+            let screen = document.getElementById('privacy-screen');
+            if (!screen) return;
+            screen.style.display = 'flex';
+            document.querySelectorAll('#privacy-screen .priv-tab').forEach(b => b.classList.remove('active'));
+            let btn = document.querySelector('#privacy-screen .priv-tab[data-tab="' + tab + '"]');
+            if (btn) btn.classList.add('active');
+            document.querySelectorAll('#privacy-screen .priv-section').forEach(s => s.style.display = 'none');
+            let section = document.getElementById('priv-' + tab);
+            if (section) section.style.display = 'block';
+        }
+        function closePrivacy() {
+            let screen = document.getElementById('privacy-screen');
+            if (screen) screen.style.display = 'none';
+        }
+        window.openPrivacy = openPrivacy;
+        window.closePrivacy = closePrivacy;
+
         function switchTab(tab) {
             document.querySelectorAll('.enc-tab').forEach(b => b.classList.remove('active'));
             let targetTab = document.querySelector(`.enc-tab[onclick*="('${tab}')"]`);
@@ -3950,6 +4237,49 @@
             return true;
         }
 
+        // Updates the main-menu top-right status text and the smart auth action button.
+        // user === null means "no Firebase user" (offline guest fallback).
+        function updateAuthUI(user) {
+            const btn = document.getElementById('auth-action-btn');
+            const status = document.getElementById('auth-status-text');
+            if (!btn || !status) return;
+            if (user && !user.isAnonymous) {
+                status.innerText = "Playing as: " + (user.email ? user.email.split('@')[0] : "Hero");
+                btn.innerHTML = "🚪 Logout";
+                btn.style.background = "#e74c3c";
+                btn.style.boxShadow = "0 4px 0 #c0392b";
+            } else if (user && user.isAnonymous) {
+                status.innerText = "Playing as: Guest";
+                btn.innerHTML = "🔑 Sign In to Save";
+                btn.style.background = "var(--success)";
+                btn.style.boxShadow = "0 4px 0 #27ae60";
+            } else {
+                status.innerText = "Playing as: Offline Guest";
+                btn.innerHTML = "🔑 Sign In to Save";
+                btn.style.background = "var(--success)";
+                btn.style.boxShadow = "0 4px 0 #27ae60";
+            }
+        }
+        window.updateAuthUI = updateAuthUI;
+
+        window.openLoginModal = () => {
+            const modal = document.getElementById('login-screen');
+            const err = document.getElementById('login-error');
+            if (err) err.innerHTML = '';
+            if (modal) modal.style.display = 'flex';
+        };
+        window.closeLoginModal = () => {
+            const modal = document.getElementById('login-screen');
+            if (modal) modal.style.display = 'none';
+        };
+        window.handleAuthAction = () => {
+            if (auth && auth.currentUser && !auth.currentUser.isAnonymous) {
+                window.logout();
+            } else {
+                window.openLoginModal();
+            }
+        };
+
         window.startLocalSession = () => {
             window.currentUserUid = 'offline_guest';
             window.saveToFirestore = null; // Vypnout cloud pro offline
@@ -3965,26 +4295,25 @@
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
-            document.getElementById('auth-status-text').innerText = "Playing as: Offline Guest";
+            updateAuthUI(null);
+            if (window.loadAdsense) window.loadAdsense();
             if (window.startApp) { window.startApp(); window.startApp = null; }
         };
 
+        // Explicit "play as guest" — kept for backwards compatibility (e.g. if called from
+        // anywhere else). Initial load now auto-starts a guest session in onAuthStateChanged.
         window.loginAsGuest = () => {
-            document.getElementById('login-error').innerHTML = "⏳ Starting offline session...";
             if (auth) {
-                signInAnonymously(auth).then(() => {
-                    // Úspěch - zpracuje se v onAuthStateChanged
-                }).catch(e => { 
+                signInAnonymously(auth).catch(e => {
                     console.warn("Firebase Guest Login blocked (likely by iframe restrictions). Forcing Offline Mode.");
-                    window.startLocalSession(); 
+                    window.startLocalSession();
                 });
             } else {
                 window.startLocalSession();
             }
-            
-            // Failsafe pojistka: Pokud Firebase zamrzne a nevrátí ani chybu, spustíme hru lokálně za 1.5s
+            // Failsafe: if Firebase auth doesn't return at all in 1.5s, fall back to offline.
             setTimeout(() => {
-                if(document.getElementById('login-screen').style.display !== 'none') {
+                if (!window.currentUserUid) {
                     window.startLocalSession();
                 }
             }, 1500);
@@ -4027,7 +4356,15 @@
             }
         };
         
-        window.logout = () => { if (auth && auth.currentUser) signOut(auth); else { document.getElementById('main-menu').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; } };
+        // Sign out of the current real account. onAuthStateChanged(null) will then
+        // auto-start a fresh guest session, so the player never sees a dead-end login screen.
+        window.logout = () => {
+            if (auth && auth.currentUser) {
+                signOut(auth);
+            } else {
+                window.openLoginModal();
+            }
+        };
 
         window.loadCloudProgress = async (uid) => {
             let local = localStorage.getItem('catwars_save_' + uid);
@@ -4132,71 +4469,75 @@
             }
         };
 
+        // Try to bootstrap an auth session as soon as the page loads. If there is no
+        // existing user we sign in anonymously so the player lands directly on the
+        // main menu (no login dead-end / "screens without publisher content").
         const initAuth = async () => {
             if (!auth) return;
             if (auth.currentUser) return;
-            try { 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
-                    await signInWithCustomToken(auth, __initial_auth_token); 
-                } else if (isCanvasEnv) {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
                     await signInAnonymously(auth);
                 }
-            } 
-            catch (e) { 
-                completeLoading();
-                document.getElementById('loading-screen').style.display = 'none'; 
-                document.getElementById('login-screen').style.display = 'flex'; 
+            }
+            catch (e) {
+                console.warn("[CatWars] initAuth failed, falling back to offline guest.", e);
+                window.startLocalSession();
             }
         };
 
         if (auth) {
             initAuth();
-            
+
             let authResolved = false;
+            // If Firebase doesn't resolve in 3s (blocked / hung) — still take the user
+            // straight into the game as an offline guest. The sign-in modal stays
+            // available from the main menu.
             setTimeout(() => {
                 if (!authResolved) {
-                    completeLoading();
-                    document.getElementById('loading-screen').style.display = 'none';
-                    document.getElementById('login-screen').style.display = 'flex';
+                    console.warn("[CatWars] Auth timeout. Falling back to offline guest.");
+                    window.startLocalSession();
                 }
-            }, 3000); // ZKRÁCENÝ TIMEOUT NA 3 VTEŘINY
+            }, 3000);
 
             onAuthStateChanged(auth, async (user) => {
                 authResolved = true;
                 const loadingScreen = document.getElementById('loading-screen');
                 const loadText = document.getElementById('loading-status-text');
-                
+
                 if (user) {
                     window.currentUserUid = user.uid;
-                    if (loadText) loadText.innerText = "Syncing cloud profile...";
-                    
+                    if (loadText) loadText.innerText = user.isAnonymous ? "Starting guest session..." : "Syncing cloud profile...";
+
                     await window.loadCloudProgress(user.uid);
 
                     completeLoading();
-                    
+
                     setTimeout(() => {
                         if (loadingScreen) loadingScreen.style.display = 'none';
-                        const statusText = document.getElementById('auth-status-text');
-                        statusText.innerText = "Playing as: " + (user.isAnonymous ? "Guest" : (user.email ? user.email.split('@')[0] : "Hero"));
                         document.getElementById('login-screen').style.display = 'none';
-                        document.getElementById('main-menu').style.display = 'flex'; 
-                        
+                        document.getElementById('main-menu').style.display = 'flex';
+                        updateAuthUI(user);
+                        if (window.loadAdsense) window.loadAdsense();
                         if (window.startApp) { window.startApp(); window.startApp = null; }
                     }, 400);
                 } else {
+                    // No user (initial load, or just signed out): silently start a fresh
+                    // anonymous session. Falls back to offline guest if Firebase blocks it.
                     window.currentUserUid = null;
-                    completeLoading();
-                    setTimeout(() => {
-                        if (loadingScreen) loadingScreen.style.display = 'none';
-                        document.getElementById('login-screen').style.display = 'flex';
-                        document.getElementById('main-menu').style.display = 'none';
-                    }, 400);
+                    if (loadText) loadText.innerText = "Starting guest session...";
+                    signInAnonymously(auth).catch(e => {
+                        console.warn("[CatWars] Anonymous auth failed, falling back to offline guest.", e);
+                        window.startLocalSession();
+                    });
                 }
             });
         } else {
              completeLoading();
-             document.getElementById('loading-screen').style.display = 'none'; 
-             document.getElementById('login-screen').style.display = 'flex';
+             document.getElementById('loading-screen').style.display = 'none';
+             window.startLocalSession();
         }
     </script>
 </body>
