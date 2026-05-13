@@ -3711,8 +3711,11 @@
                 if (pDealDamage) {
                     let chestHit = false;
                     for (let i = chests.length - 1; i >= 0; i--) {
-                        let c = chests[i]; let distToC = Math.hypot(player.x - c.x, player.y - c.y); if (distToC > pAttackReach + c.size) continue;
-                        let aToC = Math.atan2(c.y - player.y, c.x - player.x), aDiff = Math.abs(((aToC - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
+                        let c = chests[i];
+                        let dxCh = c.x - player.x, dyCh = c.y - player.y, distToC = Math.hypot(dxCh, dyCh);
+                        if (distToC > pAttackReach + c.size) continue;
+                        // Coincident centers: atan2(0,0) is ill-defined; treat as in-arc (chest branch only).
+                        let aDiff = distToC < 1e-4 ? 0 : Math.abs(((Math.atan2(dyCh, dxCh) - player.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
                         if (aDiff < archStats.sweepAngle) { 
                             let dmg = stats.playerDamage * pDmgMult; c.hp -= dmg; chestHit = true; 
                             let d = getDmgNumber(); d.x=c.x; d.y=c.y-c.size; d.val=formatNumber(dmg); d.color='#fff'; d.life=1.0; d.vy=-200; damageNumbers.push(d);
