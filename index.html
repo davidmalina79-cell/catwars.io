@@ -844,14 +844,15 @@
                 </p>
             </div>
 
-            <div id="ds-milestones" style="background: rgba(0,0,0,0.3); padding: 12px 14px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-size: 14px; color: #ddd;"></div>
-
             <div id="death-buttons" style="opacity: 0; pointer-events: none; transition: opacity 0.5s ease; width: 100%;">
                 <button id="btn-revive-gem" class="btn-main" onclick="reviveWithGems()" style="background: #00d4ff; box-shadow: 0 4px 0 #0099cc; width: 100%; margin: 8px 0;">
                     💎 Revive (Cost: <span id="revive-cost">0</span>)
                 </button>
-                <button id="btn-revive-ad" class="btn-main" onclick="reviveWithAd()" style="background: var(--success); box-shadow: 0 4px 0 #27ae60; width: 100%; margin: 8px 0;">
+                <button id="btn-revive-ad" class="btn-main" onclick="reviveWithAd()" style="background: #f1c40f; color: #1a1a1a; box-shadow: 0 4px 0 #c29d0b; width: 100%; margin: 8px 0;">
                     📺 Watch Ad to Revive (FREE)
+                </button>
+                <button class="btn-main" onclick="newGameFromDeath()" style="background: var(--success); box-shadow: 0 4px 0 #27ae60; width: 100%; margin: 8px 0;">
+                    ▶️ New Game
                 </button>
                 <button class="btn-main" onclick="giveUp()" style="background: var(--primary); box-shadow: 0 4px 0 var(--primary-active); width: 100%; margin: 8px 0; margin-top: 15px;">
                     🏠 Back to Menu
@@ -1104,27 +1105,33 @@
 
         function getGlobalRankInfo(level) {
             const tiers = [
-                { name: "Stray Recruit", color: "#7f8c8d" },       
-                { name: "Paw-rivate", color: "#27ae60" },          
-                { name: "Claw-poral", color: "#2980b9" },          
-                { name: "Purr-geant", color: "#8e44ad" },          
-                { name: "Lieu-tail-nant", color: "#cd7f32" },      
-                { name: "Cat-tain", color: "#bdc3c7" },            
-                { name: "Meow-jor", color: "#f1c40f" },            
-                { name: "Purr-onel", color: "#00d4ff" },            
-                { name: "Gen-furball", color: "#e74c3c" },         
-                { name: "Supreme Comm-meow-nder", color: "#ff00ff" } 
+                { name: "Stray Recruit",          color: "#7f8c8d" },
+                { name: "Paw-rivate",             color: "#27ae60" },
+                { name: "Claw-poral",             color: "#2980b9" },
+                { name: "Purr-geant",             color: "#8e44ad" },
+                { name: "Lieu-tail-nant",         color: "#cd7f32" },
+                { name: "Cat-tain",               color: "#bdc3c7" },
+                { name: "Meow-jor",               color: "#f1c40f" },
+                { name: "Purr-onel",              color: "#00d4ff" },
+                { name: "Gen-furball",            color: "#e74c3c" },
+                { name: "Supreme Comm-meow-nder", color: "#ff00ff" },
+                { name: "Omni-purrr-tent",        color: "#ffd700", gradient: "linear-gradient(90deg, #ffd700, #ffffff, #00d4ff)" },
+                { name: "The One True Meow",      color: "#ff3300", gradient: "linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00cc44, #0088ff, #cc00ff)" }
             ];
-            let safeLevel = Math.max(1, Math.min(50, level));
+            let safeLevel = Math.max(1, Math.min(60, level));
             let tierIndex = Math.floor((safeLevel - 1) / 5);
             let starsCount = ((safeLevel - 1) % 5) + 1;
-            let starsStr = "★".repeat(starsCount);
-            
+            let rawStars = "★".repeat(starsCount);
+            let tier = tiers[tierIndex];
+            let starsStr = tier.gradient
+                ? `<span style="background:${tier.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${rawStars}</span>`
+                : rawStars;
+
             return {
-                title: tiers[tierIndex].name,
-                color: tiers[tierIndex].color,
+                title: tier.name,
+                color: tier.color,
                 stars: starsStr,
-                fullText: `${tiers[tierIndex].name} ${starsStr}`,
+                fullText: `${tier.name} ${starsStr}`,
                 nextXp: safeLevel * 1000
             };
         }
@@ -1199,9 +1206,9 @@
                 badgeEl.style.background = rankInfo.color;
                 document.getElementById('mm-global-level').innerText = prog.globalLevel || 1;
                 
-                let xpPct = prog.globalLevel >= 50 ? 100 : ((prog.globalXp || 0) / rankInfo.nextXp) * 100;
+                let xpPct = prog.globalLevel >= 60 ? 100 : ((prog.globalXp || 0) / rankInfo.nextXp) * 100;
                 document.getElementById('global-xp-bar').style.width = `${Math.min(100, xpPct)}%`;
-                document.getElementById('global-xp-text').innerText = prog.globalLevel >= 50 ? "MAX RANK REACHED" : `${prog.globalXp || 0} / ${rankInfo.nextXp} XP`;
+                document.getElementById('global-xp-text').innerText = prog.globalLevel >= 60 ? "MAX RANK REACHED" : `${prog.globalXp || 0} / ${rankInfo.nextXp} XP`;
             }
         }
 
@@ -1685,6 +1692,7 @@
                 let el = document.getElementById(id);
                 if (el) {
                     if (prop === 'text') el.innerText = value;
+                    else if (prop === 'html') el.innerHTML = value;
                     else if (prop === 'width') el.style.width = value;
                     else if (prop === 'height') el.style.height = value;
                     else if (prop === 'display') el.style.display = value;
@@ -3039,21 +3047,21 @@
                 let displayLevel = prog.globalLevel || 1;
                 
                 let currentRankInfo = gRank;
-                while (displayXp >= currentRankInfo.nextXp && displayLevel < 50) {
+                while (displayXp >= currentRankInfo.nextXp && displayLevel < 60) {
                     displayXp -= currentRankInfo.nextXp;
                     displayLevel++;
                     currentRankInfo = getGlobalRankInfo(displayLevel);
                 }
                 
-                updateDOM('ui-rank-name', 'text', currentRankInfo.fullText);
+                updateDOM('ui-rank-name', 'html', currentRankInfo.fullText);
                 updateDOM('ui-rank-name', 'color', currentRankInfo.color);
                 updateDOM('ui-global-rank', 'borderColor', currentRankInfo.color);
                 updateDOM('ui-global-rank', 'boxShadow', `0 0 15px ${currentRankInfo.color}`);
                 
-                let xpPct = displayLevel >= 50 ? 100 : (displayXp / currentRankInfo.nextXp) * 100;
+                let xpPct = displayLevel >= 60 ? 100 : (displayXp / currentRankInfo.nextXp) * 100;
                 updateDOM('ui-rank-bar', 'width', `${Math.min(100, xpPct)}%`);
                 updateDOM('ui-rank-bar', 'background', currentRankInfo.color);
-                updateDOM('ui-rank-xp', 'text', displayLevel >= 50 ? "MAX RANK" : `${Math.floor(displayXp)} / ${currentRankInfo.nextXp} XP`);
+                updateDOM('ui-rank-xp', 'text', displayLevel >= 60 ? "MAX RANK" : `${Math.floor(displayXp)} / ${currentRankInfo.nextXp} XP`);
             }
 
             let archIcon = { fast:'⚡', heavy:'🔨', wide:'🌀', reach:'➡️', balanced:'⚔️' }[getWeaponArchetype(stats.weaponType)] || '⚔️';
@@ -4040,8 +4048,7 @@
                 reviveAdBtn.style.display = 'block';
             }
 
-            let gainedXp = (player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500);
-            document.getElementById('ds-final-gems').innerText = `${playerRunData.totalRunGems} (XP: +${gainedXp})`; 
+            document.getElementById('ds-final-gems').innerText = String(playerRunData.totalRunGems);
             
             let stats = evolutions[Math.min(player.level - 1, 49)];
             document.getElementById('ds-final-level').innerText = player.level;
@@ -4051,36 +4058,6 @@
             
             document.getElementById('ds-current-gems').innerText = prog.gems + playerRunData.gems; 
 
-            // --- Next milestones panel ---
-            let ms = document.getElementById('ds-milestones');
-            if (ms) {
-                let projGlobalXp = (prog.globalXp || 0) + gainedXp;
-                let projGlobalLevel = prog.globalLevel || 1;
-                let rInfo = getGlobalRankInfo(projGlobalLevel);
-                while (projGlobalXp >= rInfo.nextXp && projGlobalLevel < 50) {
-                    projGlobalXp -= rInfo.nextXp; projGlobalLevel++; rInfo = getGlobalRankInfo(projGlobalLevel);
-                }
-                let nextRankInfo = getGlobalRankInfo(Math.min(50, projGlobalLevel + 1));
-                let xpToNext = Math.max(0, rInfo.nextXp - projGlobalXp);
-
-                let nextLockedDog = null;
-                for (let i = 1; i <= 50; i++) {
-                    let dn = evolutions[i-1].dogName;
-                    if (!(prog.dogKills[dn] > 0)) { nextLockedDog = { name: dn, level: i }; break; }
-                }
-                let bestiaryCount = Object.values(prog.dogKills || {}).filter(v => v > 0).length;
-
-                let nextCatLvl = Math.min(50, (prog.maxCatLevel || 1) + 1);
-                let nextCat = evolutions[nextCatLvl - 1];
-
-                ms.innerHTML = `
-                    <div style="color:#f39c12; font-weight:bold; font-size:15px; margin-bottom:6px;">🎯 Next Milestones</div>
-                    <div style="margin: 3px 0;">⭐ Rank <b style="color:${rInfo.color};">${rInfo.fullText}</b> — ${projGlobalLevel >= 50 ? 'MAX' : `${xpToNext} XP to <b style="color:${nextRankInfo.color}">${nextRankInfo.title}</b>`}</div>
-                    <div style="margin: 3px 0;">🐱 Cat collection: <b>${prog.maxCatLevel || 1}/50</b> — next: <b style="color:#3498db;">Lv.${nextCatLvl} ${nextCat.catName}</b></div>
-                    <div style="margin: 3px 0;">📖 Bestiary: <b>${bestiaryCount}/50</b>${nextLockedDog ? ` — next: <b style="color:#9b59b6;">${nextLockedDog.name}</b> (Lv.${nextLockedDog.level})` : ' — <b style="color:#2ecc71;">Completed!</b>'}</div>
-                `;
-            }
-            
             let gemBtn = document.getElementById('btn-revive-gem'); 
             let totalGems = prog.gems + playerRunData.gems;
             if (totalGems < currentReviveCost) { 
@@ -4145,18 +4122,13 @@
             setTimeout(() => { adBtn.innerHTML = originalText; adBtn.disabled = false; playSound('meow'); executeRevive(); }, 2000); 
         } window.reviveWithAd = reviveWithAd;
 
-        async function giveUp() { 
-            document.getElementById('death-screen').style.display = 'none'; 
-            document.getElementById('pause-overlay').style.display = 'none'; 
-            document.getElementById('game-ui').style.display = 'none'; 
-            prog.gems += playerRunData.gems; 
-            if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo; 
-            
+        async function bankEndedRunToMeta() {
+            prog.gems += playerRunData.gems;
+            if (playerRunData.bestCombo > prog.bestCombo) prog.bestCombo = playerRunData.bestCombo;
             let gainedXp = (player.level * 50) + (playerRunData.kills * 10) + (playerRunData.bossKills * 500);
             prog.globalXp = (prog.globalXp || 0) + gainedXp;
-            
             if (!prog.globalLevel) prog.globalLevel = 1;
-            while (prog.globalLevel < 50) {
+            while (prog.globalLevel < 60) {
                 let rankInfo = getGlobalRankInfo(prog.globalLevel);
                 if (prog.globalXp >= rankInfo.nextXp) {
                     prog.globalXp -= rankInfo.nextXp;
@@ -4165,9 +4137,22 @@
                     break;
                 }
             }
-            if (prog.globalLevel >= 50) { prog.globalLevel = 50; prog.globalXp = 0; } 
-            
-            await forceSaveNow(); 
+            if (prog.globalLevel >= 60) { prog.globalLevel = 60; prog.globalXp = 0; }
+            await forceSaveNow();
+        }
+
+        async function newGameFromDeath() {
+            document.getElementById('death-screen').style.display = 'none';
+            document.getElementById('pause-overlay').style.display = 'none';
+            await bankEndedRunToMeta();
+            startGame();
+        } window.newGameFromDeath = newGameFromDeath;
+
+        async function giveUp() { 
+            document.getElementById('death-screen').style.display = 'none'; 
+            document.getElementById('pause-overlay').style.display = 'none'; 
+            document.getElementById('game-ui').style.display = 'none'; 
+            await bankEndedRunToMeta();
             goToMenu(); 
         } window.giveUp = giveUp;
         
