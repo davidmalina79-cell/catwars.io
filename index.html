@@ -1146,7 +1146,7 @@
     <!-- ================================================================================================= -->
     <script>
         // GLOBAL SCOPE DECLARATIONS (FIX PRO OFFLINE GUEST CHYBU)
-        var defaultProg = { nickname: '', globalLevel: 1, globalXp: 0, maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [], bestTimes: { solo: null, hardcore: null }, boosts: {}, equippedBoosts: [null, null, null], lastDailySpinAt: 0, dailyStreak: 0, lastAdBoostAt: 0 };
+        var defaultProg = { nickname: '', globalLevel: 1, globalXp: 0, maxCatLevel: 1, totalKills: 0, gems: 0, dogKills: {}, weaponUpgrades: {}, helmetUpgrades: {}, bestCombo: 0, tutorialDone: false, questDate: '', quests: [], bestTimes: { solo: null, hardcore: null, team: null }, boosts: {}, equippedBoosts: [null, null, null], lastDailySpinAt: 0, dailyStreak: 0, lastAdBoostAt: 0 };
         var prog = { ...defaultProg };
         var currentGemMultiplier = 1.0; 
         var activeMods = { doubleDmg: false, noHeal: false, doubleBoss: false, fast: false, noDash: false };
@@ -3139,13 +3139,15 @@
             let isCompHardcore = selectedGameMode === 'hardcore' && 
                 activeMods.doubleDmg && activeMods.noHeal && activeMods.doubleBoss && activeMods.fast && activeMods.noDash;
 
-            if (!prog.bestTimes) prog.bestTimes = { solo: null, hardcore: null };
+            if (!prog.bestTimes) prog.bestTimes = { solo: null, hardcore: null, team: null };
             
             if (isCompHardcore) {
                 if (!prog.bestTimes.hardcore || timeElapsedMs < prog.bestTimes.hardcore) prog.bestTimes.hardcore = timeElapsedMs;
                 questProgress('hardcore_win', 1);
             } else if (selectedGameMode === 'solo') {
                 if (!prog.bestTimes.solo || timeElapsedMs < prog.bestTimes.solo) prog.bestTimes.solo = timeElapsedMs;
+            } else if (selectedGameMode === 'team') {
+                if (!prog.bestTimes.team || timeElapsedMs < prog.bestTimes.team) prog.bestTimes.team = timeElapsedMs;
             }
             
             // Masivní exploze a ohňostroje
@@ -3436,6 +3438,7 @@
                         if (d < minDogDist) { nearestDog = e; minDogDist = d; }
                     }
                     let targetDog = (nearestBoss && minBossDist < 2500) ? nearestBoss : nearestDog;
+                    let targetDist = (targetDog === nearestBoss) ? minBossDist : minDogDist;
 
                     let searchRadiusFood = c.personality === 'greedy' ? 1800 : 1000;
                     let nearFoods = c.nearFoodsCache;
@@ -3486,7 +3489,7 @@
                         c.attackProgress = 1 - (c.attackTimer / c.attackCooldown);
                     } else { c.attackProgress = 0; c.hasAttacked = false; }
 
-                    if (c.state === 'chase' && targetDog && minDogDist < cAttackReach + targetDog.size && c.attackTimer <= 0) {
+                    if (c.state === 'chase' && targetDog && targetDist < cAttackReach + targetDog.size && c.attackTimer <= 0) {
                         c.attackTimer = cStats.attackCooldown || (0.66 * cArchStats.cdMult);
                         c.attackCooldown = c.attackTimer;
                         c.hasAttacked = false;
@@ -3498,7 +3501,7 @@
                         if (targetDog) {
                             let aToE = Math.atan2(targetDog.y - c.y, targetDog.x - c.x);
                             let aDiff = Math.abs(((aToE - c.angle) + Math.PI*3) % (Math.PI*2) - Math.PI);
-                            if (aDiff < cArchStats.sweepAngle && minDogDist < cAttackReach + targetDog.size) {
+                            if (aDiff < cArchStats.sweepAngle && targetDist < cAttackReach + targetDog.size) {
                                 if (targetDog.invuln === undefined || targetDog.invuln <= 0) {
                                     let dmg = cStats.playerDamage * cDmgMult;
                                     targetDog.hp -= dmg;
@@ -3546,10 +3549,10 @@
                             } else {
                                 let xpGained = (f.type === 'milk' ? Math.max(18, Math.floor(cStats.nextXp * 0.12)) : f.type === 'mouse' ? Math.max(10, Math.floor(cStats.nextXp * 0.06)) : f.type === 'fish' ? Math.max(6, Math.floor(cStats.nextXp * 0.03)) : Math.max(2, Math.floor(cStats.nextXp * 0.01)));
                                 c.xp += xpGained;
-                                if (c.xp >= cStats.nextXp && c.level < 50) {
-                                    c.level++; c.xp = 0;
-                                    let newStats = evolutions[Math.min(c.level - 1, 49)];
-                                    c.maxHp = newStats.maxHp * HELMET_HP_MULT[c.hTier]; c.hp = c.maxHp; c.size = newStats.baseSize;
+                                while (c.xp >= cStats.nextXp && c.level < 50) {
+                                    c.level++; c.xp -= cStats.nextXp;
+                                    cStats = evolutions[Math.min(c.level - 1, 49)];
+                                    c.maxHp = cStats.maxHp * HELMET_HP_MULT[c.hTier]; c.hp = c.maxHp; c.size = cStats.baseSize;
                                     for(let p=0; p<15; p++) { let pt = getParticle(); if(!pt) break; pt.x = c.x; pt.y = c.y; pt.vx = (Math.random() - 0.5) * 800; pt.vy = (Math.random() - 0.5) * 800; pt.life = 1.0; pt.color = '#3498db'; particles.push(pt); }
                                 }
                             }
@@ -4653,10 +4656,13 @@
                 return players;
             } catch (error) { 
                 console.error("[CatWars] Leaderboard fetch error:", error); 
-                if (error.code === 'permission-denied') {
-                    document.getElementById('lb-content').innerHTML = '<p style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 16px;">Firebase Error: Permission Denied!<br><br>Check your Firestore Security Rules.</p>';
-                } else {
-                    document.getElementById('lb-content').innerHTML = `<p style="text-align: center; color: #e74c3c;">Database Error: ${error.message}</p>`;
+                let lbBody = document.getElementById('lb-table-body');
+                if (lbBody) {
+                    if (error.code === 'permission-denied') {
+                        lbBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 16px; padding: 20px;">Firebase Error: Permission Denied!<br><br>Check your Firestore Security Rules.</td></tr>';
+                    } else {
+                        lbBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #e74c3c; padding: 20px;">Database Error: ${error.message}</td></tr>`;
+                    }
                 }
                 return []; 
             }
