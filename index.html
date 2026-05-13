@@ -220,7 +220,7 @@
 
         /* NOVE CSS PRO VYBER MODU */
         .modes-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 400px; margin-bottom: 8px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 400px; margin: 0 0 8px 0;
         }
         .mode-card {
             background: rgba(0,0,0,0.4); border: 3px solid #444; border-radius: 12px; padding: 8px 5px;
@@ -266,14 +266,16 @@
                 <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
             </div>
 
-            <p style="color: #aaa; font-size: 18px; margin-bottom: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Game Login</p>
-            
-            <div id="login-error" style="color: #e74c3c; font-weight: bold; margin-bottom: 10px; min-height: 24px; font-size: 14px;"></div>
-            
-            <input type="text" id="login-nick" placeholder="Nickname (for login)" autocomplete="off" style="width: 85%; margin: 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
-            <input type="password" id="login-pass" placeholder="Password" style="width: 85%; margin: 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
-            
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+            <button class="btn-main" onclick="window.loginAsGuest()" style="font-size: 18px; background: var(--success); box-shadow: 0 6px 0 #27ae60; width: 90%; margin: 0 auto 32px auto; display: block;">👤 Play as Guest</button>
+
+            <p style="color: #aaa; font-size: 18px; margin: 0 0 10px 0; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Game Login</p>
+
+            <input type="text" id="login-nick" placeholder="Nickname (for login)" autocomplete="off" style="width: 85%; margin: 0 auto 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
+            <input type="password" id="login-pass" placeholder="Password" style="width: 85%; margin: 0 auto 5px auto; display: block; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #555; background: #2c3e50; color: white; text-align: center; outline: none;">
+
+            <div id="login-error" style="color: #e74c3c; font-weight: bold; margin: 5px auto 10px auto; min-height: 22px; font-size: 14px; width: 85%; text-align: center;"></div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 0;">
                 <button class="btn-main" onclick="window.loginWithPassword()" style="font-size: 18px; padding: 12px 25px; margin: 5px;">Login</button>
                 <button class="btn-main" onclick="window.registerWithPassword()" style="font-size: 18px; padding: 12px 25px; margin: 5px; background: var(--info); box-shadow: 0 4px 0 #2980b9;">Register</button>
             </div>
@@ -281,7 +283,6 @@
             <div style="color: #555; margin: 25px 0; font-weight: bold; font-size: 14px;">──────── OR ────────</div>
             
             <button class="btn-main" onclick="window.loginWithGoogle()" style="font-size: 18px; background: #e74c3c; box-shadow: 0 4px 0 #c0392b; width: 90%; margin: 5px auto; display: block;">🔴 Login with Google</button>
-            <button class="btn-main" onclick="window.loginAsGuest()" style="font-size: 18px; background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; width: 90%; margin: 5px auto; display: block;">👤 Play as Guest</button>
         </div>
     </div>
 
@@ -327,10 +328,12 @@
                     <img src="https://raw.githubusercontent.com/davidmalina79-cell/catwars.io/main/CatWars.png" alt="CatWars Battle" onerror="this.style.display='none';">
                 </div>
                 
-                <input type="text" id="player-nickname" class="nickname-input" placeholder="Enter your name..." autocomplete="off" maxlength="15" style="margin: 0 0 8px 0; width: 100%; max-width: 400px; box-sizing: border-box; flex-shrink: 0;">
+                <input type="text" id="player-nickname" class="nickname-input" placeholder="Enter your name..." autocomplete="off" maxlength="15" style="margin: 0 0 12px 0; width: 100%; max-width: 400px; box-sizing: border-box; flex-shrink: 0;">
+
+                <button class="btn-main" id="btn-start-game" onclick="startGame()" style="font-size: 26px; padding: 15px 30px; width: 100%; max-width: 400px; margin: 0 0 12px 0; flex-shrink: 0; background: var(--success); box-shadow: 0 6px 0 #27ae60;">▶️ PLAY SOLO</button>
                 
                 <!-- VÝBĚR MÓDU -->
-                <div class="modes-grid" style="flex-shrink: 0; margin-bottom: 8px;">
+                <div class="modes-grid" style="flex-shrink: 0; margin: 0 0 8px 0;">
                     <div class="mode-card active" id="mode-solo" onclick="selectMode('solo')">
                         <div class="mode-icon">🗡️</div>
                         <div class="mode-name">Solo Survival</div>
@@ -405,8 +408,6 @@
                         <li>Chaotic battles perfect for casual play.</li>
                     </ul>
                 </div>
-                
-                <button class="btn-main" id="btn-start-game" onclick="startGame()" style="font-size: 26px; padding: 15px 30px; width: 100%; max-width: 400px; margin-top: 2px; margin-bottom: auto; flex-shrink: 0; background: var(--success); box-shadow: 0 6px 0 #27ae60;">▶️ PLAY SOLO</button>
             </div>
 
             <!-- RIGHT COLUMN: Upgrades -->
