@@ -5,19 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CatWars.io - Bosses & Hardcore Balance</title>
     
-    <!-- Google tag (gtag.js) GA4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R74QC0ZMG5&v=2"></script>
+    <!-- Google tag (gtag.js) GA4 — match Admin → Data streams → Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R74QC0ZMG5"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        
-        // ZAPNUTÍ DEBUG MODE A KONTROLY V KONZOLI
-        gtag('config', 'G-R74QC0ZMG5', {
-            'debug_mode': true,       // Vynutí okamžité odeslání a zobrazení v GA4 DebugView
-            'send_page_view': true    // Explicitně řekne, ať to pošle hned
-        });
-        console.log("[CatWars] Google Analytics INICIALIZOVÁNO s ID: G-R74QC0ZMG5");
+        gtag('config', 'G-R74QC0ZMG5', { send_page_view: true });
     </script>
 
     <!-- Google AdSense Verification & Auto Ads -->
@@ -3927,7 +3921,7 @@
             storageBucket: "catwars-63a0c.firebasestorage.app", 
             messagingSenderId: "918204912047", 
             appId: "1:918204912047:web:3059fc2c0a7ff1e48f5f5a",
-            measurementId: "G-TVUJ_SPRAVNY_KOD"
+            measurementId: "G-R74QC0ZMG5"
         };
 
         let app, auth, db;
