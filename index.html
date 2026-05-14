@@ -779,7 +779,7 @@
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
-            <span style="margin-left: 10px; color: #555;">v1.1.1</span>
+            <span style="margin-left: 10px; color: #555;">v1.1.2</span>
         </footer>
     </div>
 
@@ -4399,7 +4399,7 @@
         }
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, EmailAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, linkWithCredential, linkWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, initializeFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         console.log("[CatWars] Initializing Firebase...");
@@ -4524,17 +4524,44 @@
         
         window.loginWithGoogle = () => { 
             if (!checkValidKey()) return;
-            document.getElementById('login-error').innerHTML = "⏳ Waiting for Google... (check popups)";
-            const provider = new GoogleAuthProvider(); 
-            signInWithPopup(auth, provider).then(() => {
-                document.getElementById('login-error').innerText = "Success! Loading data...";
-            }).catch(e => { 
+            const errEl = document.getElementById('login-error');
+            errEl.innerHTML = "⏳ Waiting for Google... (check popups)";
+            const provider = new GoogleAuthProvider();
+
+            const handleError = (e) => {
                 if (e.code === 'auth/unauthorized-domain') {
-                    document.getElementById('login-error').innerHTML = "<b>DOMAIN ERROR:</b> Add this URL to Firebase Authorized Domains.";
+                    errEl.innerHTML = "<b>DOMAIN ERROR:</b> Add this URL to Firebase Authorized Domains.";
+                } else if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+                    errEl.innerText = "";
                 } else {
-                    document.getElementById('login-error').innerText = "Login failed: " + e.message; 
+                    errEl.innerText = "Login failed: " + e.message;
                 }
-            }); 
+            };
+
+            const current = auth.currentUser;
+            if (current && current.isAnonymous) {
+                // Try to LINK the Google credential to the current guest. If it succeeds,
+                // the uid is kept and the guest's local + cloud progress carries over.
+                // If the Google account is already used by an existing Firebase user
+                // (credential-already-in-use), fall back to a plain sign-in into that
+                // existing account — guest data is intentionally NOT merged in.
+                linkWithPopup(current, provider)
+                    .then(() => { errEl.innerText = "Success! Loading data..."; })
+                    .catch(e => {
+                        if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+                            errEl.innerHTML = "⏳ Signing in to existing Google account...";
+                            signInWithPopup(auth, provider)
+                                .then(() => { errEl.innerText = "Success! Loading data..."; })
+                                .catch(handleError);
+                        } else {
+                            handleError(e);
+                        }
+                    });
+            } else {
+                signInWithPopup(auth, provider)
+                    .then(() => { errEl.innerText = "Success! Loading data..."; })
+                    .catch(handleError);
+            }
         };
         
         window.loginWithPassword = () => { 
@@ -4551,11 +4578,36 @@
         window.registerWithPassword = () => { 
             if (!checkValidKey()) return;
             const email = getFakeEmail(); const pass = getPass(); 
-            if (email && pass) {
-                document.getElementById('login-error').innerHTML = "⏳ Creating account... (please wait)";
+            if (!email || !pass) return;
+
+            const errEl = document.getElementById('login-error');
+            errEl.innerHTML = "⏳ Creating account... (please wait)";
+
+            // If the current session is an anonymous guest, LINK the credential
+            // instead of creating a brand-new user. Linking keeps the same uid,
+            // so the guest's local + cloud progress is preserved automatically.
+            // For a non-anonymous user (shouldn't happen from this UI) or no user,
+            // we fall back to plain createUserWithEmailAndPassword.
+            const current = auth.currentUser;
+            if (current && current.isAnonymous) {
+                const credential = EmailAuthProvider.credential(email, pass);
+                linkWithCredential(current, credential)
+                    .then(() => { errEl.innerText = "Account created! Loading..."; })
+                    .catch(e => {
+                        if (e.code === 'auth/email-already-in-use' || e.code === 'auth/credential-already-in-use') {
+                            // Nickname already taken by another account. Anti-fraud rule:
+                            // do NOT merge guest progress into someone else's account.
+                            // Player should use Login instead, which signs into that account
+                            // cleanly without importing the guest save.
+                            errEl.innerText = "Nickname already in use. Use Login instead.";
+                        } else {
+                            errEl.innerText = "Error: " + e.message;
+                        }
+                    });
+            } else {
                 createUserWithEmailAndPassword(auth, email, pass)
-                    .then(() => { document.getElementById('login-error').innerText = "Account created! Loading..."; })
-                    .catch(e => { document.getElementById('login-error').innerText = (e.code === 'auth/email-already-in-use' ? "Nickname already in use." : "Error: " + e.message); }); 
+                    .then(() => { errEl.innerText = "Account created! Loading..."; })
+                    .catch(e => { errEl.innerText = (e.code === 'auth/email-already-in-use' ? "Nickname already in use." : "Error: " + e.message); });
             }
         };
         
