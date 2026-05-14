@@ -931,7 +931,7 @@
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
-            <span style="margin-left: 10px; color: #555;">v1.1.15</span>
+            <span style="margin-left: 10px; color: #555;">v1.1.16</span>
         </footer>
     </div>
 
@@ -4055,16 +4055,16 @@
             comboPopupTimeoutId = setTimeout(() => { el.style.opacity = 0; comboPopupTimeoutId = null; }, holdMs != null ? holdMs : 1400);
         }
 
-        /** Two-line milestone text for combo tiers. */
+        /** One-line milestone text for combo tiers. */
         function comboTierPopupLines(comboCount) {
             if (comboCount === COMBO_BUFF_THRESHOLD)
-                return '5× COMBO\n+25% movement';
+                return '5× COMBO +25% movement';
             if (comboCount === BALANCE.COMBO_TIER_CRIT)
-                return '10× COMBO\n+15% crit chance';
+                return '10× COMBO +15% crit chance';
             if (comboCount === BALANCE.COMBO_TIER_AOE)
-                return '20× COMBO\nHits splash nearby (25% dmg)';
+                return '20× COMBO +Hits splash nearby (25% dmg)';
             if (comboCount === BALANCE.COMBO_TIER_PIERCE)
-                return '30× COMBO\nUnstoppable swings';
+                return '30× COMBO +Unstoppable swings';
             return null;
         }
 
