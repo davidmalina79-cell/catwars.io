@@ -268,14 +268,89 @@
         #joystick-knob { position: absolute; width: 58px; height: 58px; background: rgba(255,255,255,0.4); border: 3px solid rgba(255,255,255,0.7); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; will-change: transform; }
         #attack-btn { position: absolute; bottom: 20px; right: 20px; width: 90px; height: 90px; background: rgba(231,76,60,0.5); border: 3px solid rgba(231,76,60,0.85); border-radius: 50%; font-size: 32px; color: white; display: none; z-index: 30; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; align-items: center; justify-content: center; padding: 0; transition: background 0.1s; }
         #attack-btn:active { background: rgba(231,76,60,0.85); }
-        /* On touch devices, move dash button above attack button so nothing overlaps */
+        /* On touch devices, lay out the corner buttons so they never overlap with
+           the big attack button (90×90) parked at bottom-right.
+           Bottom-right (right→left): attack-btn (90), dash (60).
+           Top-right (right→left): sound-toggle (44), pause-btn (44).
+           Minimap is pushed down so it doesn't collide with sound/pause. */
         body.touch-device #dash-container { left: auto; right: 120px; bottom: 20px; }
+        body.touch-device #sound-toggle {
+            bottom: auto; top: 12px; right: 12px;
+            width: 44px; height: 44px; font-size: 17px;
+        }
+        body.touch-device #pause-btn {
+            bottom: auto; top: 12px; right: 66px;
+            width: 44px; height: 44px; font-size: 17px;
+        }
+        body.touch-device #minimap { top: 66px; right: 12px; }
+        /* On-screen joystick + attack button already explain the controls — the
+           verbose desktop hint just steals screen real estate on mobile. */
+        body.touch-device .controls-hint { display: none; }
 
         .game-art-banner { margin-bottom: 15px; overflow: hidden; border-radius: 12px; border: 2px solid #34495e; background: linear-gradient(135deg, var(--panel-bg) 0%, var(--panel-light) 100%); min-height: 180px; display: flex; align-items: center; justify-content: center; position: relative; }
         .game-art-banner img { width: 100%; display: block; filter: drop-shadow(0 0 10px rgba(243, 156, 18, 0.3)); }
         
         .controls-hint { text-align: center; font-size: 14px; opacity: 0.8; font-weight: normal; margin-top: auto; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; pointer-events: none; }
-        @media (max-width: 600px) { .stats-bar { top: 10px; left: 10px; flex-direction: column; gap: 5px; } .stat-box { font-size: 14px; padding: 5px 10px; } .controls-hint { font-size: 12px; } #minimap { width: 120px; height: 120px; } .enc-tab { font-size: 12px; padding: 8px; } }
+        /* MOBILE PORTRAIT — keep stats horizontal wrap (column stacked too tall
+           and was crashing into the centered Level / XP / HP bars). Hide the
+           in-game global-rank chip (with its own mini XP bar) — that info is
+           already on the menu screen and just clutters gameplay on tiny phones. */
+        @media (max-width: 600px) {
+            .stats-bar {
+                top: 8px; left: 8px; right: auto;
+                flex-direction: row; flex-wrap: wrap; gap: 4px;
+                /* Leave the top-right corner free for sound + pause buttons on touch */
+                max-width: calc(100vw - 130px);
+            }
+            .stat-box { font-size: 12px; padding: 4px 8px; border-width: 1px; }
+            #ui-global-rank { display: none !important; }
+            #game-ui { padding: 10px; }
+            .top-bar { margin-top: 56px; }
+            #level-text.text-info { font-size: 18px; margin-bottom: 3px; }
+            #xp-bar-container { height: 18px; max-width: 92vw; }
+            #xp-text { font-size: 11px; }
+            #hp-bar-container { height: 12px !important; max-width: 92vw; }
+            .controls-hint { font-size: 11px; padding: 4px 10px; }
+            #minimap { width: 100px; height: 100px; }
+            .enc-tab { font-size: 12px; padding: 8px; }
+            /* Smaller virtual controls so attack/dash/joystick all fit comfortably */
+            body.touch-device #attack-btn { width: 78px; height: 78px; font-size: 28px; }
+            body.touch-device #dash-container { width: 52px; height: 52px; right: 108px; }
+            body.touch-device #joystick-zone { width: 120px; height: 120px; }
+            body.touch-device #joystick-knob { width: 50px; height: 50px; }
+        }
+
+        /* LANDSCAPE PHONE — vertical space is the bottleneck. Shrink top HUD
+           and minimap, hide the verbose desktop hint, push the centered
+           Level/XP/HP block down so the stats row on the left doesn't crash
+           into it, and pull the controls toward the corners. */
+        @media (max-height: 500px) {
+            .stats-bar {
+                top: 6px; left: 6px; gap: 4px;
+                flex-direction: row; flex-wrap: wrap;
+                max-width: 45vw;
+            }
+            .stat-box { font-size: 11px; padding: 3px 7px; border-width: 1px; }
+            #ui-global-rank { padding: 3px 8px !important; gap: 2px !important; }
+            #ui-rank-name { font-size: 11px !important; }
+            #ui-rank-xp { font-size: 9px !important; }
+            #game-ui { padding: 8px; }
+            /* Push the centered Level / XP / HP block below the stats-bar row. */
+            .top-bar { margin-top: 40px; }
+            #level-text.text-info { font-size: 16px; margin-bottom: 2px; }
+            #xp-bar-container { height: 14px; max-width: 55vw; }
+            #xp-text { font-size: 10px; }
+            #hp-bar-container { height: 8px !important; max-width: 55vw; margin-top: 4px !important; }
+            .controls-hint { display: none; }
+            #minimap { width: 90px; height: 90px; top: 8px; right: 8px; }
+            body.touch-device #minimap { top: 56px; right: 8px; }
+            body.touch-device #attack-btn { width: 72px; height: 72px; font-size: 24px; bottom: 12px; right: 12px; }
+            body.touch-device #dash-container { width: 48px; height: 48px; bottom: 12px; right: 92px; }
+            body.touch-device #joystick-zone { width: 100px; height: 100px; bottom: 12px; left: 12px; }
+            body.touch-device #joystick-knob { width: 44px; height: 44px; }
+            body.touch-device #sound-toggle { top: 8px; right: 8px; width: 40px; height: 40px; font-size: 15px; }
+            body.touch-device #pause-btn { top: 8px; right: 56px; width: 40px; height: 40px; font-size: 15px; }
+        }
 
         /* VLASTNÍ HERNÍ POSUVNÍKY (Odstraní hnusné šedé pruhy) */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -297,10 +372,28 @@
         .menu-col.side { flex: 1; min-width: 200px; max-width: 320px; }
         .menu-col.center { flex: 2; min-width: 300px; align-items: center; justify-content: flex-start; }
 
-        /* PRAVIDLO PRO MENŠÍ OBRAZOVKY (Přeskládá sloupce pod sebe) */
+        /* PRAVIDLO PRO MENŠÍ OBRAZOVKY (Přeskládá sloupce pod sebe)
+           IMPORTANT: on mobile the overlay itself must scroll. With the old
+           `height: 90vh` + a fixed-height column the footer was getting
+           pushed UP on top of the menu (overlay is `justify-content: center`,
+           so an overflowing flex child gets visually shifted upward). Let
+           the container grow naturally and scroll the whole overlay. */
         @media (max-width: 850px) {
-            .menu-container { flex-direction: column; height: 90vh; overflow-y: auto; align-items: center; padding-right: 5px; }
-            .menu-col.side, .menu-col.center { width: 100%; max-width: 500px; min-height: auto; flex: none; }
+            #main-menu.overlay {
+                justify-content: flex-start;
+                overflow-y: auto;
+                padding: 12px 12px 16px 12px;
+            }
+            .menu-container {
+                flex-direction: column; height: auto; min-height: 0;
+                overflow-y: visible; align-items: center;
+                padding-right: 0; margin-top: 0;
+            }
+            .menu-col.side, .menu-col.center {
+                width: 100%; max-width: 500px; min-height: auto; flex: none;
+                overflow-y: visible;
+            }
+            #main-menu > footer { margin-top: 14px; }
         }
 
         .nickname-input {
@@ -794,7 +887,7 @@
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
-            <span style="margin-left: 10px; color: #555;">v1.1.10</span>
+            <span style="margin-left: 10px; color: #555;">v1.1.11</span>
         </footer>
     </div>
 
