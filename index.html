@@ -226,11 +226,11 @@
         .close-btn { background: var(--danger); color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
         
         .enc-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
         
         .card { background: #34495e; border: 2px solid #555; border-radius: 12px; padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: center; color: white; transition: transform 0.2s; position: relative;}
         .card:hover { transform: scale(1.02); }
-        .card img { width: 140px; height: 140px; object-fit: contain; margin-bottom: 10px; }
+        .card img { width: 100%; height: 180px; object-fit: contain; margin-bottom: 10px; }
         .card h3 { margin: 0 0 5px 0; font-size: 18px; }
         .card p { margin: 0; font-size: 14px; color: #aaa; }
         .card.locked { background: var(--panel-bg); border-color: var(--panel-light); }
@@ -785,7 +785,7 @@
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
-            <span style="margin-left: 10px; color: #555;">v1.1.6</span>
+            <span style="margin-left: 10px; color: #555;">v1.1.7</span>
         </footer>
     </div>
 
@@ -3197,7 +3197,7 @@
                         let weaponLabel = legKey ? LEGENDARY_WEAPONS[legKey].name.toUpperCase() : stats.weaponType.toUpperCase();
                         
                         let cardContent = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ${stats.catName}</h3>`;
-                        cardContent += `<img src="${getSpriteDataURL('cats', i, wTier, hTier, legKey)}" style="width:150px; height:150px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
+                        cardContent += `<img src="${getSpriteDataURL('cats', i, wTier, hTier, legKey)}" style="width:100%; height:180px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
                         cardContent += `<div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px; line-height: 1.3;">
                                             <strong style="color: ${legKey ? '#ff7ff0' : '#fff'}; font-size: 13px;">${wTierName}${weaponLabel}</strong><br>
                                             <span style="color:#f39c12; font-size: 11px;">${archLabel}</span>
@@ -3245,7 +3245,7 @@
                         card.appendChild(legBtn);
                     } else { 
                         card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
-                        card.innerHTML += `<img src="${getSpriteDataURL('cats', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
+                        card.innerHTML += `<img src="${getSpriteDataURL('cats', i, 0, 0)}" style="width:100%; height:180px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
                         card.innerHTML += `<p style="margin-top:10px;">Reach Lv. ${i}</p>`; 
                     }
                     grid.appendChild(card);
@@ -3258,7 +3258,7 @@
                     
                     if (!locked) {
                         let cardContent = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ${stats.dogName}</h3>`;
-                        cardContent += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
+                        cardContent += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:100%; height:180px; object-fit:contain; margin-bottom: 10px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.5));">`;
                         cardContent += `<div style="background: rgba(0,0,0,0.4); padding: 6px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px; line-height: 1.3;">
                                             <strong style="color: #fff; font-size: 13px;">${stats.weaponType.toUpperCase()}</strong><br>
                                             <span style="color:#f39c12; font-size: 11px;">${archLabel}</span>
@@ -3267,7 +3267,7 @@
                         card.innerHTML = cardContent;
                     } else { 
                         card.innerHTML = `<h3 style="margin: 0 0 5px 0; font-size: 18px;">Lv.${i} ???</h3>`;
-                        card.innerHTML += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:150px; height:150px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
+                        card.innerHTML += `<img src="${getSpriteDataURL('dogs', i, 0, 0)}" style="width:100%; height:180px; object-fit:contain; opacity:0.7; filter:brightness(0.2) grayscale(0.8); margin: 5px 0;">`;
                         card.innerHTML += `<p style="margin-top: 10px;">Defeated: 0</p>`; 
                     }
                     grid.appendChild(card);
