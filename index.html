@@ -262,6 +262,14 @@
         #dash-container { position: absolute; bottom: 80px; left: 20px; width: 60px; height: 60px; background: rgba(0,0,0,0.5); border: 2px solid #555; border-radius: 50%; display: none; align-items: center; justify-content: center; overflow: hidden; pointer-events: auto; cursor: pointer; z-index: 30; transition: opacity 0.2s;}
         #dash-fill { position: absolute; bottom: 0; width: 100%; height: 100%; background: #00d4ff; opacity: 0.6; transition: height 0.1s linear; }
         #dash-icon { position: relative; z-index: 2; font-size: 24px; color: white; }
+        /* Mobile virtual joystick */
+        #joystick-zone { position: absolute; bottom: 20px; left: 20px; width: 140px; height: 140px; display: none; z-index: 30; pointer-events: none; }
+        #joystick-base { position: absolute; inset: 0; background: rgba(255,255,255,0.1); border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; touch-action: none; }
+        #joystick-knob { position: absolute; width: 58px; height: 58px; background: rgba(255,255,255,0.4); border: 3px solid rgba(255,255,255,0.7); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; will-change: transform; }
+        #attack-btn { position: absolute; bottom: 20px; right: 20px; width: 90px; height: 90px; background: rgba(231,76,60,0.5); border: 3px solid rgba(231,76,60,0.85); border-radius: 50%; font-size: 32px; color: white; display: none; z-index: 30; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; align-items: center; justify-content: center; padding: 0; transition: background 0.1s; }
+        #attack-btn:active { background: rgba(231,76,60,0.85); }
+        /* On touch devices, move dash button above attack button so nothing overlaps */
+        body.touch-device #dash-container { left: auto; right: 120px; bottom: 20px; }
 
         .game-art-banner { margin-bottom: 15px; overflow: hidden; border-radius: 12px; border: 2px solid #34495e; background: linear-gradient(135deg, var(--panel-bg) 0%, var(--panel-light) 100%); min-height: 180px; display: flex; align-items: center; justify-content: center; position: relative; }
         .game-art-banner img { width: 100%; display: block; filter: drop-shadow(0 0 10px rgba(243, 156, 18, 0.3)); }
@@ -887,6 +895,8 @@
     
     <canvas id="minimap" width="160" height="160"></canvas>
     <div id="dash-container" onclick="triggerDash(new Event('click'))"><div id="dash-fill"></div><div id="dash-icon">⚡</div></div>
+    <div id="joystick-zone"><div id="joystick-base"><div id="joystick-knob"></div></div></div>
+    <button id="attack-btn">⚔️</button>
     <div id="boss-arrow">⬆️</div>
     <div id="boss-alert"></div>
     <div id="sound-toggle" class="circle-btn" onclick="toggleSound()">🔊</div>
@@ -1234,6 +1244,9 @@
         let mouseX = width / 2;
         let mouseY = height / 2;
         let isMouseDown = false;
+        // Virtual joystick state (mobile)
+        let joystickTouchId = -1, attackTouchId = -1;
+        let joystickCenterX = 0, joystickCenterY = 0;
         let isRightMouseDown = false;
         let dashRequested = false;
 
@@ -1909,21 +1922,101 @@
         });
         window.addEventListener('keyup', (e) => { if(e.code === 'Space') dashRequested = false; });
 
-        // Opravené touch eventy pro mobil - tažení = pohyb, ťuknutí = útok
-        let touchStartTime = 0, touchMoved = false;
-        window.addEventListener('touchstart', (e) => { 
-            if (e.touches.length > 1) return;
-            if (e.target.closest('button, [role="button"], .overlay, input')) return; 
-            if(e.target.id !== 'dash-container') { 
-                e.preventDefault(); mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; isMouseDown = true; initAudio(); 
-            } 
+        // Detect touch device once; add body class so CSS can reposition the dash button
+        const IS_TOUCH_DEV = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+        if (IS_TOUCH_DEV) document.body.classList.add('touch-device');
+
+        // --- Joystick helpers ---
+        function _joyKnob(nx, ny) {
+            const k = document.getElementById('joystick-knob');
+            if (k) k.style.transform = `translate(calc(-50% + ${nx * 40}px), calc(-50% + ${ny * 40}px))`;
+        }
+        function _joyReset() {
+            joystickTouchId = -1;
+            _joyKnob(0, 0);
+            mouseX = width / 2; mouseY = height / 2;
+        }
+
+        // --- Attack button (own touch listeners so the button guard doesn't swallow them) ---
+        (function() {
+            const ab = document.getElementById('attack-btn');
+            if (!ab) return;
+            ab.addEventListener('touchstart', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                if (attackTouchId === -1) { attackTouchId = e.changedTouches[0].identifier; isMouseDown = true; initAudio(); }
+            }, {passive: false});
+            ab.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                for (let t of e.changedTouches) { if (t.identifier === attackTouchId) { attackTouchId = -1; isMouseDown = false; } }
+            }, {passive: false});
+            ab.addEventListener('touchcancel', (e) => {
+                for (let t of e.changedTouches) { if (t.identifier === attackTouchId) { attackTouchId = -1; isMouseDown = false; } }
+            }, {passive: false});
+        })();
+
+        // --- Global multi-touch handlers ---
+        window.addEventListener('touchstart', (e) => {
+            initAudio();
+            // Outside gameplay: let native events handle UI (buttons, overlays, inputs)
+            if (gameState !== 'playing') return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                // Always skip: overlays, inputs, attack-btn (handled above), encyclopedia, dash
+                if (t.target.closest('.overlay, input, #encyclopedia, #attack-btn')) continue;
+                if (t.target.id === 'dash-container' || t.target.closest('#dash-container')) continue;
+                if (IS_TOUCH_DEV) {
+                    // Left 55 % of screen → joystick direction; skip UI buttons
+                    if (t.clientX < window.innerWidth * 0.55 && joystickTouchId === -1) {
+                        if (t.target.closest('button, [role="button"]')) continue;
+                        e.preventDefault();
+                        joystickTouchId = t.identifier;
+                        const base = document.getElementById('joystick-base');
+                        if (base) { const r = base.getBoundingClientRect(); joystickCenterX = r.left + r.width / 2; joystickCenterY = r.top + r.height / 2; }
+                    }
+                } else {
+                    // Non-touch desktop with touch events (e.g. Surface): legacy mouse-style
+                    if (t.target.closest('button, [role="button"]')) continue;
+                    e.preventDefault(); mouseX = t.clientX; mouseY = t.clientY; isMouseDown = true;
+                }
+            }
         }, {passive: false});
-        window.addEventListener('touchmove', (e) => { 
-            if (e.touches.length > 1) return;
-            if (e.target.closest('button, [role="button"], .overlay, input')) return;
-            e.preventDefault(); mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; 
+
+        window.addEventListener('touchmove', (e) => {
+            if (gameState !== 'playing') return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === joystickTouchId) {
+                    e.preventDefault();
+                    const dx = t.clientX - joystickCenterX, dy = t.clientY - joystickCenterY;
+                    const dist = Math.hypot(dx, dy);
+                    const nx = dist > 0 ? dx / dist : 0, ny = dist > 0 ? dy / dist : 0;
+                    // Clamp knob visually to base radius (40 px travel), but allow over-drag for direction
+                    _joyKnob(nx * Math.min(dist / 40, 1), ny * Math.min(dist / 40, 1));
+                    // Project virtual mouse far in joystick direction so player always moves at full speed
+                    mouseX = width / 2 + nx * 800; mouseY = height / 2 + ny * 800;
+                } else if (!IS_TOUCH_DEV && t.identifier !== attackTouchId) {
+                    if (t.target.closest('button, [role="button"], .overlay, input')) continue;
+                    e.preventDefault(); mouseX = t.clientX; mouseY = t.clientY;
+                }
+            }
         }, {passive: false});
-        window.addEventListener('touchend', (e) => { if(e.touches.length === 0) isMouseDown = false; }, {passive: false});
+
+        window.addEventListener('touchend', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === joystickTouchId) _joyReset();
+                // Legacy non-touch-dev path
+                if (!IS_TOUCH_DEV && t.identifier !== attackTouchId && e.touches.length === 0) isMouseDown = false;
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchcancel', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === joystickTouchId) _joyReset();
+                if (t.identifier === attackTouchId) { attackTouchId = -1; isMouseDown = false; }
+            }
+        }, {passive: false});
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && gameState === 'playing') togglePause();
@@ -3070,7 +3163,7 @@
 
         function goToMenu() { 
             document.getElementById('game-ui').style.display = 'none'; 
-            document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('dash-container').style.display = 'none'; 
+            document.getElementById('encyclopedia').style.display = 'none'; document.getElementById('dash-container').style.display = 'none'; document.getElementById('joystick-zone').style.display = 'none'; document.getElementById('attack-btn').style.display = 'none';
             document.getElementById('minimap').style.display = 'none'; document.getElementById('boss-arrow').style.display = 'none';
             document.getElementById('pause-btn').style.display = 'none'; document.getElementById('tutorial').style.display = 'none';
             document.getElementById('pause-overlay').style.display = 'none'; 
@@ -3449,6 +3542,7 @@
 
         function startGame() {
             document.getElementById('main-menu').style.display = 'none'; document.getElementById('game-ui').style.display = 'flex'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('pause-btn').style.display = 'flex'; document.getElementById('minimap').style.display = 'block';
+            if (IS_TOUCH_DEV) { document.getElementById('joystick-zone').style.display = 'flex'; document.getElementById('attack-btn').style.display = 'flex'; }
             
             prog.nickname = document.getElementById('player-nickname').value.trim() || 'Hero';
             saveProgress();
@@ -4807,7 +4901,7 @@
                 gemBtn.innerHTML = `💎 Revive (Cost: ${currentReviveCost})`;
             } 
             
-            document.getElementById('dash-container').style.display = 'none'; document.getElementById('minimap').style.display = 'none'; 
+            document.getElementById('dash-container').style.display = 'none'; document.getElementById('joystick-zone').style.display = 'none'; document.getElementById('attack-btn').style.display = 'none'; document.getElementById('minimap').style.display = 'none'; 
             document.getElementById('boss-arrow').style.display = 'none'; document.getElementById('pause-btn').style.display = 'none'; 
             document.getElementById('death-screen').style.display = 'flex'; 
             
@@ -4833,7 +4927,8 @@
             player.invuln = 3.0; 
             enemies = enemies.filter(e => e.isBoss || Math.hypot(e.x - player.x, e.y - player.y) > 1200); 
             
-            document.getElementById('death-screen').style.display = 'none'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('minimap').style.display = 'block'; document.getElementById('pause-btn').style.display = 'flex'; 
+            document.getElementById('death-screen').style.display = 'none'; document.getElementById('dash-container').style.display = 'flex'; document.getElementById('minimap').style.display = 'block'; document.getElementById('pause-btn').style.display = 'flex';
+            if (IS_TOUCH_DEV) { document.getElementById('joystick-zone').style.display = 'flex'; document.getElementById('attack-btn').style.display = 'flex'; }
             lastTime = performance.now(); 
             gameState = 'playing'; 
             updateUI(); 
