@@ -147,7 +147,6 @@
             backdrop-filter: blur(4px);
         }
         .gem-text { color: #00d4ff; }
-        .combo-text { color: #f1c40f; border-color: #f39c12; display: none; }
         
         #xp-bar-container {
             width: 90%; max-width: 600px; height: 25px; background: rgba(0,0,0,0.6);
@@ -177,7 +176,7 @@
         #boss-arrow { position: absolute; width: 40px; height: 40px; pointer-events: none; display: none; z-index: 8; font-size: 32px; text-align: center; line-height: 40px; text-shadow: 0 0 8px #000, 0 0 16px #e74c3c; }
         
         #level-up-text { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(40px, 8vw, 60px); font-weight: 900; color: #f1c40f; text-shadow: 0 0 10px #e67e22, 3px 3px 0 #000; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 50; text-align: center; width: 100%; }
-        #combo-popup { position: absolute; top: 42%; left: 50%; transform: translateX(-50%); font-size: 34px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 8px #e67e22, 2px 2px 0 #000; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 50; text-align: center; }
+        #combo-popup { position: absolute; top: 42%; left: 50%; transform: translateX(-50%); max-width: min(92vw, 520px); padding: 0 12px; font-size: clamp(22px, 4.2vw, 30px); font-weight: 900; color: #f1c40f; text-shadow: 0 0 8px #e67e22, 2px 2px 0 #000; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 50; text-align: center; line-height: 1.2; white-space: pre-line; }
         
         #boss-alert { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(231, 76, 60, 0.9); color: white; padding: 15px 40px; border-radius: 50px; font-size: clamp(24px, 5vw, 32px); font-weight: 900; border: 4px solid #fff; display: none; animation: pulse 1s infinite; z-index: 60; text-align: center; white-space: nowrap; }
         @keyframes pulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 30px #e74c3c; } 100% { transform: translateX(-50%) scale(1); } }
@@ -932,7 +931,7 @@
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
-            <span style="margin-left: 10px; color: #555;">v1.1.13</span>
+            <span style="margin-left: 10px; color: #555;">v1.1.15</span>
         </footer>
     </div>
 
@@ -1009,7 +1008,6 @@
             <div class="stat-box">⚔️ <span id="ui-kills">0</span></div>
             <div class="stat-box" id="ui-team-kills-box" style="display:none; color: #3498db; border-color: #3498db;">👥 <span id="ui-team-kills">0</span></div>
             <div class="stat-box gem-text">💎 <span id="ui-gems">0</span></div>
-            <div class="stat-box combo-text" id="combo-box">🔥 <span id="ui-combo">0</span>x</div>
             <div class="stat-box" style="color: #e74c3c; border-color: #e74c3c; box-shadow: 0 0 10px rgba(231, 76, 60, 0.4);">⏱️ <span id="ui-timer">00:00</span></div>
         </div>
         
@@ -4043,20 +4041,31 @@
             updateDOM('ui-team-kills', 'text', playerRunData.teamKills);
             updateDOM('ui-gems', 'text', prog.gems + playerRunData.gems); 
             
-            if (combo >= 2) { 
-                updateDOM('combo-box', 'display', 'block'); 
-                updateDOM('ui-combo', 'text', combo); 
-            } else { 
-                updateDOM('combo-box', 'display', 'none'); 
-            }
-            
             let dashPct = Math.min(100, (1 - player.dashTimer / player.dashCooldown) * 100); 
             updateDOM('dash-fill', 'height', dashPct + '%'); 
             updateDOM('dash-container', 'borderColor', dashPct === 100 ? '#00d4ff' : '#555');
         }
 
-        function showComboPopup(text) {
-            let el = document.getElementById('combo-popup'); el.innerText = text; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 1000);
+        let comboPopupTimeoutId = null;
+        function showComboPopup(text, holdMs) {
+            let el = document.getElementById('combo-popup');
+            if (comboPopupTimeoutId) clearTimeout(comboPopupTimeoutId);
+            el.innerText = text;
+            el.style.opacity = 1;
+            comboPopupTimeoutId = setTimeout(() => { el.style.opacity = 0; comboPopupTimeoutId = null; }, holdMs != null ? holdMs : 1400);
+        }
+
+        /** Two-line milestone text for combo tiers. */
+        function comboTierPopupLines(comboCount) {
+            if (comboCount === COMBO_BUFF_THRESHOLD)
+                return '5× COMBO\n+25% movement';
+            if (comboCount === BALANCE.COMBO_TIER_CRIT)
+                return '10× COMBO\n+15% crit chance';
+            if (comboCount === BALANCE.COMBO_TIER_AOE)
+                return '20× COMBO\nHits splash nearby (25% dmg)';
+            if (comboCount === BALANCE.COMBO_TIER_PIERCE)
+                return '30× COMBO\nUnstoppable swings';
+            return null;
         }
 
         /** Full kill rewards + removal when the player (direct hit or combo AoE) brings an enemy to 0 HP. Uses indexOf so splices stay correct if the array shifted mid-frame. */
@@ -4071,8 +4080,11 @@
             combo++; comboTimer = COMBO_WINDOW; if (combo > playerRunData.bestCombo) playerRunData.bestCombo = combo; if (combo > prog.bestCombo) prog.bestCombo = combo;
             questProgress('combo', combo); questProgress('kills', 1);
             if (enemy.isElite) questProgress('elite', 1);
-            if (combo === COMBO_BUFF_THRESHOLD) { showComboPopup('🔥 SPEED BUFF!'); playSound('combo'); }
-            if (combo > 0 && combo % 5 === 0) showComboPopup(`${combo}x COMBO!`);
+            let tierMsg = comboTierPopupLines(combo);
+            if (tierMsg) {
+                showComboPopup(tierMsg, combo === COMBO_BUFF_THRESHOLD ? 2200 : 2000);
+                if (combo === COMBO_BUFF_THRESHOLD) playSound('combo');
+            }
             if (enemy.isFinalBoss) triggerWin();
             let eStats = evolutions[Math.min(enemy.level - 1, 49)];
             let orbXp = Math.max(50, Math.floor(eStats.nextXp * 0.015));
