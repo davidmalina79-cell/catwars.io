@@ -407,8 +407,7 @@
             #main-menu.overlay {
                 justify-content: flex-start;
                 overflow-y: auto;
-                /* Reserve room for the fixed footer bar at the bottom. */
-                padding: 12px 12px 96px 12px;
+                padding: 12px 12px 16px 12px;
             }
             .menu-container {
                 flex-direction: column; height: auto; min-height: 0;
@@ -419,25 +418,26 @@
                 width: 100%; max-width: 500px; min-height: auto; flex: none;
                 overflow-y: visible;
             }
-            /* Pin the About / Privacy / version footer to the very bottom of the
-               viewport as a translucent bar instead of letting it sit flush
-               against the menu panel and visually "stick" to it. */
+            /* Footer sits at the END of the scrollable menu (NOT fixed to the
+               viewport — a fixed footer "travels" with the user's scroll, which
+               looked like a sticky bar glued to the middle of the screen).
+               Style it as a translucent bar so it's visually separated from the
+               menu panel above it, but it scrolls naturally with the content. */
             #main-menu > footer {
-                position: fixed;
-                left: 0; right: 0; bottom: 0;
+                position: static;
                 width: 100%;
-                max-width: none;
-                margin: 0;
-                padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px));
+                max-width: 500px;
+                margin: 18px auto 0;
+                padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
                 background: rgba(18, 28, 38, 0.78);
                 backdrop-filter: blur(8px);
                 -webkit-backdrop-filter: blur(8px);
-                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
                 box-sizing: border-box;
                 font-size: 11px;
                 line-height: 1.45;
                 color: #aaa;
-                z-index: 5;
             }
         }
 
@@ -932,7 +932,7 @@
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
-            <span style="margin-left: 10px; color: #555;">v1.1.12</span>
+            <span style="margin-left: 10px; color: #555;">v1.1.13</span>
         </footer>
     </div>
 
