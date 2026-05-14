@@ -607,16 +607,6 @@
 
     <!-- MAIN MENU (COMPLETELY REDESIGNED FOR 16:9) -->
     <div id="main-menu" class="overlay" style="display: none;">
-        <div style="position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; z-index: 10;">
-            <div id="auth-status-text" style="color: #aaa; font-size: 14px; margin-bottom: 5px; font-weight: bold; text-shadow: 1px 1px 2px black;">Playing as: Guest</div>
-            <button id="auth-action-btn" class="btn-main" onclick="window.handleAuthAction()" style="font-size: 14px; padding: 8px 16px; margin: 0; background: var(--success); box-shadow: 0 4px 0 #27ae60;">🔑 Sign In to Save</button>
-            <div style="margin-top: 8px; font-size: 11px; color: #999; text-align: right; line-height: 1.5;">
-                <a href="#" onclick="window.openPrivacy('about'); return false;" style="color: #ccc; text-decoration: none;">About</a> ·
-                <a href="#" onclick="window.openPrivacy('howto'); return false;" style="color: #ccc; text-decoration: none;">How to play</a> ·
-                <a href="#" onclick="window.openPrivacy('privacy'); return false;" style="color: #ccc; text-decoration: none;">Privacy</a> ·
-                <a href="#" onclick="window.openPrivacy('cookies'); return false;" style="color: #ccc; text-decoration: none;">Cookies &amp; Ads</a>
-            </div>
-        </div>
 
         <div class="menu-container">
             <!-- LEFT COLUMN: Profile & Stats -->
@@ -643,8 +633,11 @@
                 <div class="stat-box" style="margin-bottom: 12px; font-size: 16px;">Max Lv: <span id="mm-level">1</span></div>
                 <div class="stat-box gem-text" style="margin-bottom: 12px; font-size: 18px;">💎 <span id="mm-gems">0</span></div>
                 <button class="btn-main" onclick="window.openLeaderboard()" style="background: #e67e22; box-shadow: 0 6px 0 #d35400; width: 100%; font-size: 18px; padding: 15px; margin-top: 0;">🏆 Leaderboard</button>
-                
-                <button class="btn-main" id="btn-daily-spin" onclick="window.openDailySpin()" style="background: #9b59b6; box-shadow: 0 6px 0 #8e44ad; width: 100%; font-size: 18px; padding: 15px; margin-top: auto; line-height: 1.2;">🎰 Daily Spin<br><span id="daily-spin-sub" style="font-size: 14px;">Ready!</span></button>
+
+                <div style="margin-top: auto; border-top: 2px solid rgba(255,255,255,0.1); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div id="auth-status-text" style="color: #aaa; font-size: 13px; font-weight: bold; text-shadow: 1px 1px 2px black; text-align: center;">Playing as: Guest</div>
+                    <button id="auth-action-btn" class="btn-main" onclick="window.handleAuthAction()" style="font-size: 15px; padding: 12px 16px; margin: 0; background: var(--success); box-shadow: 0 4px 0 #27ae60; width: 100%;">🔑 Sign In to Save</button>
+                </div>
             </div>
 
             <!-- CENTER COLUMN: Play Area -->
@@ -764,15 +757,29 @@
                         <span style="font-size: 20px; font-weight: 900; letter-spacing: 1px;">QUESTS</span>
                     </button>
                 </div>
+
+                <div style="border-top: 2px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: auto;">
+                    <button class="btn-main" id="btn-daily-spin" onclick="window.openDailySpin()" style="background: #9b59b6; box-shadow: 0 6px 0 #8e44ad; width: 100%; font-size: 18px; padding: 15px; margin: 0; line-height: 1.2;">🎰 Daily Spin<br><span id="daily-spin-sub" style="font-size: 14px;">Ready!</span></button>
+                </div>
             </div>
         </div>
 
         <!-- About footer (always visible publisher content for AdSense) -->
-        <footer style="max-width: 1200px; width: 95%; margin: 12px auto 0; padding: 10px 20px; color: #888; font-size: 12px; line-height: 1.55; text-align: center;">
+        <footer style="max-width: 1200px; width: 95%; margin: 8px auto 0; padding: 8px 20px; color: #888; font-size: 12px; line-height: 1.55; text-align: center;">
+            <div style="margin-bottom: 6px; font-size: 12px; color: #777;">
+                <a href="#" onclick="window.openPrivacy('about'); return false;" style="color: #bbb; text-decoration: none;">About</a>
+                <span style="margin: 0 6px; color: #555;">·</span>
+                <a href="#" onclick="window.openPrivacy('howto'); return false;" style="color: #bbb; text-decoration: none;">How to play</a>
+                <span style="margin: 0 6px; color: #555;">·</span>
+                <a href="#" onclick="window.openPrivacy('privacy'); return false;" style="color: #bbb; text-decoration: none;">Privacy</a>
+                <span style="margin: 0 6px; color: #555;">·</span>
+                <a href="#" onclick="window.openPrivacy('cookies'); return false;" style="color: #bbb; text-decoration: none;">Cookies &amp; Ads</a>
+            </div>
             <b style="color: #ccc;">CatWars.io</b> — a free browser‑based 2D top‑down survival action game.
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
+            <span style="margin-left: 10px; color: #555;">v1.1.1</span>
         </footer>
     </div>
 
