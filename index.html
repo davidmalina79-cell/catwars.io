@@ -300,16 +300,18 @@
         /* NOVE CSS PRO VYBER MODU */
         .modes-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 400px; margin: 0 0 8px 0;
+            align-items: stretch;
         }
         .mode-card {
             background: rgba(0,0,0,0.4); border: 3px solid #444; border-radius: 12px; padding: 8px 5px;
             cursor: pointer; transition: all 0.2s; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100px; box-sizing: border-box;
         }
         .mode-card:hover:not(.locked) { border-color: var(--primary-hover); background: rgba(243, 156, 18, 0.1); transform: translateY(-2px); }
         .mode-card.active { border-color: var(--primary); background: rgba(243, 156, 18, 0.2); box-shadow: 0 0 15px rgba(243, 156, 18, 0.4); }
         .mode-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
         .mode-icon { font-size: 26px; margin-bottom: 2px; filter: drop-shadow(2px 2px 2px #000); }
-        .mode-name { font-size: 13px; font-weight: bold; color: white; text-align: center; }
+        .mode-name { font-size: 13px; font-weight: bold; color: white; text-align: center; min-height: 2.65em; display: flex; align-items: center; justify-content: center; line-height: 1.2; }
         .mode-badge { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; font-size: 10px; padding: 3px 6px; border-radius: 8px; font-weight: bold; border: 2px solid #111; letter-spacing: 0.5px; text-transform: uppercase; }
 
         /* Privacy/About overlay tabs */
@@ -648,7 +650,7 @@
                 
                 <input type="text" id="player-nickname" class="nickname-input" placeholder="Enter your name..." autocomplete="off" maxlength="15" style="margin: 0 0 12px 0; width: 100%; max-width: 400px; box-sizing: border-box; flex-shrink: 0;">
 
-                <button class="btn-main" id="btn-start-game" onclick="startGame()" style="font-size: 26px; padding: 15px 30px; width: 100%; max-width: 400px; margin: 0 0 12px 0; flex-shrink: 0; background: var(--success); box-shadow: 0 6px 0 #27ae60;">▶️ PLAY SOLO</button>
+                <button class="btn-main" id="btn-start-game" onclick="startGame()" style="font-size: 26px; padding: 15px 30px; width: 100%; max-width: 400px; margin: 0 0 12px 0; flex-shrink: 0; background: var(--success); box-shadow: 0 6px 0 #27ae60;">🗡️ PLAY SOLO</button>
                 
                 <!-- VÝBĚR MÓDU -->
                 <div class="modes-grid" style="flex-shrink: 0; margin: 0 0 8px 0;">
@@ -779,7 +781,7 @@
             Play as a cat, hunt food, evolve through <b>50 levels</b> and survive endless dog hordes.
             Solo, Hardcore and Co‑Op modes · public leaderboards · permanent upgrades.
             Built as a hobby project — no install, no pay‑to‑win.
-            <span style="margin-left: 10px; color: #555;">v1.1.4</span>
+            <span style="margin-left: 10px; color: #555;">v1.1.5</span>
         </footer>
     </div>
 
@@ -1348,7 +1350,7 @@
                 startBtn.style.boxShadow = '0 6px 0 #c0392b';
             } else if (mode === 'team') {
                 if (teamPanel) teamPanel.style.display = 'flex';
-                startBtn.innerHTML = '🔵 PLAY CO-OP';
+                startBtn.innerHTML = '<span style="font-size: 0.82em; letter-spacing: -0.06em; white-space: nowrap; vertical-align: middle;">🐱⚔️🐺</span> PLAY CO-OP';
                 startBtn.style.background = 'var(--info)';
                 startBtn.style.boxShadow = '0 6px 0 #2980b9';
             }
